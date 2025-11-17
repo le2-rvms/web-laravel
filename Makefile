@@ -18,7 +18,7 @@ composer-global-refresh-hooks:
 composer-update:
 	#composer clear-cache
 	# 或指定 Composer 偏好协议为 ssh
-	composer config github-protocols ssh
+	#composer config github-protocols ssh
 	composer update -vvv
 
 composer-version:
@@ -28,7 +28,6 @@ composer-version:
 
 composer-run:
 	php artisan serve
-
 
 npm-update:
 	pnpm update
