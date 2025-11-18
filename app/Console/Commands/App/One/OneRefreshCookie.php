@@ -101,13 +101,13 @@ class OneRefreshCookie extends Command
 
     private function findWelcome($filePath, $searchString): bool
     {
-        $command = "grep -n1 '".escapeshellcmd($searchString)."' ".escapeshellarg(Storage::path($filePath));
+        $command = sprintf("grep '%s' %s", escapeshellcmd($searchString), escapeshellarg(Storage::path($filePath)));
 
         $output     = [];
         $returnCode = 0;
         exec($command, $output, $returnCode);
 
-        Log::channel('console')->info('grep result : '.join(PHP_EOL, $output));
+        Log::channel('console')->info('grep result : ', $output);
 
         return 0 === $returnCode;
     }

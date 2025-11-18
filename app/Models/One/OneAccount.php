@@ -8,12 +8,12 @@ use App\Enum\One\OaOaType;
 use App\Models\_\ModelTrait;
 use GuzzleHttp\Cookie\FileCookieJar;
 use GuzzleHttp\Cookie\SetCookie;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 #[ClassName('122账号信息')]
@@ -43,14 +43,20 @@ class OneAccount extends Model
         'oa_type'           => OaOaType::class,
     ];
 
+    private static ?Filesystem $disk = null;
+
     public function initializeCookies(): FileCookieJar
     {
-        $cookieFilePath = Storage::path($this->getCookiePath());
+        if (null === static::$disk) {
+            static::$disk = Storage::disk('local');
+        }
 
-        $directory = dirname($cookieFilePath);
+        $cookieFilePath = static::$disk->path($this->getCookiePath());
 
-        if (!File::exists($directory)) {
-            Storage::disk('local')->makeDirectory($directory);
+        $directory = 'cookie';
+
+        if (!static::$disk->exists($directory)) {
+            static::$disk->makeDirectory($directory);
         }
 
         if (file_exists($cookieFilePath)) {
@@ -89,7 +95,11 @@ class OneAccount extends Model
 
     public function deleteCookies(): void
     {
-        Storage::delete($this->getCookiePath());
+        if (null === static::$disk) {
+            static::$disk = Storage::disk('local');
+        }
+
+        static::$disk->delete($this->getCookiePath());
     }
 
     public function getCookiePath()
