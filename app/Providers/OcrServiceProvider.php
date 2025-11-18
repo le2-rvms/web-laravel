@@ -21,12 +21,9 @@ class OcrServiceProvider extends ServiceProvider
             $config = new Config([
                 'credential' => $credential,
             ]);
+
             // Endpoint 请参考 https://api.aliyun.com/product/ocr-api
-            if (app()->isLocal()) {
-                $config->endpoint = 'ocr-api.cn-hangzhou.aliyuncs.com';
-            } else {
-                $config->endpoint = 'ocr-api-vpc.cn-hangzhou.aliyuncs.com';
-            }
+            $config->endpoint = 'ocr-api.cn-hangzhou.aliyuncs.com';
 
             return new Ocrapi($config);
         });

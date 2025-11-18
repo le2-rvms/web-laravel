@@ -36,7 +36,7 @@ use App\Http\Controllers\Admin\Sale\SaleOrderCancelController;
 use App\Http\Controllers\Admin\Sale\SaleOrderController;
 use App\Http\Controllers\Admin\Sale\SaleOrderTplController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementApproveController;
-use App\Http\Controllers\Admin\Sale\saleSettlementController;
+use App\Http\Controllers\Admin\Sale\SaleSettlementController;
 use App\Http\Controllers\Admin\Sale\VehiclePreparationController;
 use App\Http\Controllers\Admin\Sale\VehicleReplacementController;
 use App\Http\Controllers\Admin\Staff\StaffController;
@@ -160,9 +160,9 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
     Route::post('vehicle-replacement/upload', [VehicleReplacementController::class, 'upload']);
     Route::resource('vehicle-replacement', VehicleReplacementController::class);
 
-    Route::post('sale-settlement/upload', [saleSettlementController::class, 'upload']);
-    Route::get('sale-settlement/{sale_settlement}/doc', [saleSettlementController::class, 'doc']);
-    Route::resource('sale-settlement', saleSettlementController::class);
+    Route::post('sale-settlement/upload', [SaleSettlementController::class, 'upload']);
+    Route::get('sale-settlement/{sale_settlement}/doc', [SaleSettlementController::class, 'doc']);
+    Route::resource('sale-settlement', SaleSettlementController::class);
 
     Route::apiSingleton('sale-settlement.approve', SaleSettlementApproveController::class);
 

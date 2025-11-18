@@ -23,7 +23,8 @@ composer-update:
 
 composer-version:
 	php -v
-	composer --version
+	#composer --version
+	composer diagnose
 	php artisan --version
 
 composer-run:
