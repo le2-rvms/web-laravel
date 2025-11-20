@@ -66,7 +66,7 @@ class OneRefreshCookie extends Command
         return CommandAlias::SUCCESS;
     }
 
-    private function processPerson(OneAccount $oneAccount)
+    private function processPerson(OneAccount $oneAccount): void
     {
         $client    = new Client(['cookies' => true]);
         $cookieJar = $oneAccount->initializeCookies();
@@ -79,6 +79,8 @@ class OneRefreshCookie extends Command
 
         $filePath = null;
 
+        $response = null;
+
         while ($location && $requestCount <= 10) {
             $response = $this->makeRequest($oneAccount, $client, $location, $cookieJar, $filePath);
 
@@ -86,30 +88,33 @@ class OneRefreshCookie extends Command
             ++$requestCount;
         }
 
-        if ($filePath && $this->findWelcome($filePath, $searchString = '欢迎')) {
+        if (!$response || 200 !== $response->getStatusCode()) {
+            return;
+        }
+
+        $filePath = sprintf('html/response_body_%s.html', date('YmdHisv'));
+
+        $html = (string) $response->getBody();
+
+        $disk = Storage::disk('local');
+
+        $disk->put($filePath, $html);
+
+        if (!str_contains($html, '</body>')) { // 出现过不完整的html。当是不完整html的时候，直接轮空。
+            return;
+        }
+
+        if (str_contains($html, $searchString = '欢迎')) {
             Log::channel('console')->info('Response Body contain : '.$searchString);
 
             $oneAccount->cookie_refresh_at = now();
             $oneAccount->save();
 
-            Storage::delete($filePath);
+            $disk->delete($filePath);
         } else {
             $oneAccount->cookie_string = null;
             $oneAccount->save();
         }
-    }
-
-    private function findWelcome($filePath, $searchString): bool
-    {
-        $command = sprintf("grep '%s' %s", escapeshellcmd($searchString), escapeshellarg(Storage::path($filePath)));
-
-        $output     = [];
-        $returnCode = 0;
-        exec($command, $output, $returnCode);
-
-        Log::channel('console')->info('grep result : ', $output);
-
-        return 0 === $returnCode;
     }
 
     private function makeRequest(OneAccount $oneAccount, Client $client, string $url, FileCookieJar $cookieJar, &$filePath)
@@ -122,21 +127,16 @@ class OneRefreshCookie extends Command
 
         $header['Referer'] = $domain.'/';
 
+        $debugResource = fopen(storage_path(sprintf('logs/122-%d-%s.log', $oneAccount->oa_id, date('Y-m-d'))), 'a+');
+
         $response = $client->get($url, [
             'headers'         => $header,
             'cookies'         => $cookieJar,
             'allow_redirects' => false,
-            'debug'           => fopen(storage_path(sprintf('logs/122-%d-%s.log', $oneAccount->oa_id, date('Y-m-d'))), 'a+'),
+            'debug'           => $debugResource,
         ]);
 
-        $statusCode = $response->getStatusCode();
-
-        //        if (!app()->isProduction()) {
-        if (200 === $statusCode) {
-            $filePath = sprintf('html/response_body_%s.html', date('YmdHisv'));
-            Storage::put($filePath, $response->getBody());
-        }
-        //        }
+        fclose($debugResource);
 
         return $response;
     }

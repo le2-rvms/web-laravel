@@ -89,7 +89,7 @@ return [
         ],
     ],
 
-    'manual_host' => env('MANUAL_HOST'),
+    'manual_host' => env('HOST_MANUAL'),
 
     'super_role' => [
         'name' => env('SUPER_ROLE_NAME', 'Super Admin'),
