@@ -127,7 +127,7 @@ class OneAccountController extends Controller
     {
         $this->response()->withExtras(
             OaOaType::options(),
-            ['how_cookie_url' => config('setting.manual_host').'/config/122']
+            ['how_cookie_url' => config('setting.host_manual').'/config/122']
         );
     }
 }

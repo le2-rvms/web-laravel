@@ -99,6 +99,7 @@ class HistoryController extends Controller
                 }
             })
             ->orderBy('changed_at', 'desc')
+            ->limit(100)
             ->get()
         ;
 
