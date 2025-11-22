@@ -85,6 +85,11 @@ class OneRefreshCookie extends Command
             $response = $this->makeRequest($oneAccount, $client, $location, $cookieJar, $filePath);
 
             $location = $response->getHeaderLine('Location');
+
+            if (str_contains($location, 'error')) {// 122异常的时候：https://sc.122.gov.cn/error/500.jsp?ticket=WST-1383127-Vxo9VX3QkYreMTfz1mbLSMPRLzNXWcLnHOW
+                break;
+            }
+
             ++$requestCount;
         }
 

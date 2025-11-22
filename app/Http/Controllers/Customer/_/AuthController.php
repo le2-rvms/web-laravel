@@ -80,7 +80,7 @@ class AuthController extends Controller
             ]
         )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey) {
             if (!$validator->failed()) {
-                $cacheKey = 'phone_verification_'.$request->input('phone');
+                $cacheKey = 'customer_verification_code:'.$request->input('phone');
 
                 $cachedCode = Cache::get($cacheKey);
 
