@@ -126,7 +126,7 @@ class AuthController extends Controller
 
         Cache::set("temporary_customer:{$token}", $customer->cu_id, 3600 * 3);
 
-        return $this->response()->withData([
+        return $this->response()->withMessages('测试登录成功')->withData([
             'customer' => $customer,
             'token'    => $token,
         ])->respond();
