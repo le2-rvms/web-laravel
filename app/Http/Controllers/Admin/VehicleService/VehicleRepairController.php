@@ -101,7 +101,7 @@ class VehicleRepairController extends Controller
             'repair_info'    => [],
         ]);
 
-        //        $vehicleRepair->load('Vehicle', 'SaleOrder', 'SaleOrder.Customer', 'Payment', 'Payment.PaymentType');
+        $vehicleRepair->load('Payment');
 
         return $this->response()->withData($vehicleRepair)->respond();
     }

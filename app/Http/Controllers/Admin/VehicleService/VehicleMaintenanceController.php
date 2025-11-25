@@ -100,7 +100,7 @@ class VehicleMaintenanceController extends Controller
             'maintenance_info'      => [],
         ]);
 
-        //        $vehicleMaintenance->load('Vehicle', 'SaleOrder', 'SaleOrder.Customer', 'Payment', 'Payment.PaymentType');
+        $vehicleMaintenance->load('Payment');
 
         return $this->response()->withData($vehicleMaintenance)->respond();
     }

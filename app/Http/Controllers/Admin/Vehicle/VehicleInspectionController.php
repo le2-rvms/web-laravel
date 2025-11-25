@@ -103,7 +103,7 @@ class VehicleInspectionController extends Controller
             'processed_by'    => Auth::id(),
         ]);
 
-        //        $vehicleInspection->load('Vehicle', 'SaleOrder', 'SaleOrder.Customer', 'Payment', 'Payment.PaymentType');
+        $vehicleInspection->load('Payment');
 
         return $this->response()->withData($vehicleInspection)->respond();
     }

@@ -189,8 +189,10 @@ class PaginateService
                     break;
 
                 case 'between_date':
-                    $value = explode(',', $value);
-                    $this->builder->whereBetween($keyAs.'.'.$keyField, [$value[0], $value[1].' 23:59:59']);
+                    $value_array = json_decode($value, true) ?? explode(',', $value); // 小程序过来的格式是["2025-11-24","2025-11-24"];web 过来的格式是 "2025-11-24","2025-11-24"
+                    if ($value_array && is_array($value_array) && count($value_array)) {
+                        $this->builder->whereBetween($keyAs.'.'.$keyField, [$value_array[0], $value_array[1].' 23:59:59']);
+                    }
 
                     break;
 
