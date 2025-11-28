@@ -110,7 +110,7 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
  * @property null|Carbon                            $canceled_at                         取消日时
  * @property Carbon                                 $completed_at                        结算日时
  * @property Carbon                                 $early_termination_at                提前结算日时
- * @property callable                               $payments_phpword_func               计划收款表; 生成 docx 文件使用
+ * @property callable                               $payments_phpword_func               计划收款表-表格; 生成 docx 文件使用
  * @property null|array                             $additional_photos                   附加照片
  * @property null|array                             $additional_file                     附加文件
  * @property null|string                            $cus_1                               自定义合同内容1
@@ -246,6 +246,7 @@ class SaleOrder extends Model
                 DB::raw(SoRentalType_Short::toCaseSQL()),
                 DB::raw(SoPaymentDayType::toCaseSQL()),
                 DB::raw(SoOrderStatus::toCaseSQL()),
+                DB::raw(SoOrderStatus::toColorSQL()),
                 DB::raw("to_char(so.order_at, 'YYYY-MM-DD HH24:MI:SS') as order_at_"),
                 DB::raw("to_char(so.signed_at, 'YYYY-MM-DD HH24:MI:SS') as signed_at_"),
                 DB::raw("to_char(so.canceled_at, 'YYYY-MM-DD HH24:MI:SS') as canceled_at_"),

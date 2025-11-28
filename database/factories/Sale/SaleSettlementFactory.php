@@ -11,11 +11,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class SaleSettlementFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -33,7 +28,7 @@ class SaleSettlementFactory extends Factory
             'insurance_deductible'       => $this->faker->randomFloat(2, 0, 1000),
             'forced_collection_fee'      => $this->faker->randomFloat(2, 0, 150),
             'other_deductions'           => $this->faker->randomFloat(2, 0, 500),
-            'other_deductions_remark'    => $this->faker->optional()->sentence(),
+            'other_deductions_remark'    => null,
             'refund_amount'              => $this->faker->randomFloat(2, 0, 1000),
             'refund_details'             => $this->faker->randomFloat(2, 0, 1000),
             'settlement_amount'          => $this->faker->randomFloat(2, -5000, 5000),
@@ -42,7 +37,7 @@ class SaleSettlementFactory extends Factory
             'return_datetime'            => fake_current_period_dt(),
             'additional_photos'          => fake_many_photos(),
             'delete_option'              => RsDeleteOption::label_key_random(),
-            'ss_remark'                  => $this->faker->optional()->paragraph(),
+            //            'ss_remark'                  => $this->faker->optional()->paragraph(),
         ];
     }
 }

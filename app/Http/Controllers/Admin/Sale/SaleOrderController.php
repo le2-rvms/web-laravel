@@ -77,7 +77,7 @@ class SaleOrderController extends Controller
         $columns = SaleOrder::indexColumns();
 
         // 如果是管理员或经理，则可以看到所有的用户；如果不是管理员或经理，则只能看到销售或驾管为自己的用户。
-        $user = $request->user();
+        $user = auth()->user();
 
         $role_sales_manager = $user->hasRole(ImportAdminAndRoles::role_sales);
         if ($role_sales_manager) {

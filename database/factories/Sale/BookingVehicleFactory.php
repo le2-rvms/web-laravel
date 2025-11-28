@@ -16,11 +16,6 @@ class BookingVehicleFactory extends Factory
 {
     protected $model = BookingVehicle::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         $pickup       = $this->faker->dateTimeBetween('-30 days', 'now');
@@ -36,7 +31,7 @@ class BookingVehicleFactory extends Factory
             'b_mileage'          => $this->faker->numberBetween(0, 150000),
             'service_interval'   => $this->faker->randomElement([0, 5000, 10000, 15000]),
             'b_props'            => $this->faker->optional()->randomElements(array_keys(RbvProps::kv), $this->faker->numberBetween(0, sizeof(RbvProps::kv))),
-            'b_note'             => $this->faker->optional()->sentence(),
+            'b_note'             => null,
             'is_listed'          => BvIsListed::label_key_random(),
         ];
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\VehicleService;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Console\Commands\Sys\ImportAdminAndRoles;
 use App\Enum\Payment\RpIsValid;
 use App\Enum\Payment\RpPayStatus;
 use App\Enum\Payment\RpPtId;
@@ -17,6 +18,7 @@ use App\Enum\Vehicle\VrSettlementMethod;
 use App\Enum\Vehicle\VrSettlementStatus;
 use App\Exceptions\ClientException;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Staff;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Sale\SaleOrder;
@@ -52,18 +54,35 @@ class VehicleRepairController extends Controller
     #[PermissionAction(PermissionAction::INDEX)]
     public function index(Request $request): Response
     {
+        // 如果是维修厂，则只能看到自己的。
+        /** @var Staff $user */
+        $user = auth()->user();
+
         $this->options(true);
         $this->response()->withExtras(
             Vehicle::options(),
+            ServiceCenter::options(function (Builder $query) use ($user) {
+                if ($user->hasRole(ImportAdminAndRoles::role_vehicle_service)) {
+                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
+
+                    $query->whereIn('vr.sc_id', $sc_id_array);
+                }
+            }),
         );
 
         $query   = VehicleRepair::indexQuery();
         $columns = VehicleRepair::indexColumns();
 
+        if ($user->hasRole(ImportAdminAndRoles::role_vehicle_service)) {
+            $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
+
+            $query->whereIn('vr.sc_id', $sc_id_array);
+        }
+
         $paginate = new PaginateService(
             [],
             [['vr.vr_id', 'desc']],
-            ['kw', 'vr_ve_id', 'vr_entry_datetime', 'vr_repair_status'],
+            ['kw', 'vr_ve_id', 'vr_entry_datetime', 'vr_repair_status', 'vr_sc_id'],
             []
         );
 
@@ -73,9 +92,7 @@ class VehicleRepairController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.plate_no', 'like', '%'.$value.'%')
-                            ->orWhere('vr.vr_remark', 'like', '%'.$value.'%')
-                        ;
+                        $builder->where('ve.plate_no', 'like', '%'.$value.'%')->orWhere('vr.vr_remark', 'like', '%'.$value.'%');
                     });
                 },
             ],
@@ -88,10 +105,20 @@ class VehicleRepairController extends Controller
     #[PermissionAction(PermissionAction::ADD)]
     public function create(Request $request): Response
     {
+        // 如果是维修厂，则只能看到自己的。
+        /** @var Staff $user */
+        $user = auth()->user();
+
         $this->options();
         $this->response()->withExtras(
             Vehicle::options(),
-            ServiceCenter::options(),
+            ServiceCenter::options(function (Builder $query) use ($user) {
+                if ($user->hasRole(ImportAdminAndRoles::role_vehicle_service)) {
+                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
+
+                    $query->whereIn('vr.sc_id', $sc_id_array);
+                }
+            }),
             RpPayStatus::options(),
             PaymentAccount::options(),
         );
@@ -123,11 +150,21 @@ class VehicleRepairController extends Controller
     #[PermissionAction(PermissionAction::EDIT)]
     public function edit(VehicleRepair $vehicleRepair): Response
     {
+        // 如果是维修厂，则只能看到自己的。
+        /** @var Staff $user */
+        $user = auth()->user();
+
         $this->options();
         $this->response()->withExtras(
             Vehicle::options(),
             VrRepairStatus::finalValue(),
-            ServiceCenter::options(),
+            ServiceCenter::options(function (Builder $query) use ($user) {
+                if ($user->hasRole(ImportAdminAndRoles::role_vehicle_service)) {
+                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
+
+                    $query->whereIn('vr.sc_id', $sc_id_array);
+                }
+            }),
             RpPayStatus::options(),
             PaymentAccount::options(),
         );
@@ -189,18 +226,6 @@ class VehicleRepairController extends Controller
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($vehicleRepair, $request, &$vehicle) {
                 if (!$validator->failed()) {
-                    $so_id = $request->input('so_id');
-
-                    if ($so_id) {
-                        /** @var SaleOrder $saleOrder */
-                        $SaleOrder = SaleOrder::query()->find($so_id);
-                        if (!$SaleOrder) {
-                            $validator->errors()->add('so_id', 'The sale_order does not exist.');
-
-                            return;
-                        }
-                    }
-
                     // ve_id
                     $ve_id = $request->input('ve_id');
 
@@ -215,6 +240,18 @@ class VehicleRepairController extends Controller
                     $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
                     if (!$pass) {
                         return;
+                    }
+
+                    $so_id = $request->input('so_id');
+
+                    if ($so_id) {
+                        /** @var SaleOrder $saleOrder */
+                        $SaleOrder = SaleOrder::query()->find($so_id);
+                        if (!$SaleOrder) {
+                            $validator->errors()->add('so_id', 'The sale_order does not exist.');
+
+                            return;
+                        }
                     }
 
                     // 不能关闭财务记录的判断：修改状态 + 收付款数据存在 + 收付款数据为已支付 + 当前是要关闭。
@@ -234,33 +271,34 @@ class VehicleRepairController extends Controller
             throw new ValidationException($validator);
         }
 
-        $input = $validator->validated();
+        $input         = $validator->validated();
+        $input_payment = $input['payment'];
 
-        $input['payment']['so_id'] = $input['so_id'];
+        $input_payment['so_id'] = $input['so_id'];
 
-        DB::transaction(function () use (&$input, &$vehicle, &$vehicleRepair) {
+        DB::transaction(function () use (&$input, &$input_payment, &$vehicle, &$vehicleRepair) {
             if (null === $vehicleRepair) {
                 $vehicleRepair = VehicleRepair::query()->create($input);
 
                 if ($vehicleRepair->add_should_pay) {
-                    $vehicleRepair->Payment()->create($input['payment']);
+                    $vehicleRepair->Payment()->create($input_payment);
                 }
             } else {
                 $vehicleRepair->update($input);
 
                 if ($vehicleRepair->add_should_pay) {
                     $Payment = $vehicleRepair->Payment;
-                    if ($Payment->exists) {
+                    if ($Payment && $Payment->exists) {
                         if (RpPayStatus::PAID === $Payment->pay_status->value) {
-                            $Payment->fill($input['payment']);
+                            $Payment->fill($input_payment);
                             if ($Payment->isDirty()) {
                                 throw new ClientException('财务信息已支付，不能做修改。'); // 不能修改财务记录的判断：修改状态 + 收款数据存在 + 收款记录为已支付 + 收款记录要做更新($model->isDirty()) =>
                             }
                         } else {
-                            $Payment->update($input['payment']);
+                            $Payment->update($input_payment + ['is_valid' => RpIsValid::VALID]);
                         }
                     } else {
-                        $vehicleRepair->Payment()->create($input['payment']);
+                        $vehicleRepair->Payment()->create($input_payment);
                     }
                 } else {
                     $vehicleRepair->Payment()->where('pay_status', '=', RpPayStatus::UNPAID)->update(

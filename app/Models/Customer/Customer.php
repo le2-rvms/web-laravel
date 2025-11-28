@@ -134,10 +134,14 @@ class Customer extends Authenticatable
                     ->where('cu.cu_type', '=', CuCuType::INDIVIDUAL)
                 ;
             })
+            ->leftjoin('admins as admin_sm', 'cu.sales_manager', '=', 'admin_sm.id')
+            ->leftjoin('admins as admin_dm', 'cu.driver_manager', '=', 'admin_dm.id')
             ->select('cuc.*', 'cui.*', 'cu.*') // cu.* 在最后，这样可以让空值在前
             ->addSelect(
                 DB::raw(CuCuType::toCaseSQL()),
                 DB::raw(CuiCuiGender::toCaseSQL()),
+                'admin_sm.name as sales_manager_name',
+                'admin_dm.name as driver_manager_name',
             )
         ;
     }

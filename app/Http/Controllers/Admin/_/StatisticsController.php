@@ -89,7 +89,7 @@ class StatisticsController extends Controller
         $endDate = $endDate->format('Y-m-d');
 
         /** @var Staff $user */
-        $user = $request->user();
+        $user = auth()->user();
 
         $sql_permission_array = [
             'sale_orders'         => 'SaleOrder',

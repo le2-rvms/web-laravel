@@ -41,7 +41,7 @@ class VehicleManualViolationController extends Controller
         $paginate = new PaginateService(
             [],
             [['vmv.violation_datetime', 'desc']],
-            ['kw', 'vmv_violation_datetime'],
+            ['kw', 'vmv_violation_datetime', 'vmv_status'],
             []
         );
 

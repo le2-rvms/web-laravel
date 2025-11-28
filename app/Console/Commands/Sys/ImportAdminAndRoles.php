@@ -55,31 +55,35 @@ use Illuminate\Support\Facades\DB;
 
 class ImportAdminAndRoles extends Command
 {
-    public const string role_driver  = '驾管';
-    public const string role_payment = '财务';
-    public const string role_manager = '经理';
-    public const string role_sales   = '销售';
-    public const string role_vehicle = '车管';
-    public const string role_system  = '系统管理';
+    public const string role_system = '系统管理';
+
+    public const string role_manager    = '经理';
+    public const string role_driver_mgr = '驾管';
+    public const string role_payment    = '财务';
+
+    public const string role_sales       = '销售';
+    public const string role_vehicle_mgr = '车管';
+
+    public const string role_vehicle_service = '修理厂';
 
     protected $signature   = 'sys:import-admin-and-roles';
     protected $description = '导入应用内置角色';
 
     /** 导入的内置角色清单 */
     private array $builtinRoles = [
-        self::role_vehicle => [GpsDataController::class, IotDeviceBindingController::class, ExpiryDriverController::class, ExpiryVehicleController::class, VehicleForceTakeController::class, VehicleInsuranceController::class, VehicleScheduleController::class, ViolationCountController::class, ServiceCenterController::class, VehicleAccidentController::class, VehicleMaintenanceController::class, VehicleRepairController::class, OneAccountController::class, VehicleController::class, VehicleInspectionController::class, VehicleManualViolationController::class, VehicleModelController::class, VehicleViolationController::class, VehiclePreparationController::class],
-        self::role_payment => [InoutController::class, PaymentController::class, PaymentTypeController::class, SaleOrderRentPaymentController::class, SaleOrderSignPaymentController::class, VehiclePreparationController::class],
-        self::role_sales   => [BookingOrderController::class, BookingVehicleController::class, SaleOrderController::class, SaleOrderCancelController::class, SaleOrderTplController::class, SaleSettlementController::class, VehicleReplacementController::class, CustomerController::class],
-        '修理厂'           => [VehicleAccidentController::class, VehicleMaintenanceController::class, VehicleRepairController::class],
-        self::role_manager => [Configuration0Controller::class, DocTplController::class, PaymentAccountController::class, StaffController::class, StaffPermissionController::class, StaffRoleController::class, OneAccountController::class, VehicleController::class, ServiceCenterController::class, SaleOrderController::class, CustomerController::class, DeliveryWecomGroupController::class, DeliveryWecomMemberController::class, DocTplController::class],
-        self::role_system  => [Configuration0Controller::class, Configuration1Controller::class, ImportController::class, StaffPermissionController::class, DeliveryChannelController::class, DeliveryLogController::class],
+        self::role_vehicle_mgr     => [GpsDataController::class, IotDeviceBindingController::class, ExpiryDriverController::class, ExpiryVehicleController::class, VehicleForceTakeController::class, VehicleInsuranceController::class, VehicleScheduleController::class, ViolationCountController::class, ServiceCenterController::class, VehicleAccidentController::class, VehicleMaintenanceController::class, VehicleRepairController::class, OneAccountController::class, VehicleController::class, VehicleInspectionController::class, VehicleManualViolationController::class, VehicleModelController::class, VehicleViolationController::class, VehiclePreparationController::class],
+        self::role_payment         => [InoutController::class, PaymentController::class, PaymentTypeController::class, SaleOrderRentPaymentController::class, SaleOrderSignPaymentController::class, VehiclePreparationController::class],
+        self::role_sales           => [BookingOrderController::class, BookingVehicleController::class, SaleOrderController::class, SaleOrderCancelController::class, SaleOrderTplController::class, SaleSettlementController::class, VehicleReplacementController::class, CustomerController::class],
+        self::role_vehicle_service => [VehicleAccidentController::class, VehicleMaintenanceController::class, VehicleRepairController::class],
+        self::role_manager         => [Configuration0Controller::class, DocTplController::class, PaymentAccountController::class, StaffController::class, StaffPermissionController::class, StaffRoleController::class, OneAccountController::class, VehicleController::class, ServiceCenterController::class, SaleOrderController::class, CustomerController::class, DeliveryWecomGroupController::class, DeliveryWecomMemberController::class, DocTplController::class],
+        self::role_system          => [Configuration0Controller::class, Configuration1Controller::class, ImportController::class, StaffPermissionController::class, DeliveryChannelController::class, DeliveryLogController::class],
     ];
 
     private array $mock_admins = [
         '演示经理'   => self::role_manager,
-        '演示修理厂' => '修理厂',
+        '演示修理厂' => self::role_vehicle_service,
         '演示销售'   => self::role_sales,
-        '演示车管'   => self::role_vehicle,
+        '演示车管'   => self::role_vehicle_mgr,
         '演示财务'   => self::role_payment,
     ];
 

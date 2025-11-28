@@ -56,6 +56,7 @@ class DocTpl extends Model
                 DB::raw(DtDtType::toCaseSQL()),
                 DB::raw(DtDtFileType::toCaseSQL()),
                 DB::raw(DtDtStatus::toCaseSQL()),
+                DB::raw(DtDtStatus::toColorSQL()),
             )
         ;
     }

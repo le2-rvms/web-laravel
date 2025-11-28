@@ -64,9 +64,9 @@ class VehiclePreparationController extends Controller
         );
 
         /** @var Staff $user */
-        $user = $request->user();
+        $user = auth()->user();
 
-        $has_role_prep_vehicle  = $user->hasRole(ImportAdminAndRoles::role_vehicle) || $user->hasRole(config('setting.super_role.name'));
+        $has_role_prep_vehicle  = $user->hasRole(ImportAdminAndRoles::role_vehicle_mgr) || $user->hasRole(config('setting.super_role.name'));
         $has_role_prep_document = $user->hasRole(ImportAdminAndRoles::role_payment) || $user->hasRole(config('setting.super_role.name'));
 
         return $this->response()->withData([
@@ -78,9 +78,9 @@ class VehiclePreparationController extends Controller
     #[PermissionAction(PermissionAction::ADD)]
     public function store(Request $request)
     {
-        $user = $request->user();
+        $user = auth()->user();
 
-        $role_prep_vehicle  = $user->hasRole(ImportAdminAndRoles::role_vehicle) || $user->hasRole(config('setting.super_role.name'));
+        $role_prep_vehicle  = $user->hasRole(ImportAdminAndRoles::role_vehicle_mgr) || $user->hasRole(config('setting.super_role.name'));
         $role_prep_document = $user->hasRole(ImportAdminAndRoles::role_payment) || $user->hasRole(config('setting.super_role.name'));
 
         $validator = Validator::make(

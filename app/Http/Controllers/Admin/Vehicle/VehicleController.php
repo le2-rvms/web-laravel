@@ -54,9 +54,9 @@ class VehicleController extends Controller
         $columns = Vehicle::indexColumns();
 
         // 如果是管理员和经理，则可以看到所有的车辆；如果不是管理员和经理，则只能看到车管为自己的车辆。
-        $user = $request->user();
+        $user = auth()->user();
 
-        $role_vehicle_manager = $user->hasRole(ImportAdminAndRoles::role_vehicle);
+        $role_vehicle_manager = $user->hasRole(ImportAdminAndRoles::role_vehicle_mgr);
 
         if ($role_vehicle_manager) {
             $query->whereNull('vehicle_manager')->orWhere('vehicle_manager', '=', $user->id);
@@ -65,7 +65,7 @@ class VehicleController extends Controller
         $paginate = new PaginateService(
             [],
             [['ve.ve_id', 'desc']],
-            ['kw', 've_status_service', 've_status_repair', 've_status_rental', 've_status_dispatch'],
+            ['kw', 've_vm_id', 've_status_service', 've_status_repair', 've_status_rental', 've_status_dispatch'],
             []
         );
 

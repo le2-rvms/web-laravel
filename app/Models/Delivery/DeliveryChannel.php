@@ -67,6 +67,7 @@ class DeliveryChannel extends Model
                 DB::raw(DcDcKey::toCaseSQL()),
                 DB::raw(DcDcProvider::toCaseSQL()),
                 DB::raw(DcDcStatus::toCaseSQL()),
+                DB::raw(DcDcStatus::toColorSQL()),
                 DB::raw(" ('T-' || dc.dc_tn ) as dc_tn_label"),
             )
         ;

@@ -235,13 +235,14 @@ class VehicleInspectionController extends Controller
             throw new ValidationException($validator);
         }
 
-        $input = $validator->validated();
+        $input         = $validator->validated();
+        $input_payment = $input['payment'];
 
         if ($input['so_id']) {
-            $input['payment']['so_id'] = $input['so_id'];
+            $input_payment['so_id'] = $input['so_id'];
         }
 
-        DB::transaction(function () use (&$input, &$vehicleInspection, &$vehicle) {
+        DB::transaction(function () use (&$input, &$input_payment, &$vehicleInspection, &$vehicle) {
             /** @var VehicleInspection $vehicleInspection */
             if (null === $vehicleInspection) {
                 $input['ve_id'] = $vehicle['ve_id'];
@@ -296,24 +297,24 @@ class VehicleInspectionController extends Controller
                 }
 
                 if ($vehicleInspection->add_should_pay) {
-                    $vehicleInspection->Payment()->create($input['payment']);
+                    $vehicleInspection->Payment()->create($input_payment);
                 }
             } else {
                 $vehicleInspection->update($input);
 
                 if ($vehicleInspection->add_should_pay) {
-                    $Payment = $vehicleInspection->Payment;
-                    if ($Payment->exists) {
+                    $Payment = $vehicleInspection->PaymentAll;
+                    if ($Payment && $Payment->exists) {
                         if (RpPayStatus::PAID === $Payment->pay_status->value) {
-                            $Payment->fill($input['payment']);
+                            $Payment->fill($input_payment);
                             if ($Payment->isDirty()) {
                                 throw new ClientException('财务信息已支付，不能做修改。'); // 不能修改财务记录的判断：修改状态 + 收款数据存在 + 收款记录为已支付 + 收款记录要做更新($model->isDirty()) =>
                             }
                         } else {
-                            $Payment->update($input['payment']);
+                            $Payment->update($input_payment + ['is_valid' => RpIsValid::VALID]);
                         }
                     } else {
-                        $vehicleInspection->Payment()->create($input['payment']);
+                        $vehicleInspection->Payment()->create($input_payment);
                     }
                 } else {
                     $vehicleInspection->Payment()->where('pay_status', '=', RpPayStatus::UNPAID)->update(

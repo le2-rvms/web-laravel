@@ -42,6 +42,7 @@ class PaymentAccount extends Model
             ->select('*')
             ->addSelect(
                 DB::raw(PaPaStatus::toCaseSQL()),
+                DB::raw(PaPaStatus::toColorSQL()),
             )
         ;
     }

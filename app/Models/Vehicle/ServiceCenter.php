@@ -94,6 +94,7 @@ class ServiceCenter extends Model
             ->select('sc.*')
             ->addSelect(
                 DB::raw(ScScStatus::toCaseSQL()),
+                DB::raw(ScScStatus::toColorSQL()),
             )
         ;
     }

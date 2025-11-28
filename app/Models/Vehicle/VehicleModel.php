@@ -45,6 +45,7 @@ class VehicleModel extends Model
         $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
         $value = static::query()->toBase()
             ->select(DB::raw("(brand_name || '-' || model_name) as text,vm_id as value"))
+            ->where('vm_status', '=', VmVmStatus::ENABLED)
             ->get()
         ;
 
@@ -58,6 +59,7 @@ class VehicleModel extends Model
             ->select(
                 'vm.*',
                 DB::raw(VmVmStatus::toCaseSQL()),
+                DB::raw(VmVmStatus::toColorSQL()),
             )
             ->addSelect([
                 'vehicle_count_service'    => Vehicle::query()->selectRaw('count(*)')->whereColumn('vehicles.vm_id', 'vm.vm_id')->where('vehicles.status_service', '=', VeStatusService::YES),

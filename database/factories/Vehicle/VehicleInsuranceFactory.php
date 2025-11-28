@@ -10,11 +10,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class VehicleInsuranceFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -51,7 +46,7 @@ class VehicleInsuranceFactory extends Factory
             'commercial_org_code'                 => strtoupper($this->faker->bothify('??#####')),
             'commercial_insurance_company'        => $this->faker->company(),
             'is_company_borne'                    => $this->faker->boolean(),
-            'vi_remark'                           => $this->faker->sentence(),
+            'vi_remark'                           => null,
         ];
     }
 }

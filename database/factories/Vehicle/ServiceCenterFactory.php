@@ -4,6 +4,7 @@ namespace Database\Factories\Vehicle;
 
 use App\Enum\Vehicle\ScScStatus;
 use App\Models\Vehicle\ServiceCenter;
+use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,21 +12,22 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ServiceCenterFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    use UsesJsonFixture;
+
+    protected $model = ServiceCenter::class;
+
     public function definition(): array
     {
+        $data = $this->shiftShuffleFromPools();
+
         return [
-            'sc_name'             => $this->faker->company().'修理厂',
-            'sc_address'          => $this->faker->address(), // 示例：地区/行政区编码整数
-            'contact_name'        => $this->faker->name(),
-            'contact_phone'       => $this->faker->optional()->phoneNumber(),
+            'sc_name'             => $data['sc_name'],
+            'sc_address'          => $data['sc_address'],
+            'contact_name'        => $data['contact_name'],
+            'contact_phone'       => $data['contact_mobile'],
             'sc_status'           => ScScStatus::label_key_random(),
-            'sc_note'             => $this->faker->optional()->sentence(),
-            'permitted_admin_ids' => [],
+            'sc_note'             => $data['sc_note'],
+            'permitted_admin_ids' => $this->faker->boolean(50) ? [$this->randomVehicleServiceAdminID(1)] : null,
         ];
     }
 }

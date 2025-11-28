@@ -33,7 +33,7 @@ class VehicleViolationController extends Controller
     {
         $this->options(true);
         $this->response()->withExtras(
-            Vehicle::options(),
+            Vehicle::optionsNo(),
         );
 
         $query  = VehicleViolation::indexQuery();
@@ -42,7 +42,7 @@ class VehicleViolationController extends Controller
         $paginate = new PaginateService(
             [],
             [['vv.violation_datetime', 'desc']],
-            ['kw', 'vv_ve_id', 'vv_violation_datetime', 'vv_process_status', 'vv_payment_status'],
+            ['kw', 'vv_plate_no', 'vv_violation_datetime', 'vv_process_status', 'vv_payment_status'],
             []
         );
 

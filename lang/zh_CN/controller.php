@@ -30,6 +30,7 @@ return [
     'SaleOrderCancel'        => '租车订单取消管理',
     'SaleOrder'              => '订单管理',
     'SaleOrderTpl'           => '签约模板管理',
+    'SaleSettlementApprove'  => '退车结算审核管理',
     'SaleSettlement'         => '退车结算管理',
     'VehiclePreparation'     => '整备管理',
     'VehicleReplacement'     => '换车管理',

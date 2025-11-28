@@ -2,6 +2,7 @@
 
 namespace App\Enum\Sale;
 
+use App\Enum\Color;
 use App\Enum\EnumLikeBase;
 
 class SoOrderStatus extends EnumLikeBase
@@ -18,6 +19,11 @@ class SoOrderStatus extends EnumLikeBase
         self::CANCELLED         => '已作废',
         self::EARLY_TERMINATION => '提前解约',
         self::COMPLETED         => '已完成',
+    ];
+
+    public const array colors = [
+        self::PENDING => Color::ERROR,
+        self::SIGNED  => Color::SUCCESS,
     ];
 
     public const getSignAndAfter = [self::SIGNED, self::EARLY_TERMINATION, self::COMPLETED];

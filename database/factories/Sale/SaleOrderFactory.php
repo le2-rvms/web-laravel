@@ -15,11 +15,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class SaleOrderFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         $rental_type = SoRentalType::label_key_random();

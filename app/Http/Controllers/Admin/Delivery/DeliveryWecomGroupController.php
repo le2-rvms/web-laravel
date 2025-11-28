@@ -45,7 +45,7 @@ class DeliveryWecomGroupController extends Controller
             ->addSelect(
                 DB::raw(sprintf(
                     "CONCAT(cu.contact_name,'|',%s,'|', ve.plate_no ,'|',  %s, %s ,'|', %s ) as text,so.so_id as value",
-                    "(CONCAT(SUBSTRING(cu.contact_phone, 1, 0), '', SUBSTRING(cu.contact_phone, 8, 4)) )",
+                    '((SUBSTRING(cu.contact_phone, 1, 0)  || SUBSTRING(cu.contact_phone, 8, 4)) )',
                     SoPaymentDayType::toCaseSQL(hasAs: false),
                     SoRentalType_ShortOnlyShort::toCaseSQL(hasAs: false),
                     SoOrderStatus::toCaseSQL(hasAs: false)

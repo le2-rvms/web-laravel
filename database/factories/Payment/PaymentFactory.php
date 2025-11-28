@@ -13,11 +13,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class PaymentFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -27,7 +22,7 @@ class PaymentFactory extends Factory
             'pay_status'        => RpPayStatus::label_key_random(),
             'actual_pay_date'   => $should_pay_date,
             'actual_pay_amount' => $this->faker->boolean(10) ? $amount * 0.9 : $amount,
-            'rp_remark'         => $this->faker->realText(),
+            'rp_remark'         => null,
             'is_valid'          => RpIsValid::label_key_random(),
         ];
     }

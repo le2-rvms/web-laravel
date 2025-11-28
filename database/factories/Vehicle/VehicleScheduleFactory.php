@@ -10,11 +10,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class VehicleScheduleFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
@@ -24,7 +19,7 @@ class VehicleScheduleFactory extends Factory
             'inspection_amount'    => $this->faker->randomFloat(2, 50, 5000),
             'next_inspection_date' => fake_current_period_d(modify: '+3 month'),
             'additional_photos'    => fake_many_photos(),
-            'vs_remark'            => $this->faker->optional()->sentence(10),
+            'vs_remark'            => null,
         ];
     }
 }

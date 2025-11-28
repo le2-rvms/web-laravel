@@ -31,6 +31,8 @@ use Illuminate\Support\Facades\DB;
  * @property string              $payment_status_label 违章交款状态
  * @property null|string         $vv_remark            违章备注
  * @property VehicleUsage        $VehicleUsage
+ * @property array               $vv_response
+ * @property string              $vv_code
  */
 class VehicleViolation extends Model
 {
@@ -54,7 +56,7 @@ class VehicleViolation extends Model
 
     public function Vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 've_id', 've_id');
+        return $this->belongsTo(Vehicle::class, 'plate_no', 'plate_no');
     }
 
     public function VehicleUsage(): BelongsTo
@@ -70,7 +72,7 @@ class VehicleViolation extends Model
 
         return DB::query()
             ->from('vehicle_violations', 'vv')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.ve_id')
+            ->leftJoin('vehicles as ve', 've.plate_no', '=', 'vv.plate_no')
             ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vu_id')
             ->leftJoin('sale_orders as so', 'so.so_id', '=', 'vu.so_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')

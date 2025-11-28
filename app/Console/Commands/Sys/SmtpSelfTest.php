@@ -33,7 +33,8 @@ class SmtpSelfTest extends Command
             return CommandAlias::FAILURE;
         }
 
-        $subject = $this->option('subject') ?: 'SMTP Self Test';
+        $subject_prefix = app()->isProduction() ? '' : ('['.app()->environment().']');
+        $subject        = $this->option('subject') ?: $subject_prefix.'SMTP Self Test';
 
         $now = Carbon::now()->toDateTimeString();
 

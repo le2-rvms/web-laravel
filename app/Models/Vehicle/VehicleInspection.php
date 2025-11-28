@@ -25,30 +25,31 @@ use Illuminate\Support\Facades\DB;
 
 #[ClassName('验车')]
 /**
- * @property int         $vi_id                       验车序号
- * @property int         $so_id                       订单序号
- * @property int         $ve_id                       车辆序号；订单可能换车
- * @property mixed       $inspection_type             验车类型；发车或退车
- * @property null|int    $policy_copy                 保单复印件
- * @property null|int    $driving_license             行驶证
- * @property null|int    $operation_license           营运证（硬卡）
- * @property int         $vehicle_damage_status       车损状态；TRUE 表示有车损，FALSE 表示无车损
- * @property Carbon      $inspection_datetime         验车完成日时
- * @property int         $vi_mileage                  公里数
- * @property mixed       $processed_by                验车人
- * @property null|float  $damage_deduction            车损扣款
- * @property null|string $vi_remark                   验车备注
- * @property null|bool   $add_should_pay              是否为客户应收款
- * @property null|mixed  $additional_photos           附加照片；存储照片路径
- * @property null|mixed  $inspection_info             验车信息；包括验车照片路径和验车文字描述
- * @property mixed       $inspection_type_label       验车类型
- * @property mixed       $policy_copy_label           保单复印件
- * @property mixed       $driving_license_label       行驶证
- * @property mixed       $operation_license_label     营运证
- * @property mixed       $vehicle_damage_status_label 车损状态
- * @property Vehicle     $Vehicle
- * @property SaleOrder   $SaleOrder
- * @property Payment     $Payment
+ * @property int                         $vi_id                       验车序号
+ * @property int                         $so_id                       订单序号
+ * @property int                         $ve_id                       车辆序号；订单可能换车
+ * @property string|ViInspectionType     $inspection_type             验车类型；发车或退车
+ * @property null|int|ViPolicyCopy       $policy_copy                 保单复印件
+ * @property null|int|ViDrivingLicense   $driving_license             行驶证
+ * @property null|int|ViOperationLicense $operation_license           营运证（硬卡）
+ * @property int|ViVehicleDamageStatus   $vehicle_damage_status       车损状态；TRUE 表示有车损，FALSE 表示无车损
+ * @property Carbon                      $inspection_datetime         验车完成日时
+ * @property int                         $vi_mileage                  公里数
+ * @property mixed                       $processed_by                验车人
+ * @property null|float                  $damage_deduction            车损扣款
+ * @property null|string                 $vi_remark                   验车备注
+ * @property null|bool                   $add_should_pay              是否为客户应收款
+ * @property null|mixed                  $additional_photos           附加照片；存储照片路径
+ * @property null|mixed                  $inspection_info             验车信息；包括验车照片路径和验车文字描述
+ * @property mixed                       $inspection_type_label       验车类型
+ * @property mixed                       $policy_copy_label           保单复印件
+ * @property mixed                       $driving_license_label       行驶证
+ * @property mixed                       $operation_license_label     营运证
+ * @property mixed                       $vehicle_damage_status_label 车损状态
+ * @property Vehicle                     $Vehicle
+ * @property SaleOrder                   $SaleOrder
+ * @property Payment                     $Payment
+ * @property Payment                     $PaymentAll
  */
 class VehicleInspection extends Model
 {
@@ -75,6 +76,7 @@ class VehicleInspection extends Model
         'driving_license'       => ViDrivingLicense::class,
         'operation_license'     => ViOperationLicense::class,
         'vehicle_damage_status' => ViVehicleDamageStatus::class,
+        'add_should_pay'        => 'boolean',
     ];
 
     public function Vehicle(): BelongsTo
@@ -101,6 +103,16 @@ class VehicleInspection extends Model
                     'pay_status'      => RpPayStatus::UNPAID,
                 ]
             )->with('PaymentType')
+        ;
+    }
+
+    public function PaymentAll(): HasOne
+    {
+        $pt_id = RpPtId::VEHICLE_DAMAGE;
+
+        return $this->hasOne(Payment::class, 'vi_id', 'vi_id')
+            ->where('pt_id', '=', $pt_id)
+            ->with('PaymentType')
         ;
     }
 
@@ -158,6 +170,7 @@ class VehicleInspection extends Model
                 DB::raw(ViDrivingLicense::toCaseSQL()),
                 DB::raw(ViOperationLicense::toCaseSQL()),
                 DB::raw(ViVehicleDamageStatus::toCaseSQL()),
+                DB::raw(ViVehicleDamageStatus::toColorSQL()),
                 DB::raw("to_char(inspection_datetime, 'YYYY-MM-DD HH24:MI:SS') as inspection_datetime_"),
             )
         ;

@@ -252,6 +252,7 @@ class Vehicle extends Model
             ->select('ve.*', 'vm.brand_name', 'vm.model_name')
             ->addSelect(
                 DB::raw(VeStatusService::toCaseSQL()),
+                DB::raw(VeStatusService::toColorSQL()),
                 DB::raw(VeStatusRental::toCaseSQL()),
                 DB::raw(VeStatusDispatch::toCaseSQL()),
             )

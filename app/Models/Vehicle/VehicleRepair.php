@@ -81,6 +81,7 @@ use Illuminate\Validation\ValidationException;
  * @property mixed             $custody_vehicle_label   代管车辆-中文
  * @property mixed             $repair_attribute_label  维修属性-中文
  * @property Payment           $Payment
+ * @property Payment           $PaymentAll
  * @property ServiceCenter     $ServiceCenter
  */
 class VehicleRepair extends Model
@@ -147,6 +148,15 @@ class VehicleRepair extends Model
                     'pay_status'      => RpPayStatus::UNPAID,
                 ]
             )
+        ;
+    }
+
+    public function PaymentAll(): HasOne
+    {
+        $pt_id = RpPtId::REPAIR_FEE;
+
+        return $this->hasOne(Payment::class, 'vr_id', 'vr_id')
+            ->where('pt_id', '=', $pt_id)
         ;
     }
 

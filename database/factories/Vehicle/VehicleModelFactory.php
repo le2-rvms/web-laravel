@@ -2,24 +2,28 @@
 
 namespace Database\Factories\Vehicle;
 
+use App\Enum\Vehicle\VmVmStatus;
+use App\Models\Vehicle\VehicleModel;
+use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Vehicle\VehicleModel>
+ * @extends Factory<VehicleModel>
  */
 class VehicleModelFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    use UsesJsonFixture;
+
+    protected $model = VehicleModel::class;
+
     public function definition(): array
     {
+        $data = $this->shiftShuffleFromPools();
+
         return [
-            'vm_id'      => $this->incTablePKValue(),
-            'brand_name' => $brand_name,
-            'model_name' => $this->faker->word(),
+            'brand_name' => $data['brand_name'],
+            'model_name' => $data['model_name'],
+            'vm_status'  => VmVmStatus::label_key_random(),
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Enum\Sale;
 
+use App\Enum\Color;
 use App\Enum\EnumLikeBase;
 
 class SsReturnStatus extends EnumLikeBase
@@ -13,5 +14,10 @@ class SsReturnStatus extends EnumLikeBase
     public const array LABELS = [
         self::UNCONFIRMED => '未确认',
         self::CONFIRMED   => '已确认',
+    ];
+
+    public const array colors = [
+        self::UNCONFIRMED => Color::SUCCESS,
+        self::CONFIRMED   => Color::ERROR,
     ];
 }

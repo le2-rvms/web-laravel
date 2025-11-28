@@ -31,16 +31,16 @@ use Illuminate\Validation\ValidationException;
 #[ColumnDesc('status', required: true, enum_class: VmvStatus::class)]
 #[ColumnDesc('vmv_remark')]
 /**
- * @property int         $vmv_id             违章序号
- * @property int         $ve_id              车辆序号；指向车辆表
- * @property null|int    $vu_id              车辆使用时间段序号
- * @property null|Carbon $violation_datetime 违章发生日时
- * @property null|string $violation_content  违章内容
- * @property null|string $location           违章发生地点
- * @property null|float  $fine_amount        违章罚款金额
- * @property null|int    $penalty_points     违章扣分
- * @property int         $status             违章状态；例已处理、未处理
- * @property null|string $vmv_remark         违章备注
+ * @property int           $vmv_id             违章序号
+ * @property int           $ve_id              车辆序号；指向车辆表
+ * @property null|int      $vu_id              车辆使用时间段序号
+ * @property null|Carbon   $violation_datetime 违章发生日时
+ * @property null|string   $violation_content  违章内容
+ * @property null|string   $location           违章发生地点
+ * @property null|float    $fine_amount        违章罚款金额
+ * @property null|int      $penalty_points     违章扣分
+ * @property int|VmvStatus $status             违章状态；例已处理、未处理
+ * @property null|string   $vmv_remark         违章备注
  */
 class VehicleManualViolation extends Model
 {
@@ -105,6 +105,7 @@ class VehicleManualViolation extends Model
             ->select('vmv.*', 've.plate_no')
             ->addSelect(
                 DB::raw(VmvStatus::toCaseSQL()),
+                DB::raw(VmvStatus::toColorSQL()),
                 DB::raw("to_char(violation_datetime, 'YYYY-MM-DD HH24:MI') as violation_datetime_"),
             )
         ;

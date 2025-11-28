@@ -22,15 +22,18 @@ use App\Models\Sale\SaleSettlement;
 use App\Models\Sale\VehicleReplacement;
 use App\Models\Vehicle\ServiceCenter;
 use App\Models\Vehicle\Vehicle;
+use App\Models\Vehicle\VehicleAccident;
 use App\Models\Vehicle\VehicleForceTake;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleInsurance;
 use App\Models\Vehicle\VehicleMaintenance;
 use App\Models\Vehicle\VehicleManualViolation;
+use App\Models\Vehicle\VehicleModel;
 use App\Models\Vehicle\VehiclePreparation;
 use App\Models\Vehicle\VehicleRepair;
 use App\Models\Vehicle\VehicleSchedule;
 use App\Models\Vehicle\VehicleUsage;
+use App\Models\Vehicle\VehicleViolation;
 use App\Services\ProgressDisplay;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
@@ -38,10 +41,10 @@ use Illuminate\Support\Facades\DB;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 #[\AllowDynamicProperties]
-#[AsCommand(name: '_dev:csv-data:generate', description: 'Command description')]
-class CsvDataGenerate extends Command
+#[AsCommand(name: '_dev:mock-data:generate', description: 'Command description')]
+class MockDataGenerate extends Command
 {
-    protected $signature   = '_dev:csv-data:generate {--month=1-12}';
+    protected $signature   = '_dev:mock-data:generate {--month=1-12}';
     protected $description = 'Command description';
 
     public function handle(): void
@@ -56,6 +59,10 @@ class CsvDataGenerate extends Command
         // 先删除数据
 
         DB::transaction(function () {
+            PaymentAccount::query()->update(['pa_balance' => '0']);
+            PaymentInout::query()->delete();
+            Payment::query()->delete();
+
             VehicleSchedule::query()->delete();
             VehicleManualViolation::query()->delete();
             VehicleMaintenance::query()->delete();
@@ -66,10 +73,12 @@ class CsvDataGenerate extends Command
             VehicleInspection::query()->delete();
             VehicleReplacement::query()->delete();
             ServiceCenter::query()->delete();
+            VehicleAccident::query()->delete();
+            VehicleViolation::query()->delete();
 
-            PaymentAccount::query()->update(['pa_balance' => '0']);
-            PaymentInout::query()->delete();
-            Payment::query()->delete();
+            Vehicle::query()->delete();
+            VehicleModel::query()->delete();
+
             SaleOrder::query()->delete();
             VehiclePreparation::query()->delete();
 
@@ -78,17 +87,17 @@ class CsvDataGenerate extends Command
             CustomerIndividual::query()->whereRaw("cu_id not in (select cu_id from customers where contact_name like '演示%')")->delete();
             Customer::query()->whereNotLike('contact_name', '演示%')->delete();
 
-            Vehicle::query()->update(['status_service' => VeStatusService::YES, 'status_rental' => VeStatusRental::LISTED, 'status_dispatch' => VeStatusDispatch::NOT_DISPATCHED]);
+            //            Vehicle::query()->update(['status_service' => VeStatusService::YES, 'status_rental' => VeStatusRental::LISTED, 'status_dispatch' => VeStatusDispatch::NOT_DISPATCHED]);
 
             DB::statement('call reset_identity_sequences(?)', ['public']);
         });
 
-        /** @var Collection $serviceCenters */
-        $serviceCenters = null;
-        DB::transaction(function () use (&$serviceCenters) {
-            ServiceCenter::factory()->count(5)->create();
+        DB::transaction(function () {
+            VehicleModel::factory()->count(20)->create();
 
-            $serviceCenters = ServiceCenter::query()->where('sc_status', '=', ScScStatus::ENABLED)->get();
+            Vehicle::factory()->count(500)->create();
+
+            ServiceCenter::factory()->count(5)->create();
 
             /** @var Collection $customers */
             $customers = Customer::factory()->count(20)->create();
@@ -101,6 +110,8 @@ class CsvDataGenerate extends Command
 
         $Vehicles  = Vehicle::query()->get();
         $customers = Customer::query()->get();
+
+        $serviceCenters = ServiceCenter::query()->where('sc_status', '=', ScScStatus::ENABLED)->get();
 
         for ($month = $month_form; $month <= $month_to; ++$month) {
             config(['setting.gen.month.current' => $month]);
@@ -183,6 +194,7 @@ class CsvDataGenerate extends Command
                         VehicleMaintenance::factory()->for($Vehicle)->for($SaleOrder)->for($serviceCenters->random())->create();
 
                         VehicleManualViolation::factory()->for($Vehicle)->for($VehicleUsage)->create();
+                        VehicleViolation::factory()->for($Vehicle)->for($VehicleUsage)->create();
                     }
 
                     if (in_array($SaleOrder->order_status, [SoOrderStatus::COMPLETED, SoOrderStatus::EARLY_TERMINATION])) {

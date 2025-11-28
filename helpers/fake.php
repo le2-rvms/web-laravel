@@ -23,22 +23,19 @@ function fake_current_period_dt($format = 'Y-m-d H:i:s'): string
     return fake()->dateTimeBetween($p1, $p2)->format($format);
 }
 
-function fake_many_photos(): array
+function fake_many_photos(int $size = 2): array
 {
-    return [[
-        'name'    => '07090646-834eecbb94f8475a9a12026c50ef0dde.jpg',
-        'size'    => 223989,
-        'path_'   => fake()->imageUrl(200, 200, 'business'),
-        'extname' => 'jpg',
-    ]];
+    $arr = fake_one_photo();
+
+    return array_fill(0, $size, $arr);
 }
 
 function fake_one_photo(): array
 {
     return [
-        'name'    => '07090646-834eecbb94f8475a9a12026c50ef0dde.jpg',
+        'name'    => '__.png',
         'size'    => 223989,
-        'path_'   => fake()->imageUrl(200, 200, 'business'),
-        'extname' => 'jpg',
+        'path_'   => 'mock/__.png',
+        'extname' => 'png',
     ];
 }

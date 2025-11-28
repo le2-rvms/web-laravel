@@ -71,6 +71,7 @@ use Illuminate\Validation\ValidationException;
  * @property Vehicle       $Vehicle
  * @property SaleOrder     $SaleOrder
  * @property Payment       $Payment
+ * @property Payment       $PaymentAll
  * @property null|int      $add_should_pay
  * @property ServiceCenter $ServiceCenter
  */
@@ -130,6 +131,15 @@ class VehicleMaintenance extends Model
         ;
     }
 
+    public function PaymentAll(): HasOne
+    {
+        $pt_id = RpPtId::MAINTENANCE_FEE;
+
+        return $this->hasOne(Payment::class, 'vm_id', 'vm_id')
+            ->where('pt_id', '=', $pt_id)
+        ;
+    }
+
     public function ServiceCenter(): BelongsTo
     {
         return $this->belongsTo(ServiceCenter::class, 'sc_id', 'sc_id');
@@ -175,7 +185,7 @@ class VehicleMaintenance extends Model
                 DB::raw("to_char(entry_datetime, 'YYYY-MM-DD HH24:MI') as entry_datetime_"),
                 DB::raw("to_char(departure_datetime, 'YYYY-MM-DD HH24:MI') as departure_datetime_"),
             )
-            ->addSelect(DB::raw('EXTRACT(EPOCH FROM entry_datetime - departure_datetime) / 86400.0 as vm_interval_day'))
+            ->addSelect(DB::raw('EXTRACT(EPOCH FROM departure_datetime - entry_datetime) / 86400.0 as vm_interval_day'))
         ;
     }
 

@@ -8,14 +8,14 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * @property int    $or_id
- * @property string $turn
- * @property string $url
- * @property string $key
- * @property string $headers
- * @property string $form_data
- * @property string $status_code
- * @property string $response
+ * @property int          $or_id
+ * @property string       $turn
+ * @property string       $url
+ * @property string       $key
+ * @property string       $headers
+ * @property string       $form_data
+ * @property string       $status_code
+ * @property array|string $response
  */
 class OneRequest extends Model
 {
@@ -33,5 +33,12 @@ class OneRequest extends Model
     public static function options(?\Closure $where = null): array
     {
         return [];
+    }
+
+    protected function casts()
+    {
+        return [
+            'response' => 'array',
+        ];
     }
 }

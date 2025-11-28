@@ -49,10 +49,10 @@ class OneVehiclesImport extends Command
             foreach ($requests as $request) {
                 $response = $request->response;
 
-                // 检查响应是否为数组（已自动转换）
-                if (!is_array($response)) {
-                    $response = json_decode($response, true);
-                }
+                //                // 检查响应是否为数组（已自动转换）
+                //                if (!is_array($response)) {
+                //                    $response = json_decode($response, true);
+                //                }
 
                 if (!$response || 200 != $response['code']) {
                     continue;

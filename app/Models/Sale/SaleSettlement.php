@@ -124,6 +124,7 @@ class SaleSettlement extends Model
             ->select('ss.*', 'so.*', 'cu.*', 've.*', '_vm.brand_name', '_vm.model_name')
             ->addSelect(
                 DB::raw(SsReturnStatus::toCaseSQL()),
+                DB::raw(SsReturnStatus::toColorSQL()),
                 DB::raw(SoRentalType::toCaseSQL()),
                 DB::raw(SoPaymentDayType::toCaseSQL()),
                 DB::raw(SoOrderStatus::toCaseSQL()),
