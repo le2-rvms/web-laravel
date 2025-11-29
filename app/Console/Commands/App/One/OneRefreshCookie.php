@@ -38,7 +38,7 @@ class OneRefreshCookie extends Command
         $accounts = OneAccount::query()
             ->where(function (Builder $query) {
                 $query->whereNull('cookie_refresh_at')
-                    ->orWhere('cookie_refresh_at', '>=', now()->subMinutes(60))
+                    ->orWhere('cookie_refresh_at', '>=', now()->subMinutes(90))
                 ;
             })
             ->whereRaw('LENGTH(cookie_string) > ?', [30])
