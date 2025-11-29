@@ -77,12 +77,10 @@ class OneRefreshCookie extends Command
 
         $requestCount = 1;
 
-        $filePath = null;
-
         $response = null;
 
         while ($location && $requestCount <= 10) {
-            $response = $this->makeRequest($oneAccount, $client, $location, $cookieJar, $filePath);
+            $response = $this->makeRequest($oneAccount, $client, $location, $cookieJar);
 
             $location = $response->getHeaderLine('Location');
 
@@ -90,39 +88,43 @@ class OneRefreshCookie extends Command
                 break;
             }
 
+            if (str_contains($location, '/login')) {
+                break;
+            }
+
             ++$requestCount;
         }
 
-        if (!$response || 200 !== $response->getStatusCode()) {
+        if (str_contains($location, '/login')) {
+            Log::channel('console')->error('location contain login: ', [$location]);
+
+            $oneAccount->cookie_string = null;
+            $oneAccount->save();
+
             return;
         }
 
-        $filePath = sprintf('html/response_body_%s.html', date('YmdHisv'));
+        if (str_contains($location, '/error')) {
+            Log::channel('console')->error('url contains error.', [$location]);
+
+            return;
+        }
 
         $html = (string) $response->getBody();
-
-        $disk = Storage::disk('local');
-
-        $disk->put($filePath, $html);
-
-        if (!str_contains($html, '</body>')) { // 出现过不完整的html。当是不完整html的时候，直接轮空。
-            return;
-        }
 
         if (str_contains($html, $searchString = '欢迎')) {
             Log::channel('console')->info('Response Body contain : '.$searchString);
 
             $oneAccount->cookie_refresh_at = now();
             $oneAccount->save();
-
-            $disk->delete($filePath);
         } else {
-            $oneAccount->cookie_string = null;
-            $oneAccount->save();
+            $disk     = Storage::disk('local');
+            $filePath = sprintf('html/response_body_%s.html', date('YmdHisv'));
+            $disk->put($filePath, $html);
         }
     }
 
-    private function makeRequest(OneAccount $oneAccount, Client $client, string $url, FileCookieJar $cookieJar, &$filePath)
+    private function makeRequest(OneAccount $oneAccount, Client $client, string $url, FileCookieJar $cookieJar)
     {
         Log::channel('console')->info("Request URL: {$url}");
 
