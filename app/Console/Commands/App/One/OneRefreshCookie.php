@@ -84,30 +84,7 @@ class OneRefreshCookie extends Command
 
             $location = $response->getHeaderLine('Location');
 
-            if (str_contains($location, 'error')) {// 122异常的时候：https://sc.122.gov.cn/error/500.jsp?ticket=WST-1383127-Vxo9VX3QkYreMTfz1mbLSMPRLzNXWcLnHOW
-                break;
-            }
-
-            if (str_contains($location, '/login')) {
-                break;
-            }
-
             ++$requestCount;
-        }
-
-        if (str_contains($location, '/login')) {
-            Log::channel('console')->error('location contain login: ', [$location]);
-
-            $oneAccount->cookie_string = null;
-            $oneAccount->save();
-
-            return;
-        }
-
-        if (str_contains($location, '/error')) {
-            Log::channel('console')->error('url contains error.', [$location]);
-
-            return;
         }
 
         $html = (string) $response->getBody();
@@ -121,6 +98,11 @@ class OneRefreshCookie extends Command
             $disk     = Storage::disk('local');
             $filePath = sprintf('html/response_body_%s.html', date('YmdHisv'));
             $disk->put($filePath, $html);
+
+            if (str_contains($html, '个人用户登录')) {
+                $oneAccount->cookie_string = null;
+                $oneAccount->save();
+            }
         }
     }
 
