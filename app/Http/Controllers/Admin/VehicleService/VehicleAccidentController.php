@@ -37,7 +37,7 @@ class VehicleAccidentController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -77,7 +77,7 @@ class VehicleAccidentController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -97,13 +97,13 @@ class VehicleAccidentController extends Controller
         return $this->response()->withData($vehicleAccident)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(VehicleAccident $vehicleAccident): Response
     {
         $this->options();
@@ -111,7 +111,7 @@ class VehicleAccidentController extends Controller
         return $this->response()->withData($vehicleAccident)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(VehicleAccident $vehicleAccident): Response
     {
         $this->options();
@@ -126,7 +126,7 @@ class VehicleAccidentController extends Controller
         return $this->response()->withData($vehicleAccident)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleAccident $vehicleAccident = null): Response
     {
         $validator = Validator::make(
@@ -214,7 +214,7 @@ class VehicleAccidentController extends Controller
         return $this->response()->withData($vehicleAccident)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleAccident $vehicleAccident): Response
     {
         $validator = Validator::make(
@@ -236,14 +236,13 @@ class VehicleAccidentController extends Controller
         return $this->response()->withData($vehicleAccident)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload($request, 'vehicle_accident', ['additional_photos', 'info_photos'], $this);
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function saleOrdersOption(Request $request): Response
     {
         $validator = Validator::make(

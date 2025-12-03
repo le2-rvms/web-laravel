@@ -25,7 +25,7 @@ class DeliveryLogController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -50,7 +50,7 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -65,13 +65,13 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($deliveryLog)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(DeliveryLog $deliveryLog): Response
     {
         $this->options();
@@ -81,7 +81,7 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($deliveryLog)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(DeliveryLog $deliveryLog): Response
     {
         $this->options();
@@ -89,13 +89,13 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($deliveryLog)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?DeliveryLog $deliveryLog): Response
     {
         return $this->response()->withData($deliveryLog)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(DeliveryLog $deliveryLog): Response
     {
         return $this->response()->withData($deliveryLog)->respond();

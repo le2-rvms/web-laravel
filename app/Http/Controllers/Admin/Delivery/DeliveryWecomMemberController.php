@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('企业微信群机器人管理')]
+#[PermissionType('企业微信机器人管理')]
 class DeliveryWecomMemberController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -23,7 +23,7 @@ class DeliveryWecomMemberController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(Request $request): Response
     {
         $this->options();
@@ -39,7 +39,7 @@ class DeliveryWecomMemberController extends Controller
         return $this->response()->withData(compact('items'))->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request): Response
     {
         $validator = Validator::make(

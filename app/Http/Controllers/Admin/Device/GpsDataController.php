@@ -26,7 +26,7 @@ class GpsDataController extends Controller
     /**
      * @throws ValidationException
      */
-    #[PermissionAction('history')]
+    #[PermissionAction(PermissionAction::READ)]
     public function history(Request $request, Vehicle $vehicle): Response
     {
         $validator = Validator::make(

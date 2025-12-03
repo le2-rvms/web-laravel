@@ -23,7 +23,7 @@ class ViolationCountController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         // 构建 vehicle_violations 表的查询

@@ -32,7 +32,7 @@ class SaleOrderTplController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -62,7 +62,7 @@ class SaleOrderTplController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -74,13 +74,13 @@ class SaleOrderTplController extends Controller
         return $this->response()->withData($saleOrderTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(SaleOrderTpl $saleOrderTpl): Response
     {
         $this->options();
@@ -90,7 +90,7 @@ class SaleOrderTplController extends Controller
         return $this->response()->withData($saleOrderTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(SaleOrderTpl $saleOrderTpl): Response
     {
         $this->options();
@@ -100,7 +100,7 @@ class SaleOrderTplController extends Controller
         return $this->response()->withData($saleOrderTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?SaleOrderTpl $saleOrderTpl): Response
     {
         $input1 = $request->validate(
@@ -164,7 +164,7 @@ class SaleOrderTplController extends Controller
         return $this->response()->withData($saleOrderTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(SaleOrderTpl $saleOrderTpl): Response
     {
         $saleOrderTpl->delete();
@@ -172,7 +172,7 @@ class SaleOrderTplController extends Controller
         return $this->response()->withData($saleOrderTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function status(Request $request, SaleOrderTpl $saleOrderTpl): Response
     {
         $validator = Validator::make(
@@ -201,8 +201,7 @@ class SaleOrderTplController extends Controller
         return $this->response()->withData($saleOrderTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload(

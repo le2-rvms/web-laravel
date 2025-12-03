@@ -41,7 +41,7 @@ class CustomerController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -83,13 +83,13 @@ class CustomerController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(Customer $customer): Response
     {
         $customer->load('CustomerIndividual', 'CustomerCompany');
@@ -114,7 +114,7 @@ class CustomerController extends Controller
         return $this->response()->withData($customer)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?Customer $customer): Response
     {
         $validator = Validator::make(
@@ -213,7 +213,7 @@ class CustomerController extends Controller
         return $this->response()->withData($customer)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(Customer $customer): Response
     {
         DB::transaction(function () use ($customer) {
@@ -225,7 +225,7 @@ class CustomerController extends Controller
         return $this->response()->withData($customer)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -241,7 +241,7 @@ class CustomerController extends Controller
         return $this->response()->withData($customer)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(Customer $customer): Response
     {
         $this->options();
@@ -266,8 +266,7 @@ class CustomerController extends Controller
         return $this->response()->withData($customer)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload(

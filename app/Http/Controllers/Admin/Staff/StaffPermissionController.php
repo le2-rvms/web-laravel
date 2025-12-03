@@ -24,7 +24,7 @@ class StaffPermissionController extends Controller
         $this->middleware(CheckAdminIsMock::class);
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request)
     {
         $this->options(true);

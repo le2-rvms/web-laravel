@@ -25,7 +25,7 @@ class OneAccountController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(): Response
     {
         $this->options();
@@ -36,7 +36,7 @@ class OneAccountController extends Controller
         return $this->response()->respond();
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -57,19 +57,19 @@ class OneAccountController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(OneAccount $oneAccount): Response
     {
         return $this->response()->withData($oneAccount)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(OneAccount $oneAccount): Response
     {
         $this->options();
@@ -80,7 +80,7 @@ class OneAccountController extends Controller
         return $this->response()->withData($oneAccount)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?OneAccount $oneAccount): Response
     {
         $validator = Validator::make(
@@ -115,7 +115,7 @@ class OneAccountController extends Controller
         return $this->response()->withData($oneAccount)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(OneAccount $oneAccount): Response
     {
         $oneAccount->delete();

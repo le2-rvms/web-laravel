@@ -28,7 +28,7 @@ class VehicleInsuranceController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -56,7 +56,7 @@ class VehicleInsuranceController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -69,13 +69,13 @@ class VehicleInsuranceController extends Controller
         return $this->response()->withData($vehicleInsurance)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(VehicleInsurance $vehicleInsurance): Response
     {
         $this->options();
@@ -83,7 +83,7 @@ class VehicleInsuranceController extends Controller
         return $this->response()->withData($vehicleInsurance)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(VehicleInsurance $vehicleInsurance): Response
     {
         $this->options();
@@ -96,7 +96,7 @@ class VehicleInsuranceController extends Controller
         return $this->response()->withData($vehicleInsurance)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleInsurance $vehicleInsurance = null): Response
     {
         $validator = Validator::make(
@@ -186,7 +186,7 @@ class VehicleInsuranceController extends Controller
         return $this->response()->withData($vehicleInsurance)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleInsurance $vehicleInsurance): Response
     {
         $validator = Validator::make(
@@ -208,8 +208,7 @@ class VehicleInsuranceController extends Controller
         return $this->response()->withData($vehicleInsurance)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload(

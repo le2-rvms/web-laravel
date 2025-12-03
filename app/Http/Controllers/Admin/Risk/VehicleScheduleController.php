@@ -29,7 +29,7 @@ class VehicleScheduleController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -57,7 +57,7 @@ class VehicleScheduleController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -73,19 +73,19 @@ class VehicleScheduleController extends Controller
         return $this->response()->withData($vehicleSchedule)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(VehicleSchedule $vehicleSchedule): Response
     {
         return $this->response()->withData($vehicleSchedule)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(VehicleSchedule $vehicleSchedule): Response
     {
         $this->options();
@@ -98,7 +98,7 @@ class VehicleScheduleController extends Controller
         return $this->response()->withData($vehicleSchedule)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleSchedule $vehicleSchedule = null): Response
     {
         $validator = Validator::make(
@@ -154,7 +154,7 @@ class VehicleScheduleController extends Controller
         return $this->response()->withData($vehicleSchedule)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleSchedule $vehicleSchedule): Response
     {
         $validator = Validator::make(
@@ -176,14 +176,13 @@ class VehicleScheduleController extends Controller
         return $this->response()->withData($vehicleSchedule)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload($request, 'vehicle_schedule', ['additional_photos'], $this);
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function st_vehicle(Request $request): Response
     {
         $this->options(true);

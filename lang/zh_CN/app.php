@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'permission_groups' => [
+        'read'  => '读',
+        'write' => '写',
+    ],
+
     'actions' => [
         'add'        => '新增',
         'index'      => '列表',

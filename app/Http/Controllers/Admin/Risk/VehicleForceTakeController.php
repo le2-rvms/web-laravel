@@ -29,7 +29,7 @@ class VehicleForceTakeController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -56,7 +56,7 @@ class VehicleForceTakeController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -72,13 +72,13 @@ class VehicleForceTakeController extends Controller
         return $this->response()->withData($vehicleForceTake)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(VehicleForceTake $vehicleForceTake): Response
     {
         $this->options();
@@ -86,7 +86,7 @@ class VehicleForceTakeController extends Controller
         return $this->response()->withData($vehicleForceTake)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(VehicleForceTake $vehicleForceTake): Response
     {
         $this->options();
@@ -100,7 +100,7 @@ class VehicleForceTakeController extends Controller
         return $this->response()->withData($vehicleForceTake)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleForceTake $vehicleForceTake = null): Response
     {
         $validator = Validator::make(
@@ -154,7 +154,7 @@ class VehicleForceTakeController extends Controller
         return $this->response()->withData($vehicleForceTake)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleForceTake $vehicleForceTake): Response
     {
         $validator = Validator::make(
@@ -176,8 +176,7 @@ class VehicleForceTakeController extends Controller
         return $this->response()->withData($vehicleForceTake)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload($request, 'vehicle_force_take', ['additional_photos'], $this);

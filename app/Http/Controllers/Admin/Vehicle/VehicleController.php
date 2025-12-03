@@ -42,7 +42,7 @@ class VehicleController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -88,13 +88,13 @@ class VehicleController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(Vehicle $vehicle): Response
     {
         $this->response()->withExtras(
@@ -109,7 +109,7 @@ class VehicleController extends Controller
         return $this->response()->withData($vehicle)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?Vehicle $vehicle): Response
     {
         $validator = Validator::make(
@@ -167,7 +167,7 @@ class VehicleController extends Controller
         return $this->response()->withData($vehicle)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(Vehicle $vehicle): Response
     {
         DB::transaction(function () use (&$vehicle) {
@@ -177,7 +177,7 @@ class VehicleController extends Controller
         return $this->response()->withData($vehicle)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -192,7 +192,7 @@ class VehicleController extends Controller
         return $this->response()->withData($vehicle)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(Vehicle $vehicle): Response
     {
         $this->options();
@@ -214,8 +214,7 @@ class VehicleController extends Controller
         return $this->response()->withData($vehicle)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload(

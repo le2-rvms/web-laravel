@@ -27,7 +27,7 @@ class StaffController extends Controller
         $this->middleware(CheckAdminIsMock::class);
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -56,7 +56,7 @@ class StaffController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->response()->withExtras(
@@ -68,7 +68,7 @@ class StaffController extends Controller
         return $this->response()->withData($staff)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(Request $request, Staff $staff): Response
     {
         abort_if($staff->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow edit.');
@@ -82,7 +82,7 @@ class StaffController extends Controller
         return $this->response()->withData($staff)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         $validator = Validator::make(
@@ -130,7 +130,7 @@ class StaffController extends Controller
         return $this->response()->withRedirect(redirect()->route('admins.index'))->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, Staff $staff): Response
     {
         $validator = Validator::make(
@@ -179,7 +179,7 @@ class StaffController extends Controller
         return $this->response()->withRedirect(redirect()->route('admins.index'))->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(Staff $staff): Response
     {
         abort_if($staff->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow destroy.');
@@ -195,7 +195,7 @@ class StaffController extends Controller
         return $this->response()->withRedirect(redirect()->route('admins.index'))->respond();
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(Staff $staff): Response
     {
         abort_if($staff->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow edit.');

@@ -23,7 +23,7 @@ class ExpiryDriverController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $days = $request->input('days', 30);

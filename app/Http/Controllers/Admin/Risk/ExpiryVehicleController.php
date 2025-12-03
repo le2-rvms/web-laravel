@@ -19,7 +19,7 @@ class ExpiryVehicleController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $query = ExpiryVehicle::indexQuery();

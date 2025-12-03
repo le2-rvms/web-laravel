@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Attributes\PermissionType;
+use App\Attributes\PermissionAction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,29 +17,38 @@ class CheckPermission
 
     private function checkRequestPermission(Request $request): bool
     {
-        $action = $request->route()->getActionName();
+        $actionName = $request->route()->getActionName();
 
-        $actionArray = explode('@', $action);
+        $actionArray = explode('@', $actionName);
 
         if (2 !== sizeof($actionArray)) {
             return true;
         }
 
-        [$controller, $method] = $actionArray;
+        [$controllerName, $method] = $actionArray;
 
         // 反射获取方法注解
-        $reflectionController = new \ReflectionClass($controller);
+        $actionName_ = str_replace('@', '::', $actionName);
 
-        $attributes = $reflectionController->getAttributes(PermissionType::class);
+        try {
+            $reflectionMethod = new \ReflectionMethod($actionName_);
+        } catch (\ReflectionException $e) {
+            return false;
+        }
 
-        if (!$attributes) {
+        $permissionAttributes = $reflectionMethod->getAttributes(PermissionAction::class);
+
+        if (!$permissionAttributes) {
             return true;
         }
 
-        $controller_short = preg_replace('{Controller$}', '', class_basename($controller));
+        /** @var PermissionAction $permissionAttributeIns */
+        $permissionAttributeIns = $permissionAttributes[0]->newInstance();
+
+        $controller_shortname = preg_replace('{Controller$}', '', class_basename($controllerName));
 
         $admin = Auth::user();
-        if ($admin && $admin->can($controller_short)) {
+        if ($admin && $admin->can($controller_shortname.'::'.$permissionAttributeIns->name)) {
             return true;
         }
 

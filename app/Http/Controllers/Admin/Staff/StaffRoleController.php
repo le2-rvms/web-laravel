@@ -26,7 +26,7 @@ class StaffRoleController extends Controller
         $this->middleware(CheckAdminIsMock::class);
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -55,7 +55,7 @@ class StaffRoleController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->response()->withExtras(
@@ -65,7 +65,7 @@ class StaffRoleController extends Controller
         return $this->response()->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         $validator = Validator::make(
@@ -101,7 +101,7 @@ class StaffRoleController extends Controller
         return $this->response()->withRedirect(redirect()->route('roles.index'))->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(Request $request, StaffRole $staff_role): Response
     {
         abort_if(config('setting.super_role.name') == $staff_role->name, 403, 'You Cannot Edit Super Admin Role!');
@@ -126,7 +126,7 @@ class StaffRoleController extends Controller
         return $this->response()->withData($staff_role)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, StaffRole $staff_role): Response
     {
         $validator = Validator::make(
@@ -161,7 +161,7 @@ class StaffRoleController extends Controller
         return $this->response()->withRedirect(redirect()->route('roles.index'))->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(StaffRole $staff_role): Response
     {
         abort_if(config('setting.super_role.name') == $staff_role->name, 403, 'You Cannot delete Super Admin Role!');
@@ -177,7 +177,7 @@ class StaffRoleController extends Controller
         return $this->response()->withRedirect(redirect()->route('roles.index'))->respond();
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(Request $request, StaffRole $staff_role): Response
     {
         abort_if(config('setting.super_role.name') == $staff_role->name, 403, 'You Cannot Edit Super Admin Role!');

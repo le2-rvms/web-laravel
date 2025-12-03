@@ -47,7 +47,7 @@ class SaleSettlementController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -84,7 +84,7 @@ class SaleSettlementController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -175,7 +175,7 @@ class SaleSettlementController extends Controller
         return $this->response()->withData($saleSettlement)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DOC)]
+    #[PermissionAction(PermissionAction::READ)]
     public function doc(Request $request, SaleSettlement $saleSettlement, DocTplService $docTplService)
     {
         $input = $request->validate([
@@ -190,19 +190,19 @@ class SaleSettlementController extends Controller
         return $this->response()->withData($url)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(Request $request, SaleSettlement $saleSettlement): Response
     {
         return $this->response()->withData($saleSettlement)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(SaleSettlement $saleSettlement): Response
     {
         $this->options();
@@ -212,7 +212,7 @@ class SaleSettlementController extends Controller
         return $this->response()->withData($saleSettlement)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?SaleSettlement $saleSettlement): Response
     {
         $validator = Validator::make(
@@ -314,8 +314,7 @@ class SaleSettlementController extends Controller
 
     public function destroy(SaleSettlement $saleSettlement) {}
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload($request, 'sale_settlement', ['additional_photos'], $this);

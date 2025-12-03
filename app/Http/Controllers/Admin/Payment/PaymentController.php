@@ -39,7 +39,7 @@ class PaymentController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -77,7 +77,7 @@ class PaymentController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request)
     {
         $this->options();
@@ -92,13 +92,13 @@ class PaymentController extends Controller
         return $this->edit(null);
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request)
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(Payment $payment): Response
     {
         $payment->load(['SaleOrder', 'PaymentType', 'SaleOrder.Customer']);
@@ -106,7 +106,7 @@ class PaymentController extends Controller
         return $this->response()->withData($payment)->respond();
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function shows(string $id): Response
     {
         $idsArray = explode(',', $id); // 将 $id 按照逗号分割成数组
@@ -116,7 +116,7 @@ class PaymentController extends Controller
         return $this->response()->withData($payments)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(?Payment $payment): Response
     {
         $this->options();
@@ -134,7 +134,7 @@ class PaymentController extends Controller
         return $this->response()->withData($payment)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DOC)]
+    #[PermissionAction(PermissionAction::READ)]
     public function doc(Request $request, Payment $payment, DocTplService $docTplService)
     {
         $input = $request->validate([
@@ -152,7 +152,7 @@ class PaymentController extends Controller
         return $this->response()->withData($url)->respond();
     }
 
-    #[PermissionAction('undo')]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function undo(Request $request, Payment $payment): Response
     {
         $validator = Validator::make(
@@ -188,7 +188,7 @@ class PaymentController extends Controller
         return $this->response()->withData($payment)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?Payment $payment): Response
     {
         $validator = Validator::make(

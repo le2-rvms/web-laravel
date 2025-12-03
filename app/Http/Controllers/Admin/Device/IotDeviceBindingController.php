@@ -29,7 +29,7 @@ class IotDeviceBindingController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -48,7 +48,7 @@ class IotDeviceBindingController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(IotDeviceBinding $iotDeviceBinding): Response
     {
         $this->options();
@@ -58,13 +58,13 @@ class IotDeviceBindingController extends Controller
         return $this->response()->withData($iotDeviceBinding)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         return $this->edit($request, null);
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(Request $request, ?IotDeviceBinding $iotDeviceBinding): Response
     {
         $this->options();
@@ -84,13 +84,13 @@ class IotDeviceBindingController extends Controller
         return $this->response()->withData($iotDeviceBinding)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?IotDeviceBinding $iotDeviceBinding): Response
     {
         $validator = Validator::make(
@@ -140,7 +140,7 @@ class IotDeviceBindingController extends Controller
         return $this->response()->withData($iotDeviceBinding)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(IotDeviceBinding $iotDeviceBinding): Response
     {
         DB::transaction(function () use ($iotDeviceBinding) {

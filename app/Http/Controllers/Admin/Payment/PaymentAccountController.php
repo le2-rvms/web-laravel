@@ -23,7 +23,7 @@ class PaymentAccountController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(): Response
     {
         $this->options();
@@ -37,7 +37,7 @@ class PaymentAccountController extends Controller
         return $this->response()->withData($paymentAccount)->respond();
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -58,13 +58,13 @@ class PaymentAccountController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(PaymentAccount $paymentAccount): Response
     {
         $this->options();
@@ -72,7 +72,7 @@ class PaymentAccountController extends Controller
         return $this->response()->withData($paymentAccount)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(PaymentAccount $paymentAccount): Response
     {
         $this->options();
@@ -80,7 +80,7 @@ class PaymentAccountController extends Controller
         return $this->response()->withData($paymentAccount)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?PaymentAccount $paymentAccount): Response
     {
         $validator = Validator::make(
@@ -113,7 +113,7 @@ class PaymentAccountController extends Controller
         return $this->response()->withData($paymentAccount)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(PaymentAccount $paymentAccount): Response
     {
         $paymentAccount->delete();

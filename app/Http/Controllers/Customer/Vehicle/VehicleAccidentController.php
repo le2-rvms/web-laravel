@@ -17,7 +17,7 @@ class VehicleAccidentController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $data = VehicleAccident::customerQuery($this)

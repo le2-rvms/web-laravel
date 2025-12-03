@@ -22,7 +22,7 @@ class PaymentTypeController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::SETTING)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function show(Request $request): Response
     {
         $this->response()->withExtras(
@@ -38,7 +38,7 @@ class PaymentTypeController extends Controller
         return $this->response()->withData(['selected_types' => $ids])->respond();
     }
 
-    #[PermissionAction(PermissionAction::SETTING)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request): Response
     {
         $validator = Validator::make(

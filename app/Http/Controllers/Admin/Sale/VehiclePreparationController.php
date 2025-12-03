@@ -31,7 +31,7 @@ class VehiclePreparationController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->response()->withExtras(
@@ -51,7 +51,7 @@ class VehiclePreparationController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request)
     {
         $this->response()->withExtras(
@@ -75,7 +75,7 @@ class VehiclePreparationController extends Controller
         ])->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request)
     {
         $user = auth()->user();

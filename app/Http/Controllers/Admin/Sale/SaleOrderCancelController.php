@@ -26,7 +26,7 @@ class SaleOrderCancelController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INVOKE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, SaleOrder $saleOrder): Response
     {
         $validator = Validator::make(

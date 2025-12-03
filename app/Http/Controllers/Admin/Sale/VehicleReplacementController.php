@@ -35,7 +35,7 @@ class VehicleReplacementController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -57,7 +57,7 @@ class VehicleReplacementController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         /** @var SaleOrder $saleOrder */
@@ -118,7 +118,7 @@ class VehicleReplacementController extends Controller
         return $this->response()->withData($vehicleReplacement)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         /** @var Vehicle $vehicle0 */
@@ -214,7 +214,7 @@ class VehicleReplacementController extends Controller
 
     public function show(VehicleReplacement $vehicleReplacement) {}
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(VehicleReplacement $vehicleReplacement): Response
     {
         $this->options();
@@ -233,7 +233,7 @@ class VehicleReplacementController extends Controller
         return $this->response()->withData($vehicleReplacement)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, VehicleReplacement $vehicleReplacement): Response
     {
         $validator = Validator::make(
@@ -285,8 +285,7 @@ class VehicleReplacementController extends Controller
 
     public function destroy(VehicleReplacement $vehicleReplacement) {}
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload($request, 'vehicle_replacement', ['additional_photos'], $this);

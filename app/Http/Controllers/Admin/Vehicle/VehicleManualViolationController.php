@@ -28,7 +28,7 @@ class VehicleManualViolationController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -58,7 +58,7 @@ class VehicleManualViolationController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(): Response
     {
         $this->options();
@@ -69,19 +69,19 @@ class VehicleManualViolationController extends Controller
         return $this->response()->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(VehicleManualViolation $vehicleManualViolation): Response
     {
         return $this->response()->withData($vehicleManualViolation)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(VehicleManualViolation $vehicleManualViolation): Response
     {
         $this->options();
@@ -91,7 +91,7 @@ class VehicleManualViolationController extends Controller
         return $this->response()->withData($vehicleManualViolation)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleManualViolation $vehicleManualViolation): Response
     {
         // 创建验证器实例
@@ -148,7 +148,7 @@ class VehicleManualViolationController extends Controller
         return $this->response()->withData($vehicleManualViolation)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleManualViolation $vehicleManualViolation): Response
     {
         $vehicleManualViolation->delete();

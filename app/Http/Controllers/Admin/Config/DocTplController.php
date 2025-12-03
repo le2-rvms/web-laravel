@@ -34,7 +34,7 @@ class DocTplController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -59,7 +59,7 @@ class DocTplController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -80,13 +80,13 @@ class DocTplController extends Controller
         return $this->response()->withData($docTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(DocTpl $docTpl): Response
     {
         $this->options();
@@ -96,7 +96,7 @@ class DocTplController extends Controller
         return $this->response()->withData($docTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function preview(Request $request, DocTpl $docTpl, DocTplService $docTplService)
     {
         $input = $request->validate([
@@ -108,7 +108,7 @@ class DocTplController extends Controller
         return $this->response()->withData($url)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(DocTpl $docTpl): Response
     {
         $this->options();
@@ -124,7 +124,7 @@ class DocTplController extends Controller
         return $this->response()->withData($docTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?DocTpl $docTpl): Response
     {
         $validator = Validator::make(
@@ -165,7 +165,7 @@ class DocTplController extends Controller
         return $this->response()->withData($docTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(DocTpl $docTpl): Response
     {
         $docTpl->delete();
@@ -173,7 +173,7 @@ class DocTplController extends Controller
         return $this->response()->withData($docTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function status(Request $request, DocTpl $docTpl): Response
     {
         $validator = Validator::make(
@@ -202,8 +202,7 @@ class DocTplController extends Controller
         return $this->response()->withData($docTpl)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload($request, 'doc_tpl', ['dt_file'], $this);

@@ -242,8 +242,7 @@ class ImportController extends Controller
         return $this->response()->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::tmp($request, 'tmp', ['import_file'], $this);

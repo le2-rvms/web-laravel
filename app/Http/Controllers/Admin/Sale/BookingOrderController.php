@@ -35,7 +35,7 @@ class BookingOrderController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -62,7 +62,7 @@ class BookingOrderController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(BookingOrder $bookingOrder): Response
     {
         $bookingOrder->load(['Vehicle', 'Customer']);
@@ -70,7 +70,7 @@ class BookingOrderController extends Controller
         return $this->response()->withData($bookingOrder)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $bookingOrder = new BookingOrder([
@@ -91,7 +91,7 @@ class BookingOrderController extends Controller
         return $this->response()->withData($bookingOrder)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(BookingOrder $bookingOrder): Response
     {
         $bookingOrder->load('Vehicle', 'Customer');
@@ -101,13 +101,13 @@ class BookingOrderController extends Controller
         return $this->response()->withData($bookingOrder)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?BookingOrder $bookingOrder): Response
     {
         $validator = Validator::make(
@@ -176,7 +176,7 @@ class BookingOrderController extends Controller
         return $this->response()->withData($bookingOrder)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(BookingOrder $bookingOrder): Response
     {
         $bookingOrder->delete();
@@ -184,7 +184,7 @@ class BookingOrderController extends Controller
         return $this->response()->withData($bookingOrder)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::READ)]
     public function generate(Request $request, BookingVehicle $bookingVehicle): Response
     {
         $bookingVehicle->append('bo_no');

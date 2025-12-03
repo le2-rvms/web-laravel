@@ -47,7 +47,7 @@ class VehicleMaintenanceController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         // 如果是维修厂，则只能看到自己的。
@@ -98,7 +98,7 @@ class VehicleMaintenanceController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         // 如果是维修厂，则只能看到自己的。
@@ -132,13 +132,13 @@ class VehicleMaintenanceController extends Controller
         return $this->response()->withData($vehicleMaintenance)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(VehicleMaintenance $vehicleMaintenance): Response
     {
         $this->options();
@@ -146,7 +146,7 @@ class VehicleMaintenanceController extends Controller
         return $this->response()->withData($vehicleMaintenance)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(VehicleMaintenance $vehicleMaintenance): Response
     {
         // 如果是维修厂，则只能看到自己的。
@@ -182,7 +182,7 @@ class VehicleMaintenanceController extends Controller
         return $this->response()->withData($vehicleMaintenance)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleMaintenance $vehicleMaintenance = null): Response
     {
         $validator = Validator::make(
@@ -308,7 +308,7 @@ class VehicleMaintenanceController extends Controller
         return $this->response()->withData($vehicleMaintenance)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleMaintenance $vehicleMaintenance): Response
     {
         $validator = Validator::make(
@@ -330,7 +330,7 @@ class VehicleMaintenanceController extends Controller
         return $this->response()->withData($vehicleMaintenance)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function saleOrdersOption(Request $request): Response
     {
         $validator = Validator::make(
@@ -357,8 +357,7 @@ class VehicleMaintenanceController extends Controller
         return $this->response()->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload($request, 'vehicle_maintenance', ['additional_photos', 'info_photos'], $this);

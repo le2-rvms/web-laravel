@@ -25,7 +25,7 @@ class VehicleModelController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create()
     {
         $this->options();
@@ -38,7 +38,7 @@ class VehicleModelController extends Controller
         return $this->response()->withData($vehicleModel)->respond();
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -60,19 +60,19 @@ class VehicleModelController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(VehicleModel $vehicleModel): Response
     {
         return $this->response()->withData($vehicleModel)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(VehicleModel $vehicleModel): Response
     {
         $this->options();
@@ -82,7 +82,7 @@ class VehicleModelController extends Controller
         return $this->response()->withData($vehicleModel)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleModel $vehicleModel): Response
     {
         $validator = Validator::make(
@@ -121,7 +121,7 @@ class VehicleModelController extends Controller
         return $this->response()->withData($vehicleModel)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleModel $vehicleModel): Response
     {
         $vehicleModel->delete();

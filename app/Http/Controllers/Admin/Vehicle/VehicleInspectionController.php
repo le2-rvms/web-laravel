@@ -52,7 +52,7 @@ class VehicleInspectionController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
         $this->options(true);
@@ -88,7 +88,7 @@ class VehicleInspectionController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -108,19 +108,19 @@ class VehicleInspectionController extends Controller
         return $this->response()->withData($vehicleInspection)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(VehicleInspection $vehicleInspection): Response
     {
         return $this->response()->withData($vehicleInspection)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(VehicleInspection $vehicleInspection): Response
     {
         $this->options();
@@ -138,7 +138,7 @@ class VehicleInspectionController extends Controller
         return $this->response()->withData($vehicleInspection)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DOC)]
+    #[PermissionAction(PermissionAction::READ)]
     public function doc(Request $request, VehicleInspection $vehicleInspection, DocTplService $docTplService)
     {
         $input = $request->validate([
@@ -155,7 +155,7 @@ class VehicleInspectionController extends Controller
         return $this->response()->withData($url)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleInspection $vehicleInspection): Response
     {
         // 创建验证器实例
@@ -329,7 +329,7 @@ class VehicleInspectionController extends Controller
         return $this->response()->withData($vehicleInspection)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleInspection $vehicleInspection): Response
     {
         $vehicleInspection->delete();
@@ -337,7 +337,7 @@ class VehicleInspectionController extends Controller
         return $this->response()->withData($vehicleInspection)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function saleOrdersOption(Request $request): Response
     {
         $validator = Validator::make(
@@ -377,8 +377,7 @@ class VehicleInspectionController extends Controller
         return $this->response()->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload($request, 'vehicle_inspection', ['additional_photos', 'info_photos'], $this);

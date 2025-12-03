@@ -29,7 +29,7 @@ class BookingVehicleController extends Controller
         );
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $bookingVehicles = new BookingVehicle([
@@ -46,7 +46,7 @@ class BookingVehicleController extends Controller
         return $this->response()->withData($bookingVehicles)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(BookingVehicle $bookingVehicle): Response
     {
         $bookingVehicle->load('Vehicle');
@@ -56,7 +56,7 @@ class BookingVehicleController extends Controller
         return $this->response()->withData($bookingVehicle)->respond();
     }
 
-    #[PermissionAction(PermissionAction::INDEX)]
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request)
     {
         $this->options(true);
@@ -82,7 +82,7 @@ class BookingVehicleController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::SHOW)]
+    #[PermissionAction(PermissionAction::READ)]
     public function show(BookingVehicle $bookingVehicle)
     {
         $this->options();
@@ -91,13 +91,13 @@ class BookingVehicleController extends Controller
         return $this->response()->withData($bookingVehicle)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request)
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?BookingVehicle $bookingVehicle)
     {
         $validator = Validator::make(
@@ -143,7 +143,7 @@ class BookingVehicleController extends Controller
         return $this->response()->withData($bookingVehicle)->respond();
     }
 
-    #[PermissionAction(PermissionAction::DELETE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(BookingVehicle $bookingVehicle)
     {
         $bookingVehicle->delete();
@@ -151,7 +151,7 @@ class BookingVehicleController extends Controller
         return $this->response()->withData($bookingVehicle)->respond();
     }
 
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function status(Request $request, BookingVehicle $bookingVehicle): Response
     {
         $validator = Validator::make(
@@ -178,8 +178,7 @@ class BookingVehicleController extends Controller
         return $this->response()->withData($bookingVehicle)->respond();
     }
 
-    #[PermissionAction(PermissionAction::ADD)]
-    #[PermissionAction(PermissionAction::EDIT)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
         return Uploader::upload(

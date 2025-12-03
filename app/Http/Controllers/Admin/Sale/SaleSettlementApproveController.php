@@ -26,7 +26,7 @@ class SaleSettlementApproveController extends Controller
 {
     public static function labelOptions(Controller $controller): void {}
 
-    #[PermissionAction(PermissionAction::INVOKE)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, SaleSettlement $saleSettlement): Response
     {
         $validator = Validator::make(
