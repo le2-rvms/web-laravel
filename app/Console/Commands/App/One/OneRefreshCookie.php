@@ -99,7 +99,8 @@ class OneRefreshCookie extends Command
             $filePath = sprintf('html/response_body_%s.html', date('YmdHisv'));
             $disk->put($filePath, $html);
 
-            if (str_contains($html, '个人用户登录')) {
+            if (str_contains($html, $searchString = '个人用户登录')) {
+                Log::channel('console')->info('Response Body contain : '.$searchString);
                 $oneAccount->cookie_string = null;
                 $oneAccount->save();
             }
@@ -132,34 +133,42 @@ class OneRefreshCookie extends Command
 
     private function processCompany(OneAccount $oneAccount)
     {
-        $client    = new Client();
+        $client    = new Client(['cookies' => true]);
         $cookieJar = $oneAccount->initializeCookies();
 
         $domain = $oneAccount->oa_province_value['url'];
 
-        $location = $domain.'/';
+        $location = $domain.'/views/memfyy/'; // /views/memrent/vehlist.html
 
         $requestCount = 1;
 
-        $filePath = null;
+        $response = null;
 
         while ($location && $requestCount <= 10) {
-            $response = $this->makeRequest($oneAccount, $client, $location, $cookieJar, $filePath);
+            $response = $this->makeRequest($oneAccount, $client, $location, $cookieJar);
 
             $location = $response->getHeaderLine('Location');
+
             ++$requestCount;
         }
 
-        if ($filePath && $this->findWelcome($filePath, $searchString = '欢迎')) {
+        $html = (string) $response->getBody();
+
+        if (str_contains($html, $searchString = '欢迎')) {
             Log::channel('console')->info('Response Body contain : '.$searchString);
 
             $oneAccount->cookie_refresh_at = now();
             $oneAccount->save();
-
-            Storage::delete($filePath);
         } else {
-            $oneAccount->cookie_string = null;
-            $oneAccount->save();
+            $disk     = Storage::disk('local');
+            $filePath = sprintf('html/response_body_%s.html', date('YmdHisv'));
+            $disk->put($filePath, $html);
+
+            if (str_contains($html, $searchString = '单位用户登录')) {
+                Log::channel('console')->info('Response Body contain : '.$searchString);
+                $oneAccount->cookie_string = null;
+                $oneAccount->save();
+            }
         }
     }
 }
