@@ -66,7 +66,7 @@ class VehicleForceTakeController extends Controller
         );
 
         $vehicleForceTake = new VehicleForceTake([
-            'force_take_time' => now()->format('Y-m-d'),
+            'force_take_time' => now(),
         ]);
 
         return $this->response()->withData($vehicleForceTake)->respond();

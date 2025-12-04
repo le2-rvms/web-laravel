@@ -117,7 +117,7 @@ class CustomerController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?Customer $customer): Response
     {
-        $validator = Validator::make(
+        $input0 = Validator::make(
             $request->all(),
             [
                 'cu_type'              => ['required', 'string', Rule::in(CuCuType::label_keys())],
@@ -133,32 +133,50 @@ class CustomerController extends Controller
 
                 'sales_manager'  => ['nullable', Rule::exists(Staff::class)],
                 'driver_manager' => ['nullable', Rule::exists(Staff::class)],
-
-                'customer_individual'                                => ['nullable', 'array'],
-                'customer_individual.cui_name'                       => ['nullable', 'string', 'max:255'],
-                'customer_individual.cui_gender'                     => ['nullable', Rule::in(CuiCuiGender::label_keys())],
-                'customer_individual.cui_date_of_birth'              => ['nullable', 'date', 'before:today'],
-                'customer_individual.cui_id_number'                  => ['nullable', 'regex:/^\d{17}[\dXx]$/'],
-                'customer_individual.cui_id_address'                 => ['nullable', 'string', 'max:500'],
-                'customer_individual.cui_id_expiry_date'             => ['nullable', 'date', 'after:date_of_birth'],
-                'customer_individual.cui_driver_license_number'      => ['nullable', 'string', 'max:50'],
-                'customer_individual.cui_driver_license_category'    => ['nullable', 'string', 'regex:/^[A-Z]\d+$/'],
-                'customer_individual.cui_driver_license_expiry_date' => ['nullable', 'date'],
-                'customer_individual.cui_emergency_contact_name'     => ['nullable', 'string', 'max:64'],
-                'customer_individual.cui_emergency_contact_phone'    => ['nullable', 'regex:/^\d{7,15}$/'],
-                'customer_individual.cui_emergency_relationship'     => ['nullable', 'string', 'max:64'],
-
-                'customer_company' => ['nullable', 'required_if:cu_type,'.CuCuType::COMPANY, 'array'],
-            ]
-            + Uploader::validator_rule_upload_object('customer_individual.cui_id1_photo')
-            + Uploader::validator_rule_upload_object('customer_individual.cui_id2_photo')
-            + Uploader::validator_rule_upload_object('customer_individual.cui_driver_license1_photo')
-            + Uploader::validator_rule_upload_object('customer_individual.cui_driver_license2_photo')
-            + Uploader::validator_rule_upload_object('cu_cert_photo')
-            + Uploader::validator_rule_upload_array('cu_additional_photos'),
+            ],
             [],
-            trans_property(Customer::class) + trans_property(CustomerIndividual::class) + trans_property(CustomerCompany::class),
-        )->after(function (\Illuminate\Validation\Validator $validator) {
+            trans_property(Customer::class),
+        )->validate();
+
+        $validator = match ($input0['cu_type']) {
+            CuCuType::INDIVIDUAL => Validator::make(
+                $request->all(),
+                [
+                    'customer_individual'                                => ['nullable', 'array'],
+                    'customer_individual.cui_name'                       => ['nullable', 'string', 'max:255'],
+                    'customer_individual.cui_gender'                     => ['nullable', Rule::in(CuiCuiGender::label_keys())],
+                    'customer_individual.cui_date_of_birth'              => ['nullable', 'date', 'before:today'],
+                    'customer_individual.cui_id_number'                  => ['nullable', 'regex:/^\d{17}[\dXx]$/'],
+                    'customer_individual.cui_id_address'                 => ['nullable', 'string', 'max:500'],
+                    'customer_individual.cui_id_expiry_date'             => ['nullable', 'date', 'after:date_of_birth'],
+                    'customer_individual.cui_driver_license_number'      => ['nullable', 'string', 'max:50'],
+                    'customer_individual.cui_driver_license_category'    => ['nullable', 'string', 'regex:/^[A-Z]\d+$/'],
+                    'customer_individual.cui_driver_license_expiry_date' => ['nullable', 'date'],
+                    'customer_individual.cui_emergency_contact_name'     => ['nullable', 'string', 'max:64'],
+                    'customer_individual.cui_emergency_contact_phone'    => ['nullable', 'regex:/^\d{7,15}$/'],
+                    'customer_individual.cui_emergency_relationship'     => ['nullable', 'string', 'max:64'],
+                ]
+                + Uploader::validator_rule_upload_object('customer_individual.cui_id1_photo')
+                + Uploader::validator_rule_upload_object('customer_individual.cui_id2_photo')
+                + Uploader::validator_rule_upload_object('customer_individual.cui_driver_license1_photo')
+                + Uploader::validator_rule_upload_object('customer_individual.cui_driver_license2_photo')
+                + Uploader::validator_rule_upload_object('cu_cert_photo')
+                + Uploader::validator_rule_upload_array('cu_additional_photos'),
+                [],
+                trans_property(CustomerIndividual::class),
+            ),
+
+            CuCuType::COMPANY => Validator::make(
+                $request->all(),
+                [
+                    'customer_company' => ['nullable', 'required', 'array'],
+                ],
+                [],
+                trans_property(CustomerCompany::class),
+            ),
+        };
+
+        $validator->after(function (\Illuminate\Validation\Validator $validator) {
             if (!$validator->failed()) {
             }
         });
@@ -167,7 +185,7 @@ class CustomerController extends Controller
             throw new ValidationException($validator);
         }
 
-        $input = $validator->validated();
+        $input = $input0 + $validator->validated();
 
         DB::transaction(function () use (&$input, &$customer) {
             if (null === $customer) {

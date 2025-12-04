@@ -130,7 +130,7 @@ class VehicleInspection extends Model
             'VehicleInspection.inspection_datetime'   => fn ($item) => $item->inspection_datetime_,
             'VehicleInspection.vi_remark'             => fn ($item) => $item->vi_remark,
             'VehicleInspection.processed_by'          => fn ($item) => $item->processed_by,
-            'VehicleInspection.inspection_info'       => fn ($item) => static::str_render($item->inspection_info, 'inspection_info'),
+            'VehicleInspection.inspection_info'       => fn ($item) => str_render($item->inspection_info, 'inspection_info'),
         ];
     }
 
@@ -171,7 +171,7 @@ class VehicleInspection extends Model
                 DB::raw(ViOperationLicense::toCaseSQL()),
                 DB::raw(ViVehicleDamageStatus::toCaseSQL()),
                 DB::raw(ViVehicleDamageStatus::toColorSQL()),
-                DB::raw("to_char(inspection_datetime, 'YYYY-MM-DD HH24:MI:SS') as inspection_datetime_"),
+                DB::raw("to_char(inspection_datetime, 'YYYY-MM-DD HH24:MI') as inspection_datetime_"),
             )
         ;
     }

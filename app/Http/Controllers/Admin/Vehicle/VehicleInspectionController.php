@@ -12,10 +12,14 @@ use App\Enum\Sale\DtDtExportType;
 use App\Enum\Sale\DtDtStatus;
 use App\Enum\Sale\DtDtType;
 use App\Enum\Sale\SoOrderStatus;
+use App\Enum\Sale\VrReplacementType;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
+use App\Enum\Vehicle\ViDrivingLicense;
 use App\Enum\Vehicle\ViInspectionType;
+use App\Enum\Vehicle\ViOperationLicense;
+use App\Enum\Vehicle\ViPolicyCopy;
 use App\Enum\Vehicle\ViVehicleDamageStatus;
 use App\Exceptions\ClientException;
 use App\Http\Controllers\Controller;
@@ -24,6 +28,7 @@ use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Sale\DocTpl;
 use App\Models\Sale\SaleOrder;
+use App\Models\Sale\VehicleReplacement;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleUsage;
@@ -47,8 +52,10 @@ class VehicleInspectionController extends Controller
     {
         $controller->response()->withExtras(
             ViInspectionType::labelOptions(),
+            ViPolicyCopy::labelOptions(),
+            ViDrivingLicense::labelOptions(),
+            ViOperationLicense::labelOptions(),
             ViVehicleDamageStatus::labelOptions(),
-            Exist::labelOptions(),
         );
     }
 
@@ -99,8 +106,9 @@ class VehicleInspectionController extends Controller
         );
 
         $vehicleInspection = new VehicleInspection([
-            'inspection_info' => [],
-            'processed_by'    => Auth::id(),
+            'inspection_info'     => [],
+            'processed_by'        => Auth::id(),
+            'inspection_datetime' => now(),
         ]);
 
         $vehicleInspection->load('Payment');
@@ -158,12 +166,38 @@ class VehicleInspectionController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleInspection $vehicleInspection): Response
     {
-        // 创建验证器实例
-        $validator = Validator::make(
+        $input0 = Validator::make(
             $request->all(),
             [
-                'so_id'                 => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'integer'],
-                'inspection_type'       => ['bail', 'required', 'string', Rule::in(ViInspectionType::label_keys())],
+                'inspection_type' => ['bail', 'required', 'string', Rule::in(ViInspectionType::label_keys())],
+            ],
+            [],
+            trans_property(VehicleInspection::class)
+        )->validate();
+
+        $rule = null;
+
+        switch ($input0['inspection_type']) {
+            case ViInspectionType::SO_DISPATCH:
+            case ViInspectionType::SO_RETURN:
+                $rule = ['so_id' => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'integer']];
+
+                break;
+
+            case ViInspectionType::VR_DISPATCH:
+            case ViInspectionType::VR_RETURN:
+                $rule = ['vr_id' => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'integer']];
+
+                break;
+
+            default:break;
+        }
+
+        $vehicle = $saleOrder = null;
+
+        $validator = Validator::make(
+            $request->all(),
+            $rule + [
                 'policy_copy'           => ['bail', 'nullable', Rule::in(Exist::label_keys())],
                 'driving_license'       => ['bail', 'nullable', Rule::in(Exist::label_keys())],
                 'operation_license'     => ['bail', 'nullable', Rule::in(Exist::label_keys())],
@@ -187,35 +221,80 @@ class VehicleInspectionController extends Controller
             + Uploader::validator_rule_upload_array('inspection_info.*.info_photos'),
             [],
             trans_property(VehicleInspection::class) + Arr::dot(['payment' => trans_property(Payment::class)])
-        )->after(function (\Illuminate\Validation\Validator $validator) use ($vehicleInspection, $request, &$vehicle, &$customer) {
+        )->after(function (\Illuminate\Validation\Validator $validator) use ($vehicleInspection, $request, &$vehicle, &$saleOrder) {
             if (!$validator->failed()) {
                 if (null === $request->input('vi_id')) {
-                    // sale_order
-                    if ($so_id = $request->input('so_id')) {
-                        /** @var SaleOrder $sale_order */
-                        $sale_order = SaleOrder::query()->find($so_id);
-                        if (!$sale_order) {
-                            $validator->errors()->add('so_id', 'The sale_order does not exist.');
+                    switch ($request->input('inspection_type')) {
+                        case ViInspectionType::SO_DISPATCH:
+                        case ViInspectionType::SO_RETURN:
+                            // sale_order
+                            if ($so_id = $request->input('so_id')) {
+                                /** @var SaleOrder $sale_order */
+                                $sale_order = SaleOrder::query()->find($so_id);
+                                if (!$sale_order) {
+                                    $validator->errors()->add('so_id', 'The sale_order does not exist.');
 
-                            return;
-                        }
+                                    return;
+                                }
 
-                        if (!$sale_order->check_order_status([SoOrderStatus::SIGNED], $validator)) {
-                            return;
-                        }
+                                if (!$sale_order->check_order_status([SoOrderStatus::SIGNED], $validator)) {
+                                    return;
+                                }
 
-                        /** @var Vehicle $vehicle */
-                        $vehicle = $sale_order->Vehicle;
-                        if (!$vehicle) {
-                            $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                                /** @var Vehicle $vehicle */
+                                $vehicle = $sale_order->Vehicle;
+                                if (!$vehicle) {
+                                    $validator->errors()->add('ve_id', 'The vehicle does not exist.');
 
-                            return;
-                        }
+                                    return;
+                                }
 
-                        $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [ViInspectionType::DISPATCH == $request->input('inspection_type') ? VeStatusDispatch::NOT_DISPATCHED : VeStatusDispatch::DISPATCHED], $validator);
-                        if (!$pass) {
-                            return;
-                        }
+                                $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [ViInspectionType::SO_DISPATCH == $request->input('inspection_type') ? VeStatusDispatch::NOT_DISPATCHED : VeStatusDispatch::DISPATCHED], $validator);
+                                if (!$pass) {
+                                    return;
+                                }
+                            }
+
+                            break;
+
+                        case ViInspectionType::VR_DISPATCH:
+                        case ViInspectionType::VR_RETURN:
+                            if ($vr_id = $request->input('vr_id')) {
+                                /** @var VehicleReplacement $vehicle_replacement */
+                                $vehicle_replacement = VehicleReplacement::query()->find($vr_id);
+                                if (!$vehicle_replacement) {
+                                    $validator->errors()->add('vr_id', '换车记录不存在');
+
+                                    return;
+                                }
+
+                                /** @var Vehicle $vehicle */
+                                $vehicle = $vehicle_replacement->NewVehicle;
+                                if (!$vehicle) {
+                                    $validator->errors()->add('ve_id', '车辆不存在');
+
+                                    return;
+                                }
+
+                                $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [ViInspectionType::VR_DISPATCH == $request->input('inspection_type') ? VeStatusDispatch::NOT_DISPATCHED : VeStatusDispatch::DISPATCHED], $validator);
+                                if (!$pass) {
+                                    return;
+                                }
+
+                                /** @var SaleOrder $saleOrder */
+                                $saleOrder = $vehicle_replacement->SaleOrder;
+                                if (!$saleOrder) {
+                                    $validator->errors()->add('so_id', 'The sale_order does not exist.');
+
+                                    return;
+                                }
+
+                                if (!$saleOrder->check_order_status([SoOrderStatus::SIGNED], $validator)) {
+                                    return;
+                                }
+                            }
+
+                            break;
                     }
 
                     // 不能关闭财务记录的判断：修改状态 + 收付款数据存在 + 收付款数据为已支付 + 当前是要关闭。
@@ -235,59 +314,53 @@ class VehicleInspectionController extends Controller
             throw new ValidationException($validator);
         }
 
-        $input         = $validator->validated();
+        $input         = $input0 + $validator->validated();
         $input_payment = $input['payment'];
 
-        if ($input['so_id']) {
-            $input_payment['so_id'] = $input['so_id'];
+        if (null === $vehicleInspection) {
+            $input['ve_id'] = $vehicle['ve_id'];
+            if (isset($input['so_id'])) {
+                $input_payment['so_id'] = $input['so_id'];
+            } elseif (isset($input['vr_id'])) {
+                $input_payment['so_id'] = $input['so_id'] = $saleOrder->so_id;
+            }
         }
 
         DB::transaction(function () use (&$input, &$input_payment, &$vehicleInspection, &$vehicle) {
             /** @var VehicleInspection $vehicleInspection */
             if (null === $vehicleInspection) {
-                $input['ve_id'] = $vehicle['ve_id'];
-
                 $vehicleInspection = VehicleInspection::query()->updateOrCreate(
                     array_intersect_key($input, array_flip(['so_id', 've_id', 'inspection_type', 'inspection_datetime'])),
                     $input
                 );
 
                 switch ($vehicleInspection->inspection_type) {
-                    case ViInspectionType::DISPATCH:
+                    case ViInspectionType::SO_DISPATCH:
+                    case ViInspectionType::VR_DISPATCH:
                         $vehicleInspection->Vehicle->updateStatus(
                             status_dispatch: VeStatusDispatch::DISPATCHED
                         );
 
                         VehicleUsage::query()->updateOrCreate(
-                            [
-                                'so_id'       => $vehicleInspection->so_id,
-                                've_id'       => $vehicleInspection->ve_id,
-                                'start_vi_id' => $vehicleInspection->vi_id,
-                            ],
-                            [
-                                'end_vi_id' => null,
-                            ]
+                            ['so_id' => $vehicleInspection->so_id, 've_id' => $vehicleInspection->ve_id, 'start_vi_id' => $vehicleInspection->vi_id],
+                            ['end_vi_id' => null]
                         );
 
                         break;
 
-                    case ViInspectionType::RETURN:
+                    case ViInspectionType::SO_RETURN:
+                    case ViInspectionType::VR_RETURN:
                         $update_ve = $vehicleInspection->Vehicle->updateStatus(
                             status_dispatch: VeStatusDispatch::NOT_DISPATCHED
                         );
 
                         $update_vu = VehicleUsage::query()->where(
-                            [
-                                'so_id' => $vehicleInspection->so_id,
-                                've_id' => $vehicleInspection->ve_id,
-                            ]
+                            ['so_id' => $vehicleInspection->so_id, 've_id' => $vehicleInspection->ve_id]
                         )
                             ->whereNull('end_vi_id')
                             ->orderByDesc('vu_id')
                             ->first()
-                            ?->update([
-                                'end_vi_id' => $vehicleInspection->vi_id,
-                            ])
+                            ?->update(['end_vi_id' => $vehicleInspection->vi_id])
                         ;
 
                         break;
@@ -317,11 +390,10 @@ class VehicleInspectionController extends Controller
                         $vehicleInspection->Payment()->create($input_payment);
                     }
                 } else {
-                    $vehicleInspection->Payment()->where('pay_status', '=', RpPayStatus::UNPAID)->update(
-                        [
-                            'is_valid' => RpIsValid::INVALID,
-                        ]
-                    );
+                    $vehicleInspection->Payment()
+                        ->where('pay_status', '=', RpPayStatus::UNPAID)
+                        ->update(['is_valid' => RpIsValid::INVALID])
+                    ;
                 }
             }
         });
@@ -342,9 +414,7 @@ class VehicleInspectionController extends Controller
     {
         $validator = Validator::make(
             $request->all(),
-            [
-                'inspection_type' => ['bail', 'required', 'string', Rule::in(ViInspectionType::label_keys())],
-            ]
+            ['inspection_type' => ['bail', 'required', 'string', Rule::in(ViInspectionType::label_keys())]]
         );
 
         if ($validator->fails()) {
@@ -355,17 +425,43 @@ class VehicleInspectionController extends Controller
 
         $this->response()->withExtras(
             match ($input['inspection_type']) {
-                ViInspectionType::DISPATCH => SaleOrder::options(
+                ViInspectionType::SO_DISPATCH => SaleOrder::options(
                     where: function (Builder $builder) {
-                        $builder->whereIn('ve.status_rental', [VeStatusRental::RENTED])
+                        $builder
+                            ->whereIn('ve.status_rental', [VeStatusRental::RENTED])
                             ->whereIn('ve.status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
                             ->whereIn('so.order_status', [SoOrderStatus::SIGNED])
                         ;
                     }
                 ),
-                ViInspectionType::RETURN => SaleOrder::options(
+                ViInspectionType::SO_RETURN => SaleOrder::options(
                     where: function (Builder $builder) {
-                        $builder->whereIn('ve.status_rental', [VeStatusRental::RENTED])
+                        $builder
+                            ->whereIn('ve.status_rental', [VeStatusRental::RENTED])
+                            ->whereIn('ve.status_dispatch', [VeStatusDispatch::DISPATCHED])
+                            ->whereIn('so.order_status', [SoOrderStatus::SIGNED])
+                        ;
+                    }
+                ),
+                ViInspectionType::VR_DISPATCH => VehicleReplacement::options(
+                    where: function (Builder $builder) {
+                        $builder
+                            ->whereIn('vr.replacement_type', [VrReplacementType::TEMPORARY])
+                            ->where('vr.replacement_start_date', '<=', $today = now()->format('Y-m-d'))
+                            ->where('vr.replacement_end_date', '>=', $today)
+                            ->whereIn('ve.status_rental', [VeStatusRental::RENTED])
+                            ->whereIn('ve.status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
+                            ->whereIn('so.order_status', [SoOrderStatus::SIGNED])
+                        ;
+                    }
+                ),
+                ViInspectionType::VR_RETURN => VehicleReplacement::options(
+                    where: function (Builder $builder) {
+                        $builder
+                            ->whereIn('vr.replacement_type', [VrReplacementType::TEMPORARY])
+                            ->where('vr.replacement_start_date', '<=', $today = now()->format('Y-m-d'))
+                            ->where('vr.replacement_end_date', '>=', $today)
+                            ->whereIn('ve.status_rental', [VeStatusRental::RENTED])
                             ->whereIn('ve.status_dispatch', [VeStatusDispatch::DISPATCHED])
                             ->whereIn('so.order_status', [SoOrderStatus::SIGNED])
                         ;

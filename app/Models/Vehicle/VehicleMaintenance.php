@@ -88,13 +88,14 @@ class VehicleMaintenance extends Model
     protected $attributes = [];
 
     protected $casts = [
-        'entry_datetime'     => 'datetime:Y-m-d H:i',
-        'departure_datetime' => 'datetime:Y-m-d H:i',
-        'maintenance_amount' => 'decimal:2',
-        'settlement_status'  => VmSettlementStatus::class,
-        'pickup_status'      => VmPickupStatus::class,
-        'settlement_method'  => VmSettlementMethod::class,
-        'custody_vehicle'    => VmCustodyVehicle::class,
+        'entry_datetime'        => 'datetime:Y-m-d H:i',
+        'departure_datetime'    => 'datetime:Y-m-d H:i',
+        'maintenance_amount'    => 'decimal:2',
+        'settlement_status'     => VmSettlementStatus::class,
+        'pickup_status'         => VmPickupStatus::class,
+        'settlement_method'     => VmSettlementMethod::class,
+        'custody_vehicle'       => VmCustodyVehicle::class,
+        'next_maintenance_date' => 'datetime:Y-m-d',
     ];
 
     protected $appends = [
@@ -205,7 +206,7 @@ class VehicleMaintenance extends Model
             'VehicleMaintenance.settlement_method'   => fn ($item) => $item->settlement_method_label,
             'VehicleMaintenance.custody_vehicle'     => fn ($item) => $item->custody_vehicle_label,
             'VehicleMaintenance.vm_remark'           => fn ($item) => $item->vm_remark,
-            'VehicleMaintenance.maintenance_info'    => fn ($item) => static::str_render($item->maintenance_info, 'maintenance_info'),
+            'VehicleMaintenance.maintenance_info'    => fn ($item) => str_render($item->maintenance_info, 'maintenance_info'),
         ];
     }
 

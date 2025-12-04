@@ -174,10 +174,14 @@ class SaleOrderController extends Controller
         $this->response()->withExtras(
             SaleOrderTpl::options(),
             Vehicle::options(
-                where: function (Builder $builder) {
-                    $builder->whereIn('status_rental', [VeStatusRental::LISTED])
-                        ->whereIn('status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
-                    ;
+                where: function (Builder $builder) use ($saleOrder) {
+                    $builder->where(function (Builder $query) {
+                        $query->whereIn('status_rental', [VeStatusRental::LISTED])
+                            ->whereIn('status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
+                        ;
+                    })->when(VeStatusRental::PENDING === $saleOrder->order_status->value, function (Builder $query) use ($saleOrder) {
+                        $query->orWhere('ve.ve_id', '=', $saleOrder->ve_id); // 显示出原车辆
+                    });
                 }
             ),
             Customer::options(),
@@ -299,6 +303,15 @@ class SaleOrderController extends Controller
                         return;
                     }
 
+                    // 当车辆变化时候，状态必须是待签约
+                    if ($saleOrder->ve_id !== $ve_id) {
+                        if (SoOrderStatus::PENDING !== $saleOrder->order_status->value) {
+                            $validator->errors()->add('ve_id', '合同在待签约状态下才允许修改车辆。');
+
+                            return;
+                        }
+                    }
+
                     $cu_id    = $request->input('cu_id');
                     $customer = Customer::query()->find($cu_id);
                     if (!$customer) {
@@ -360,6 +373,11 @@ class SaleOrderController extends Controller
             if (null === $saleOrder) {
                 $saleOrder = SaleOrder::query()->create($input + ['order_at' => now(), 'order_status' => SoOrderStatus::PENDING]);
             } else {
+                // 有修改车辆，前提是必须是在初始阶段，要把原车辆的状态改回来。
+                if ($saleOrder->ve_id !== $input['ve_id']) {
+                    $saleOrder->Vehicle->updateStatus(status_rental: VeStatusRental::LISTED);
+                }
+
                 $saleOrder->update($input);
             }
 

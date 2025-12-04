@@ -61,6 +61,7 @@ class VehicleReplacementController extends Controller
     public function create(Request $request): Response
     {
         /** @var SaleOrder $saleOrder */
+        $saleOrder = null;
         $validator = Validator::make(
             $request->all(),
             [
@@ -102,18 +103,17 @@ class VehicleReplacementController extends Controller
             ),
             SaleOrder::options(
                 where: function (Builder $builder) {
-                    $builder->whereIn('so.order_status', [SoOrderStatus::PENDING]);
+                    $builder->whereIn('so.order_status', [SoOrderStatus::SIGNED]);
                 }
             ),
         );
 
         $vehicleReplacement = new VehicleReplacement([
-            'so_id' => $saleOrder?->so_id,
-            //            'current_ve_id' => $saleOrder?->ve_id,
-            //            'photos'        => [],
+            //            'so_id'                  => $saleOrder?->so_id,
+            'replacement_type'       => VrReplacementType::TEMPORARY,
+            'replacement_start_date' => now(),
+            'replacement_status'     => VrReplacementStatus::IN_PROGRESS,
         ]);
-
-        $vehicleReplacement->SaleOrder = $saleOrder;
 
         return $this->response()->withData($vehicleReplacement)->respond();
     }
@@ -127,86 +127,93 @@ class VehicleReplacementController extends Controller
         /** @var Vehicle $vehicle */
         $vehicle = null;
 
-        $validator = Validator::make(
+        $input0 = Validator::make(
             $request->all(),
             [
-                'so_id'                  => ['bail', 'required', 'integer'],
-                'replacement_type'       => ['bail', 'required', Rule::in(VrReplacementType::label_keys())],
-                'new_ve_id'              => ['bail', 'required'],
-                'replacement_date'       => ['bail', 'nullable', 'exclude_if:replacement_type,'.VrReplacementType::TEMPORARY, 'required_if:replacement_type,'.VrReplacementType::PERMANENT, 'date'],
-                'replacement_start_date' => ['bail', 'nullable', 'exclude_if:replacement_type,'.VrReplacementType::PERMANENT, 'required_if:replacement_type,'.VrReplacementType::TEMPORARY, 'date'],
-                'replacement_end_date'   => ['bail', 'nullable', 'exclude_if:replacement_type,'.VrReplacementType::PERMANENT, 'required_if:replacement_type,'.VrReplacementType::TEMPORARY, 'date', 'afterOrEqual:replacement_start_date'],
-                'replacement_status'     => ['bail', 'nullable', 'exclude_if:replacement_type,'.VrReplacementType::PERMANENT, 'required_if:replacement_type,'.VrReplacementType::TEMPORARY, Rule::in(VrReplacementStatus::label_keys())],
-                'vr_remark'              => ['bail', 'nullable', 'string'],
+                'replacement_type' => ['bail', 'required', Rule::in(VrReplacementType::label_keys())],
             ]
             + Uploader::validator_rule_upload_array('additional_photos'),
             [],
             trans_property(VehicleReplacement::class)
-        )
-            ->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$saleOrder, &$vehicle0, &$vehicle) {
-                if (!$validator->failed()) {
-                    $saleOrder = SaleOrder::query()->findOrFail($request->input('so_id'));
+        )->validated();
 
-                    $vehicle0 = $saleOrder->Vehicle;
+        $validator = match ($input0['replacement_type']) {
+            VrReplacementType::TEMPORARY => Validator::make(
+                $request->all(),
+                [
+                    'replacement_type'       => ['bail', 'required', Rule::in(VrReplacementType::label_keys())],
+                    'so_id'                  => ['bail', 'required', 'integer'],
+                    'replacement_start_date' => ['bail', 'nullable', 'required', 'date'],
+                    'replacement_end_date'   => ['bail', 'nullable', 'required', 'date', 'afterOrEqual:replacement_start_date'],
+                    'replacement_status'     => ['bail', 'nullable', 'required', Rule::in(VrReplacementStatus::label_keys())],
+                    'new_ve_id'              => ['bail', 'required'],
+                    'vr_remark'              => ['bail', 'nullable', 'string'],
+                ]
+                + Uploader::validator_rule_upload_array('additional_photos'),
+                [],
+                trans_property(VehicleReplacement::class)
+            ),
 
-                    $pass = $vehicle0->check_status(VeStatusService::YES, [VeStatusRental::RESERVED], [VeStatusDispatch::NOT_DISPATCHED], $validator);
-                    if (!$pass) {
-                        return;
-                    }
+            VrReplacementType::PERMANENT => Validator::make(
+                $request->all(),
+                [
+                    'replacement_date' => ['bail', 'nullable', 'required', 'date'],
+                ]
+                + Uploader::validator_rule_upload_array('additional_photos'),
+                [],
+                trans_property(VehicleReplacement::class)
+            ),
+        };
 
-                    /** @var Vehicle $vehicle */
-                    $vehicle = Vehicle::query()->find($request->input('new_ve_id'));
-                    if (!$vehicle) {
-                        $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+        $validator->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$saleOrder, &$vehicle0, &$vehicle) {
+            if (!$validator->failed()) {
+                $saleOrder = SaleOrder::query()->findOrFail($request->input('so_id'));
 
-                        return;
-                    }
+                $vehicle0 = $saleOrder->Vehicle;
 
-                    $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::LISTED], [VeStatusDispatch::NOT_DISPATCHED], $validator);
-                    if (!$pass) {
-                        return;
-                    }
-
-                    if ($vehicle->ve_id === $saleOrder->ve_id) {
-                        $validator->errors()->add('new_ve_id', '请选择另外一辆车。');
-
-                        return;
-                    }
-
-                    switch ($request->input('replacement_type')) {
-                        case VrReplacementType::PERMANENT:
-                            $validator->setValue('replacement_start_date', null);
-                            $validator->setValue('replacement_end_date', null);
-                            $validator->setValue('replacement_status', null);
-
-                            break;
-
-                        case VrReplacementType::TEMPORARY:
-                            $validator->setValue('replacement_date', null);
-
-                            break;
-                    }
+                $pass = $vehicle0->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [VeStatusDispatch::DISPATCHED], $validator);
+                if (!$pass) {
+                    return;
                 }
-            })
-        ;
+
+                /** @var Vehicle $vehicle */
+                $vehicle = Vehicle::query()->find($request->input('new_ve_id'));
+                if (!$vehicle) {
+                    $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+
+                    return;
+                }
+
+                $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::LISTED], [VeStatusDispatch::NOT_DISPATCHED], $validator);
+                if (!$pass) {
+                    return;
+                }
+
+                if ($vehicle->ve_id === $saleOrder->ve_id) {
+                    $validator->errors()->add('new_ve_id', '请选择另外一辆车。');
+
+                    return;
+                }
+            }
+        });
 
         if ($validator->fails()) {
             throw new ValidationException($validator);
         }
 
-        $input = $validator->validated();
+        $input = $input0 + $validator->validated();
 
-        DB::transaction(function () use ($vehicle0, &$input, &$vehicleReplacement, &$saleOrder, $vehicle) {
+        DB::transaction(function () use (&$input, &$vehicleReplacement, &$saleOrder, $vehicle) {
             $vehicleReplacement = VehicleReplacement::query()
                 ->create($input + ['current_ve_id' => $saleOrder->ve_id])
             ;
 
-            $vehicle0->updateStatus(status_rental: VeStatusRental::LISTED);
+            //            $vehicle0->updateStatus(status_rental: VeStatusRental::LISTED);
 
-            $saleOrder->ve_id = $vehicle->ve_id;
-            $saleOrder->save();
+            //            $saleOrder->ve_id = $vehicle->ve_id;
+            //            $saleOrder->save();
 
-            $vehicle->updateStatus(status_rental: VeStatusRental::RESERVED);
+            $vehicle->updateStatus(status_rental: VeStatusRental::RENTED); // todo 不应该是已租赁，毕竟没有产生效益。
         });
 
         return $this->response()->withData($vehicleReplacement)->respond();
@@ -236,39 +243,47 @@ class VehicleReplacementController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, VehicleReplacement $vehicleReplacement): Response
     {
-        $validator = Validator::make(
+        $input0 = Validator::make(
             $request->all(),
             [
-                'vr_id'                  => ['bail', 'required', Rule::exists(VehicleReplacement::class)],
-                'replacement_date'       => ['bail', 'nullable', 'exclude_if:replacement_type,'.VrReplacementType::TEMPORARY, 'required_if:replacement_type,'.VrReplacementType::PERMANENT, 'date'],
-                'replacement_start_date' => ['bail', 'nullable', 'exclude_if:replacement_type,'.VrReplacementType::PERMANENT, 'required_if:replacement_type,'.VrReplacementType::TEMPORARY, 'date'],
-                'replacement_end_date'   => ['bail', 'nullable', 'exclude_if:replacement_type,'.VrReplacementType::PERMANENT, 'required_if:replacement_type,'.VrReplacementType::TEMPORARY, 'date', 'after:replacement_start_date'],
-                'replacement_status'     => ['bail', 'nullable', 'exclude_if:replacement_type,'.VrReplacementType::PERMANENT, 'required_if:replacement_type,'.VrReplacementType::TEMPORARY, Rule::in(VrReplacementStatus::label_keys())],
-                'vr_remark'              => ['bail', 'nullable', 'string'],
+                'replacement_type' => ['bail', 'required', Rule::in(VrReplacementType::label_keys())],
             ]
             + Uploader::validator_rule_upload_array('additional_photos'),
             [],
             trans_property(VehicleReplacement::class)
-        )
+        )->validated();
 
-            ->after(function (\Illuminate\Validation\Validator $validator) use ($request) {
-                if (!$validator->failed()) {
-                    switch ($request->input('replacement_type')) {
-                        case VrReplacementType::PERMANENT:
-                            $validator->setValue('replacement_start_date', null);
-                            $validator->setValue('replacement_end_date', null);
-                            $validator->setValue('replacement_status', null);
+        $validator = match ($input0['replacement_type']) {
+            VrReplacementType::TEMPORARY => Validator::make(
+                $request->all(),
+                [
+                    //                'so_id'            => ['bail', 'required', 'integer'],
+                    'replacement_start_date' => ['bail', 'nullable', 'required', 'date'],
+                    'replacement_end_date'   => ['bail', 'nullable', 'required', 'date', 'afterOrEqual:replacement_start_date'],
+                    'replacement_status'     => ['bail', 'nullable', 'required', Rule::in(VrReplacementStatus::label_keys())],
+                    //                'new_ve_id'        => ['bail', 'required'],
+                    'vr_remark' => ['bail', 'nullable', 'string'],
+                ]
+                + Uploader::validator_rule_upload_array('additional_photos'),
+                [],
+                trans_property(VehicleReplacement::class)
+            ),
 
-                            break;
+            VrReplacementType::PERMANENT => Validator::make(
+                $request->all(),
+                [
+                    'replacement_date' => ['bail', 'nullable', 'required', 'date'],
+                ]
+                + Uploader::validator_rule_upload_array('additional_photos'),
+                [],
+                trans_property(VehicleReplacement::class)
+            ),
+        };
 
-                        case VrReplacementType::TEMPORARY:
-                            $validator->setValue('replacement_date', null);
-
-                            break;
-                    }
-                }
-            })
-        ;
+        $validator->after(function (\Illuminate\Validation\Validator $validator) {
+            if (!$validator->failed()) {
+            }
+        });
 
         if ($validator->fails()) {
             throw new ValidationException($validator);

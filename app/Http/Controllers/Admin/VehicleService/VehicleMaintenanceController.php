@@ -122,7 +122,7 @@ class VehicleMaintenanceController extends Controller
         $vehicleMaintenance = new VehicleMaintenance([
             //            'entry_datetime'        => now()->format('Y-m-d'),
             //            'departure_datetime'    => now()->format('Y-m-d'),
-            'next_maintenance_date' => now()->addYear()->format('Y-m-d'),
+            'next_maintenance_date' => now()->addYear(),
             'maintenance_mileage'   => 10000,
             'maintenance_info'      => [],
         ]);

@@ -116,7 +116,7 @@ class PermissionImport extends Command
 
             $classTitle = $permissionTypeAttribute->zh_CN;
 
-            $className = Str::kebab(preg_replace('{Controller$}', '', $reflectionClass->getShortName()));
+            $className = preg_replace('{Controller$}', '', $reflectionClass->getShortName());
 
             $groupName = Str::afterLast($reflectionClass->getNamespaceName(), '\\');
 

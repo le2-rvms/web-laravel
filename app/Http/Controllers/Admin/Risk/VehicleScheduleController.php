@@ -66,8 +66,8 @@ class VehicleScheduleController extends Controller
         );
 
         $vehicleSchedule = new VehicleSchedule([
-            'inspection_date'      => now()->format('Y-m-d'),
-            'next_inspection_date' => now()->addYear()->format('Y-m-d'),
+            'inspection_date'      => now(),
+            'next_inspection_date' => now()->addYear(),
         ]);
 
         return $this->response()->withData($vehicleSchedule)->respond();

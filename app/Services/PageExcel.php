@@ -78,9 +78,4 @@ class PageExcel
 
         return temporarySignStorageAppShare($absPath);
     }
-
-    private static function str_render($info, $tpl): string
-    {
-        return view('excel.'.$tpl, ['info' => json_decode($info, true)])->render();
-    }
 }

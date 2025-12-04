@@ -137,7 +137,7 @@ class SaleSettlementController extends Controller
                 'other_deductions'           => '0',
                 'refund_amount'              => '0',
                 'settlement_amount'          => '0',
-                'return_datetime'            => now()->format('Y-m-d H:i:00'),
+                'return_datetime'            => now(),
                 'delete_option'              => RsDeleteOption::DELETE,
                 'processed_by'               => Auth::id(),
             ]);

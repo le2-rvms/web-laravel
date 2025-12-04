@@ -197,7 +197,7 @@ class VehicleAccident extends Model
             'VehicleAccident.settlement_method'  => fn ($item) => $item->settlement_method_label,
             'VehicleAccident.managed_vehicle'    => fn ($item) => $item->managed_vehicle_label,
             'VehicleAccident.va_remark'          => fn ($item) => $item->va_remark,
-            'VehicleAccident.accident_info'      => fn ($item) => static::str_render($item->accident_info, 'accident_info'),
+            'VehicleAccident.accident_info'      => fn ($item) => str_render($item->accident_info, 'accident_info'),
         ];
     }
 

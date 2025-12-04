@@ -184,8 +184,8 @@ class MockDataGenerate extends Command
 
                     if (in_array($SaleOrder->order_status, [SoOrderStatus::SIGNED, SoOrderStatus::COMPLETED, SoOrderStatus::EARLY_TERMINATION])) {
                         for ($groupSize = 0; $groupSize < 2; ++$groupSize) {
-                            $vehicleInspection1 = VehicleInspection::factory()->for($Vehicle)->for($SaleOrder)->create(['inspection_type' => ViInspectionType::DISPATCH]);
-                            $vehicleInspection2 = VehicleInspection::factory()->for($Vehicle)->for($SaleOrder)->create(['inspection_type' => ViInspectionType::RETURN]);
+                            $vehicleInspection1 = VehicleInspection::factory()->for($Vehicle)->for($SaleOrder)->create(['inspection_type' => ViInspectionType::SO_DISPATCH]);
+                            $vehicleInspection2 = VehicleInspection::factory()->for($Vehicle)->for($SaleOrder)->create(['inspection_type' => ViInspectionType::SO_RETURN]);
 
                             $VehicleUsage = VehicleUsage::factory()->for($SaleOrder)->for($Vehicle)->for($vehicleInspection1, 'VehicleInspectionStart')->for($vehicleInspection2, 'VehicleInspectionEnd')->create();
                         }

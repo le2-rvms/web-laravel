@@ -37,7 +37,7 @@ class VehicleInspectionControllerTest extends BaseVehicleControllerTestCase
         $resp->assertStatus(422);
 
         // 正确的 inspection_type 参数
-        $resp = $this->getJson(action([VehicleInspectionController::class, 'saleOrdersOption']).'?inspection_type='.ViInspectionType::DISPATCH);
+        $resp = $this->getJson(action([VehicleInspectionController::class, 'saleOrdersOption']).'?inspection_type='.ViInspectionType::SO_DISPATCH);
         $resp->assertStatus(200);
         $this->assertCommonJsonStructure($resp->json());
     }

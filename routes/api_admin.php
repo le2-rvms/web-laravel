@@ -123,7 +123,7 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
     Route::post('vehicles/upload', [VehicleController::class, 'upload']);
     Route::resource('vehicles', VehicleController::class);
 
-    Route::get('vehicle-inspections/sale-orders-option', [VehicleInspectionController::class, 'saleOrdersOption']);
+    Route::get('vehicle-inspections/sale-orders-option', [VehicleInspectionController::class, 'saleOrdersOption']); // todo 返回的时候不放在 ext 里
     Route::post('vehicle-inspections/upload', [VehicleInspectionController::class, 'upload']);
     Route::get('vehicle-inspections/{vehicle_inspection}/doc', [VehicleInspectionController::class, 'doc']);
     Route::resource('vehicle-inspections', VehicleInspectionController::class);

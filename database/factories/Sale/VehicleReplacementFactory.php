@@ -4,10 +4,11 @@ namespace Database\Factories\Sale;
 
 use App\Enum\Sale\VrReplacementStatus;
 use App\Enum\Sale\VrReplacementType;
+use App\Models\Sale\VehicleReplacement;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Sale\VehicleReplacement>
+ * @extends Factory<VehicleReplacement>
  */
 class VehicleReplacementFactory extends Factory
 {

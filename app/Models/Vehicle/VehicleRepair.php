@@ -178,7 +178,7 @@ class VehicleRepair extends Model
             'VehicleRepair.custody_vehicle'    => fn ($item) => $item->custody_vehicle_label,
             'VehicleRepair.repair_attribute'   => fn ($item) => $item->repair_attribute_label,
             'VehicleRepair.vr_remark'          => fn ($item) => $item->vr_remark,
-            'VehicleRepair.repair_info'        => fn ($item) => static::str_render($item->repair_info, 'repair_info'),
+            'VehicleRepair.repair_info'        => fn ($item) => str_render($item->repair_info, 'repair_info'),
         ];
     }
 

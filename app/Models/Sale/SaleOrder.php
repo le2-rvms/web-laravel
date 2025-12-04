@@ -303,7 +303,14 @@ class SaleOrder extends Model
     {
         $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
 
-        $value = DB::query()
+        $value = static::options_value($where);
+
+        return [$key => $value];
+    }
+
+    public static function options_value(?\Closure $where = null): array
+    {
+        return DB::query()
             ->from('sale_orders', 'so')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'so.ve_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
@@ -320,8 +327,6 @@ class SaleOrder extends Model
             )
             ->get()->toArray()
         ;
-
-        return [$key => $value];
     }
 
     public function getRentalStartZhAttribute(): ?string

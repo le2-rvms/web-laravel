@@ -88,9 +88,9 @@ class VehicleAccidentController extends Controller
         );
 
         $vehicleAccident = new VehicleAccident([
-            'accident_dt'    => now()->format('Y-m-d H:i:s'),
-            'factory_in_dt'  => now()->format('Y-m-d H:i:s'),
-            'factory_out_dt' => now()->format('Y-m-d H:i:s'),
+            'accident_dt'    => now(),
+            'factory_in_dt'  => now(),
+            'factory_out_dt' => now(),
             'accident_info'  => [],
         ]);
 
