@@ -14,7 +14,7 @@ use App\Enum\Sale\SsReturnStatus;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Payment\Payment;
 use App\Models\Sale\DocTpl;
 use App\Models\Sale\SaleOrder;
@@ -37,7 +37,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('退车结算管理')]
+#[PermissionType('退车结算')]
 class SaleSettlementController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -143,14 +143,14 @@ class SaleSettlementController extends Controller
             ]);
 
             $this->response()->withExtras(
-                Staff::optionsWithRoles(),
+                Admin::optionsWithRoles(),
             );
         } else { // 是修改
             $this->response()->withExtras(
                 DocTpl::options(function (Builder $query) {
                     $query->where('dt.dt_type', '=', DtDtType::SALE_SETTLEMENT);
                 }),
-                Staff::optionsWithRoles(),
+                Admin::optionsWithRoles(),
             );
         }
 
@@ -242,7 +242,7 @@ class SaleSettlementController extends Controller
                 'return_datetime'            => ['required', 'date'],
                 'delete_option'              => ['required', Rule::in(RsDeleteOption::label_keys())],
                 'ss_remark'                  => ['nullable', 'string'],
-                'processed_by'               => ['bail', 'nullable', 'integer', Rule::exists(Staff::class, 'id')],
+                'processed_by'               => ['bail', 'nullable', 'integer', Rule::exists(Admin::class, 'id')],
             ]
             + Uploader::validator_rule_upload_array('additional_photos'),
             [],

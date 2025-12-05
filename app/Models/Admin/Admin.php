@@ -31,7 +31,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property null|bool       $is_mock
  *                                                  -- relation
  */
-class Staff extends Authenticatable
+class Admin extends Authenticatable
 {
     use HasApiTokens;
     use Notifiable;

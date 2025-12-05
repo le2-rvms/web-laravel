@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\_;
 
 use App\Enum\Admin\AdmUserType;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,14 +23,14 @@ class MockController extends Controller
 
     public function index(): JsonResponse
     {
-        $options = Staff::options(function (Builder $builder) {
+        $options = Admin::options(function (Builder $builder) {
             $builder->where('user_type', '!=', AdmUserType::COMMON);
         });
 
         return $this->response()->withData($options)->respond();
     }
 
-    public function update(Request $request, Staff $mock): Response
+    public function update(Request $request, Admin $mock): Response
     {
         if (AdmUserType::COMMON === $mock->user_type) {
             throw ValidationException::withMessages([

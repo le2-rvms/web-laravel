@@ -14,7 +14,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('消息管理')]
+#[PermissionType('消息')]
 class DeliveryLogController extends Controller
 {
     public static function labelOptions(Controller $controller): void

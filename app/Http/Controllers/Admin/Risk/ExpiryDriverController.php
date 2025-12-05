@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('司机证照到期管理')]
+#[PermissionType('司机证照到期')]
 class ExpiryDriverController extends Controller
 {
     public static function labelOptions(Controller $controller): void

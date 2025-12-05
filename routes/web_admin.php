@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\Admin\_\HomeController;
+use App\Http\Controllers\Admin\Admin\AdminController;
+use App\Http\Controllers\Admin\Admin\AdminPermissionController;
+use App\Http\Controllers\Admin\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\Config\Configuration0Controller;
 use App\Http\Controllers\Admin\Config\Configuration1Controller;
-use App\Http\Controllers\Admin\Staff\StaffController;
-use App\Http\Controllers\Admin\Staff\StaffPermissionController;
-use App\Http\Controllers\Admin\Staff\StaffProfileController;
-use App\Http\Controllers\Admin\Staff\StaffRoleController;
 use App\Http\Middleware\CheckPermission;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -22,7 +22,7 @@ Auth::routes(['register' => false]);
 Route::group(['middleware' => ['auth', CheckPermission::class]], function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 
-    Route::controller(StaffProfileController::class)->group(function () {
+    Route::controller(AdminProfileController::class)->group(function () {
         Route::get('/profile/edit', 'edit')->name('profile.edit');
         Route::put('/profile/update', 'update')->name('profile.update');
     });
@@ -35,11 +35,11 @@ Route::group(['middleware' => ['auth', CheckPermission::class]], function () {
     //        Route::resource('roles', AdminRoleController::class);
 
     // Admin
-    Route::resource('admins', StaffController::class);
+    Route::resource('admins', AdminController::class);
 
     // Permissions
-    Route::resource('permissions', StaffPermissionController::class);
+    Route::resource('permissions', AdminPermissionController::class);
 
     // Roles
-    Route::resource('roles', StaffRoleController::class);
+    Route::resource('roles', AdminRoleController::class);
 });

@@ -13,7 +13,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('账户流水管理')]
+#[PermissionType('账户流水')]
 class InoutController extends Controller
 {
     public static function labelOptions(Controller $controller): void

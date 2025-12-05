@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\_;
 
 use App\Enum\Statistics\Dimension;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -88,7 +88,7 @@ class StatisticsController extends Controller
 
         $endDate = $endDate->format('Y-m-d');
 
-        /** @var Staff $user */
+        /** @var Admin $user */
         $user = auth()->user();
 
         $sql_permission_array = [

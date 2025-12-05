@@ -23,7 +23,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('签约模板管理')]
+#[PermissionType('签约模板')]
 class SaleOrderTplController extends Controller
 {
     public static function labelOptions(Controller $controller): void

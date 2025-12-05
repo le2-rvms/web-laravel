@@ -3,8 +3,8 @@
 namespace App\Console\Commands\Sys;
 
 use App\Enum\Admin\AdmUserType;
-use App\Models\Admin\Staff;
-use App\Models\Admin\StaffRole;
+use App\Models\Admin\Admin;
+use App\Models\Admin\AdminRole;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -43,13 +43,13 @@ class SuperUserCreate extends Command
         }
 
         // 创建或更新角色
-        StaffRole::query()->updateOrCreate(
+        AdminRole::query()->updateOrCreate(
             ['name' => $roleName],
             ['guard_name' => config('auth.defaults.guard')]
         );
 
         // 创建或更新管理员并同步角色
-        Staff::query()->updateOrCreate(
+        Admin::query()->updateOrCreate(
             ['email' => $email],
             [
                 'name'                 => $name,

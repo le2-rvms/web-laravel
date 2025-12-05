@@ -15,7 +15,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('122账号管理')]
+#[PermissionType('122账号')]
 class OneAccountController extends Controller
 {
     public static function labelOptions(Controller $controller): void

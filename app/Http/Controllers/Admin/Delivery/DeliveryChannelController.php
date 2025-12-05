@@ -19,7 +19,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('消息类型管理')]
+#[PermissionType('消息类型')]
 class DeliveryChannelController extends Controller
 {
     public static function labelOptions(Controller $controller): void

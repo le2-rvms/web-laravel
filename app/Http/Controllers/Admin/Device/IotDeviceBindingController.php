@@ -6,7 +6,7 @@ use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Iot\IotDevice;
 use App\Models\Iot\IotDeviceBinding;
 use App\Models\Vehicle\Vehicle;
@@ -20,7 +20,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('设备绑定管理')]
+#[PermissionType('设备绑定')]
 class IotDeviceBindingController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -70,7 +70,7 @@ class IotDeviceBindingController extends Controller
         $this->options();
 
         $this->response()->withExtras(
-            Staff::optionsWithRoles(),
+            Admin::optionsWithRoles(),
             Vehicle::options(),
         );
 
@@ -101,7 +101,7 @@ class IotDeviceBindingController extends Controller
                 'db_start_at'  => ['required', 'date'],
                 'db_end_at'    => ['nullable', 'date', 'after:db_start_at'],
                 'db_note'      => ['nullable', 'string', 'max:200'],
-                'processed_by' => ['required', Rule::exists(Staff::class, 'id')],
+                'processed_by' => ['required', Rule::exists(Admin::class, 'id')],
             ],
             trans_property(IotDeviceBinding::class),
         )->after(function (\Illuminate\Validation\Validator $validator) use ($iotDeviceBinding, $request) {

@@ -23,7 +23,7 @@ use App\Enum\Vehicle\ViPolicyCopy;
 use App\Enum\Vehicle\ViVehicleDamageStatus;
 use App\Exceptions\ClientException;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Sale\DocTpl;
@@ -45,7 +45,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('验车管理')]
+#[PermissionType('验车')]
 class VehicleInspectionController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -102,7 +102,7 @@ class VehicleInspectionController extends Controller
         $this->response()->withExtras(
             RpPayStatus::options(),
             PaymentAccount::options(),
-            Staff::optionsWithRoles(),
+            Admin::optionsWithRoles(),
         );
 
         $vehicleInspection = new VehicleInspection([
@@ -138,7 +138,7 @@ class VehicleInspectionController extends Controller
             }),
             RpPayStatus::options(),
             PaymentAccount::options(),
-            Staff::optionsWithRoles(),
+            Admin::optionsWithRoles(),
         );
 
         $vehicleInspection->load('Vehicle', 'SaleOrder', 'SaleOrder.Customer', 'SaleOrder.Vehicle', 'Payment', 'Payment.PaymentAccount');
@@ -204,7 +204,7 @@ class VehicleInspectionController extends Controller
                 'vehicle_damage_status' => ['bail', 'nullable', Rule::in(ViVehicleDamageStatus::label_keys())],
                 'inspection_datetime'   => ['bail', 'required', 'date'],
                 'vi_mileage'            => ['bail', 'required', 'integer', 'min:0'],
-                'processed_by'          => ['bail', 'nullable', 'integer', Rule::exists(Staff::class, 'id')],
+                'processed_by'          => ['bail', 'nullable', 'integer', Rule::exists(Admin::class, 'id')],
                 'damage_deduction'      => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
                 'vi_remark'             => ['bail', 'nullable', 'string'],
                 'add_should_pay'        => ['bail', 'nullable', 'boolean'],

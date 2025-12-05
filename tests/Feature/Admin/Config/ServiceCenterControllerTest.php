@@ -4,7 +4,7 @@ namespace Tests\Feature\Admin\Config;
 
 use App\Enum\Vehicle\ScScStatus;
 use App\Http\Controllers\Admin\VehicleService\ServiceCenterController;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Vehicle\ServiceCenter;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Tests\TestCase;
@@ -56,7 +56,7 @@ class ServiceCenterControllerTest extends TestCase
 
     public function testStoreCreatesServiceCenter(): void
     {
-        list('AdminOptions' => $AdminOptions) = Staff::optionsWithRoles();
+        list('AdminOptions' => $AdminOptions) = Admin::optionsWithRoles();
 
         $payload = ServiceCenter::factory()->raw([
             'sc_name'             => 'TEST-??',

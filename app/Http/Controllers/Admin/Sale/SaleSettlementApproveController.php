@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('退车结算审核管理')]
+#[PermissionType('退车结算审核')]
 class SaleSettlementApproveController extends Controller
 {
     public static function labelOptions(Controller $controller): void {}

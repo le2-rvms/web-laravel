@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'Staff' => [
+    'Admin' => [
         'id'                    => '序号',
         'name'                  => '姓名',
         'email'                 => '邮件地址',
@@ -15,18 +15,27 @@ return [
         'expires_at'            => '账号过期时间',
         'is_mock'               => '',
     ],
-    'StaffPermission' => [
+    'AdminPermission' => [
         'id'         => '',
         'name'       => '权限英文名',
         'title'      => '权限标题',
         'guard_name' => '',
     ],
-    'StaffRole' => [
+    'AdminRole' => [
         'id'          => '序号',
         'name'        => '角色名',
         'guard_name'  => '',
         'is_custom'   => '是否是自定义',
         'permissions' => '',
+    ],
+    'AdminTeam' => [
+        'at_id'        => '序号',
+        'at_parent_id' => '上层序号',
+        'at_name'      => '车队名称',
+        'at_status'    => '车队状态',
+        'at_sort'      => '排序',
+        'at_remark'    => '备注',
+        'at_extra'     => '扩展信息',
     ],
     'Customer' => [
         'cu_id'                => '客户序号',
@@ -656,6 +665,8 @@ return [
         'process_status_label' => '违章处理状态',
         'payment_status_label' => '违章交款状态',
         'vv_remark'            => '违章备注',
+        'vv_response'          => '',
+        'vv_code'              => '',
     ],
     'Company' => [
         'only_one'                  => '',

@@ -2,7 +2,7 @@
 
 namespace App\Enum;
 
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Customer\Customer;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,7 +23,7 @@ class AuthUserType
         $format = '%s:%s:%s';
 
         return match (true) {
-            $auth_user instanceof Staff    => sprintf($format, AuthUserType::ADMIN, $auth_user->id, $auth_user->name),
+            $auth_user instanceof Admin    => sprintf($format, AuthUserType::ADMIN, $auth_user->id, $auth_user->name),
             $auth_user instanceof Customer => sprintf($format, AuthUserType::CUSTOMER, $auth_user->cu_id, $auth_user->contact_name),
         };
     }

@@ -26,7 +26,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('预定订单管理')]
+#[PermissionType('预定订单')]
 class BookingOrderController extends Controller
 {
     public static function labelOptions(Controller $controller): void

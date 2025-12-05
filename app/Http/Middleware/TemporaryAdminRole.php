@@ -2,9 +2,9 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Admin\Staff;
-use App\Models\Admin\StaffPermission;
-use App\Models\Admin\StaffRole;
+use App\Models\Admin\Admin;
+use App\Models\Admin\AdminPermission;
+use App\Models\Admin\AdminRole;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Database\Eloquent\Builder;
@@ -48,7 +48,7 @@ class TemporaryAdminRole
         }
 
         // 构造临时用户对象
-        $tempUser = new Staff();
+        $tempUser = new Admin();
         $tempUser->forceFill([
             'is_mock' => true,
             'name'    => $roleCached['name'],
@@ -56,7 +56,7 @@ class TemporaryAdminRole
 
         $tempUser->exists = true;
 
-        $roles = StaffRole::query()->where('id', '=', $roleCached['id'])->get();
+        $roles = AdminRole::query()->where('id', '=', $roleCached['id'])->get();
 
         if ($roles->isEmpty()) {
             return false;
@@ -64,7 +64,7 @@ class TemporaryAdminRole
 
         $roleIds = $roles->pluck('id')->toArray();
 
-        $permissions = StaffPermission::query()->whereHas('roles', function (Builder $query) use ($roleIds) {
+        $permissions = AdminPermission::query()->whereHas('roles', function (Builder $query) use ($roleIds) {
             $query->whereIn('id', $roleIds);
         })->get();
 

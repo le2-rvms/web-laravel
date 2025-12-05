@@ -4,6 +4,9 @@ namespace App\Console\Commands\Sys;
 
 use App\Enum\Admin\AdmUserType;
 use App\Enum\Admin\ArIsCustom;
+use App\Http\Controllers\Admin\Admin\AdminController;
+use App\Http\Controllers\Admin\Admin\AdminPermissionController;
+use App\Http\Controllers\Admin\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\Config\Configuration0Controller;
 use App\Http\Controllers\Admin\Config\Configuration1Controller;
 use App\Http\Controllers\Admin\Config\DocTplController;
@@ -35,9 +38,6 @@ use App\Http\Controllers\Admin\Sale\SaleOrderTplController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementController;
 use App\Http\Controllers\Admin\Sale\VehiclePreparationController;
 use App\Http\Controllers\Admin\Sale\VehicleReplacementController;
-use App\Http\Controllers\Admin\Staff\StaffController;
-use App\Http\Controllers\Admin\Staff\StaffPermissionController;
-use App\Http\Controllers\Admin\Staff\StaffRoleController;
 use App\Http\Controllers\Admin\Vehicle\OneAccountController;
 use App\Http\Controllers\Admin\Vehicle\VehicleController;
 use App\Http\Controllers\Admin\Vehicle\VehicleInspectionController;
@@ -48,8 +48,8 @@ use App\Http\Controllers\Admin\VehicleService\ServiceCenterController;
 use App\Http\Controllers\Admin\VehicleService\VehicleAccidentController;
 use App\Http\Controllers\Admin\VehicleService\VehicleMaintenanceController;
 use App\Http\Controllers\Admin\VehicleService\VehicleRepairController;
-use App\Models\Admin\Staff;
-use App\Models\Admin\StaffRole;
+use App\Models\Admin\Admin;
+use App\Models\Admin\AdminRole;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -75,8 +75,8 @@ class ImportAdminAndRoles extends Command
         self::role_payment         => [InoutController::class, PaymentController::class, PaymentTypeController::class, SaleOrderRentPaymentController::class, SaleOrderSignPaymentController::class, VehiclePreparationController::class],
         self::role_sales           => [BookingOrderController::class, BookingVehicleController::class, SaleOrderController::class, SaleOrderCancelController::class, SaleOrderTplController::class, SaleSettlementController::class, VehicleReplacementController::class, CustomerController::class],
         self::role_vehicle_service => [VehicleAccidentController::class, VehicleMaintenanceController::class, VehicleRepairController::class],
-        self::role_manager         => [Configuration0Controller::class, DocTplController::class, PaymentAccountController::class, StaffController::class, StaffPermissionController::class, StaffRoleController::class, OneAccountController::class, VehicleController::class, ServiceCenterController::class, SaleOrderController::class, CustomerController::class, DeliveryWecomGroupController::class, DeliveryWecomMemberController::class, DocTplController::class],
-        self::role_system          => [Configuration0Controller::class, Configuration1Controller::class, ImportController::class, StaffPermissionController::class, DeliveryChannelController::class, DeliveryLogController::class],
+        self::role_manager         => [Configuration0Controller::class, DocTplController::class, PaymentAccountController::class, AdminController::class, AdminPermissionController::class, AdminRoleController::class, OneAccountController::class, VehicleController::class, ServiceCenterController::class, SaleOrderController::class, CustomerController::class, DeliveryWecomGroupController::class, DeliveryWecomMemberController::class, DocTplController::class],
+        self::role_system          => [Configuration0Controller::class, Configuration1Controller::class, ImportController::class, AdminPermissionController::class, DeliveryChannelController::class, DeliveryLogController::class],
     ];
 
     private array $mock_admins = [
@@ -91,7 +91,7 @@ class ImportAdminAndRoles extends Command
     {
         DB::transaction(function () {
             foreach ($this->builtinRoles as $name => $_permissions) {
-                $role = StaffRole::query()->updateOrCreate(['name' => $name, 'guard_name' => 'web'], ['is_custom' => ArIsCustom::NO]);
+                $role = AdminRole::query()->updateOrCreate(['name' => $name, 'guard_name' => 'web'], ['is_custom' => ArIsCustom::NO]);
                 if ($_permissions) {
                     $permissions = array_map(function ($permission) {
                         $class_basename = class_basename($permission);
@@ -105,11 +105,11 @@ class ImportAdminAndRoles extends Command
             $this->info('内置角色导入完成（基于 name+guard_name 去重）。');
 
             if (config('setting.mock.enable')) {
-                foreach ($this->mock_admins as $staff_name => $role_name) {
-                    $staff = Staff::query()->updateOrCreate(['name' => $staff_name], ['user_type' => AdmUserType::MOCK]);
+                foreach ($this->mock_admins as $admin_name => $role_name) {
+                    $admin = Admin::query()->updateOrCreate(['name' => $admin_name], ['user_type' => AdmUserType::MOCK]);
 
-                    $role = StaffRole::query()->where(['name' => $role_name])->firstOrFail();
-                    $staff->assignRole($role);
+                    $role = AdminRole::query()->where(['name' => $role_name])->firstOrFail();
+                    $admin->assignRole($role);
                 }
 
                 $this->info('演示用户导入完成（基于 name 去重）。');

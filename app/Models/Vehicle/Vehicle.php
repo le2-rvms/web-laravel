@@ -13,7 +13,7 @@ use App\Enum\Vehicle\VeVeType;
 use App\Exceptions\ClientException;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -75,7 +75,7 @@ use Illuminate\Validation\Validator;
  * @property null|string                  $ve_remark                   车辆备注
  *                                                                     -
  * @property VehicleModel                 $VehicleModel
- * @property Staff                        $VehicleManager
+ * @property Admin                        $VehicleManager
  *                                                                     -
  * @property string|VeVeType              $ve_type_label               车辆类型-中文
  * @property null|string                  $vehicle_brand_model_name    车牌品牌车型
@@ -148,7 +148,7 @@ class Vehicle extends Model
 
     public function VehicleManager(): BelongsTo
     {
-        return $this->belongsTo(Staff::class, 'vehicle_manager', 'id');
+        return $this->belongsTo(Admin::class, 'vehicle_manager', 'id');
     }
 
     public function scopeOnService(Builder $query): void

@@ -16,7 +16,7 @@ use App\Enum\Vehicle\VmSettlementMethod;
 use App\Enum\Vehicle\VmSettlementStatus;
 use App\Exceptions\ClientException;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Sale\SaleOrder;
@@ -34,7 +34,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('保养管理')]
+#[PermissionType('保养')]
 class VehicleMaintenanceController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -51,7 +51,7 @@ class VehicleMaintenanceController extends Controller
     public function index(Request $request): Response
     {
         // 如果是维修厂，则只能看到自己的。
-        /** @var Staff $user */
+        /** @var Admin $user */
         $user = auth()->user();
 
         $this->options(true);
@@ -102,7 +102,7 @@ class VehicleMaintenanceController extends Controller
     public function create(Request $request): Response
     {
         // 如果是维修厂，则只能看到自己的。
-        /** @var Staff $user */
+        /** @var Admin $user */
         $user = auth()->user();
 
         $this->options();
@@ -150,7 +150,7 @@ class VehicleMaintenanceController extends Controller
     public function edit(VehicleMaintenance $vehicleMaintenance): Response
     {
         // 如果是维修厂，则只能看到自己的。
-        /** @var Staff $user */
+        /** @var Admin $user */
         $user = auth()->user();
 
         $this->options();

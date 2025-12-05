@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin\Delivery;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Sale\SaleOrderExt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('企业微信机器人管理')]
+#[PermissionType('企业微信机器人')]
 class DeliveryWecomMemberController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -30,7 +30,7 @@ class DeliveryWecomMemberController extends Controller
         $this->response()->withExtras(
         );
 
-        $items = Staff::indexQuery()
+        $items = Admin::indexQuery()
             ->select('id as adm_id', 'name', 'wecom_name')
             ->orderByDesc('adm.id')
             ->get()
@@ -46,7 +46,7 @@ class DeliveryWecomMemberController extends Controller
             $request->all(),
             [
                 'items'              => ['bail', 'nullable', 'array'],
-                'items.*.adm_id'     => ['bail', 'required', 'integer', Rule::exists(Staff::class, 'id')],
+                'items.*.adm_id'     => ['bail', 'required', 'integer', Rule::exists(Admin::class, 'id')],
                 'items.*.wecom_name' => ['bail', 'nullable', 'max:255'],
             ],
             [],
@@ -67,9 +67,9 @@ class DeliveryWecomMemberController extends Controller
 
         DB::transaction(function () use (&$items) {
             foreach ($items->chunk(50) as $chunks) {
-                Staff::query()->upsert($chunks->all(), ['id'], ['wecom_name']);
+                Admin::query()->upsert($chunks->all(), ['id'], ['wecom_name']);
             }
-            Staff::query()->whereNotIn('adm_id', $items->pluck('id')->all())->delete();
+            Admin::query()->whereNotIn('adm_id', $items->pluck('id')->all())->delete();
         });
 
         return $this->response()->respond();

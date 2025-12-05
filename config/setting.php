@@ -1,7 +1,8 @@
 <?php
 
 use App\Models\_\Configuration;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
+use App\Models\Admin\AdminTeam;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerCompany;
 use App\Models\Customer\CustomerIndividual;
@@ -29,7 +30,8 @@ use App\Models\Vehicle\VehicleSchedule;
 return [
     'dblog' => [
         'models' => [
-            (Staff::class)                  => 'id',
+            (AdminTeam::class)              => 'at_id',
+            (Admin::class)                  => 'id',
             (Configuration::class)          => 'cfg_id',
             (DocTpl::class)                 => 'dt_id',
             (Customer::class)               => 'cu_id',

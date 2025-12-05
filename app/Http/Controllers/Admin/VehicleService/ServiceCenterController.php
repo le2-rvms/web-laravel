@@ -6,7 +6,7 @@ use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Vehicle\ScScStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Vehicle\ServiceCenter;
 use App\Models\Vehicle\VehicleAccident;
 use App\Models\Vehicle\VehicleMaintenance;
@@ -20,7 +20,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('修理厂管理')]
+#[PermissionType('修理厂')]
 class ServiceCenterController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -70,7 +70,7 @@ class ServiceCenterController extends Controller
         ]);
 
         $this->response()->withExtras(
-            Staff::optionsWithRoles(),
+            Admin::optionsWithRoles(),
         );
 
         $arr = (string) $serviceCenter;
@@ -99,7 +99,7 @@ class ServiceCenterController extends Controller
     {
         $this->options();
         $this->response()->withExtras(
-            Staff::optionsWithRoles(),
+            Admin::optionsWithRoles(),
             VehicleRepair::kvList(sc_id: $serviceCenter->sc_id),
             VehicleMaintenance::kvList(sc_id: $serviceCenter->sc_id),
             VehicleAccident::kvList(sc_id: $serviceCenter->sc_id),

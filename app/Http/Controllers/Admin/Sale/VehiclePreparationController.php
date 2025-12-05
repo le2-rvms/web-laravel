@@ -10,7 +10,7 @@ use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Enum\YesNo;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehiclePreparation;
 use App\Services\PaginateService;
@@ -22,7 +22,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('整备管理')]
+#[PermissionType('整备')]
 class VehiclePreparationController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -63,7 +63,7 @@ class VehiclePreparationController extends Controller
             )
         );
 
-        /** @var Staff $user */
+        /** @var Admin $user */
         $user = auth()->user();
 
         $has_role_prep_vehicle  = $user->hasRole(ImportAdminAndRoles::role_vehicle_mgr) || $user->hasRole(config('setting.super_role.name'));

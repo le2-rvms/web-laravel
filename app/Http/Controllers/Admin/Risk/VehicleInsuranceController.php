@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('待续保管理')]
+#[PermissionType('待续保')]
 class VehicleInsuranceController extends Controller
 {
     public static function labelOptions(Controller $controller): void

@@ -9,7 +9,7 @@ use App\Models\_\Configuration;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('系统设定值管理')]
+#[PermissionType('系统设定值')]
 class Configuration1Controller extends ConfigurationController
 {
     public function __construct()

@@ -16,7 +16,7 @@ use Spatie\Permission\Models\Role;
  * @property ArIsCustom|int $is_custom   是否是自定义
  * @property Collection     $permissions
  */
-class StaffRole extends Role
+class AdminRole extends Role
 {
     protected $table = 'admin_roles';
 

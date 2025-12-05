@@ -4,7 +4,7 @@ namespace App\Models\_;
 
 use App\Enum\AuthUserType;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Sale\SaleOrder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -97,7 +97,7 @@ trait ModelTrait
 
     public function ProcessedBy(): BelongsTo
     {
-        return $this->BelongsTo(Staff::class, 'processed_by', 'id');
+        return $this->BelongsTo(Admin::class, 'processed_by', 'id');
     }
 
     abstract public static function options(?\Closure $where = null): array;

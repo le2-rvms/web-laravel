@@ -50,7 +50,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('订单管理')]
+#[PermissionType('订单')]
 class SaleOrderController extends Controller
 {
     public static function labelOptions(Controller $controller): void

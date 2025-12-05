@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('租车订单取消管理')]
+#[PermissionType('租车订单取消')]
 class SaleOrderCancelController extends Controller
 {
     public static function labelOptions(Controller $controller): void

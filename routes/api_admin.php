@@ -5,6 +5,11 @@ use App\Http\Controllers\Admin\_\LoginController;
 use App\Http\Controllers\Admin\_\MockController;
 use App\Http\Controllers\Admin\_\PasswordResetController;
 use App\Http\Controllers\Admin\_\StatisticsController;
+use App\Http\Controllers\Admin\Admin\AdminController;
+use App\Http\Controllers\Admin\Admin\AdminPermissionController;
+use App\Http\Controllers\Admin\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\Admin\AdminRoleController;
+use App\Http\Controllers\Admin\Admin\AdminTeamController;
 use App\Http\Controllers\Admin\Config\CompanyController;
 use App\Http\Controllers\Admin\Config\Configuration0Controller;
 use App\Http\Controllers\Admin\Config\Configuration1Controller;
@@ -39,10 +44,6 @@ use App\Http\Controllers\Admin\Sale\SaleSettlementApproveController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementController;
 use App\Http\Controllers\Admin\Sale\VehiclePreparationController;
 use App\Http\Controllers\Admin\Sale\VehicleReplacementController;
-use App\Http\Controllers\Admin\Staff\StaffController;
-use App\Http\Controllers\Admin\Staff\StaffPermissionController;
-use App\Http\Controllers\Admin\Staff\StaffProfileController;
-use App\Http\Controllers\Admin\Staff\StaffRoleController;
 use App\Http\Controllers\Admin\Vehicle\OneAccountController;
 use App\Http\Controllers\Admin\Vehicle\VehicleController;
 use App\Http\Controllers\Admin\Vehicle\VehicleInspectionController;
@@ -77,13 +78,12 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     Route::get('/history/{class_basename}/{pk}', HistoryController::class);
 
-    Route::singleton('staff-profile', StaffProfileController::class);
+    Route::resource('admin-permissions', AdminPermissionController::class);
+    Route::resource('admin-roles', AdminRoleController::class);
+    Route::resource('admin-teams', AdminTeamController::class);
+    Route::resource('admin', AdminController::class);
 
-    Route::resource('staff', StaffController::class);
-
-    Route::resource('staff-permissions', StaffPermissionController::class);
-
-    Route::resource('staff-roles', StaffRoleController::class);
+    Route::singleton('admin-profile', AdminProfileController::class);
 
     Route::resource('configuration-app', Configuration0Controller::class)->parameters(['configuration-app' => 'configuration']);
     Route::resource('configuration-system', Configuration1Controller::class)->parameters(['configuration-system' => 'configuration']);

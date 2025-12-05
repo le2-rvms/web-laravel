@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('收付款账号管理')]
+#[PermissionType('收付款账号')]
 class PaymentAccountController extends Controller
 {
     public static function labelOptions(Controller $controller): void

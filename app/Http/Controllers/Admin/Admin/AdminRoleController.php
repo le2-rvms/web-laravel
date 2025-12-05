@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Staff;
+namespace App\Http\Controllers\Admin\Admin;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Admin\ArIsCustom;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\CheckAdminIsMock;
-use App\Models\Admin\StaffPermission;
-use App\Models\Admin\StaffRole;
+use App\Models\Admin\AdminPermission;
+use App\Models\Admin\AdminRole;
 use App\Services\PaginateService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -18,8 +18,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('员工角色管理')]
-class StaffRoleController extends Controller
+#[PermissionType('员工角色')]
+class AdminRoleController extends Controller
 {
     public function __construct()
     {
@@ -32,7 +32,7 @@ class StaffRoleController extends Controller
         $this->options(true);
         $this->response()->withExtras();
 
-        $query = StaffRole::query()
+        $query = AdminRole::query()
             ->where('name', '!=', config('setting.super_role.name'))
             ->with('permissions')
         ;
@@ -59,7 +59,7 @@ class StaffRoleController extends Controller
     public function create(Request $request): Response
     {
         $this->response()->withExtras(
-            StaffPermission::options(),
+            AdminPermission::options(),
         );
 
         return $this->response()->respond();
@@ -71,12 +71,12 @@ class StaffRoleController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'name'         => ['required', Rule::unique(StaffRole::class, 'name')],
+                'name'         => ['required', Rule::unique(AdminRole::class, 'name')],
                 '_permissions' => ['nullable'],
                 'title'        => ['nullable'],
             ],
             [],
-            trans_property(StaffRole::class)
+            trans_property(AdminRole::class)
         );
 
         if ($validator->fails()) {
@@ -86,12 +86,12 @@ class StaffRoleController extends Controller
         $input = $validator->validated();
 
         DB::transaction(function () use (&$input) {
-            $staff_role = StaffRole::create($input + ['guard_name' => 'web', 'is_custom' => ArIsCustom::YES]);
+            $admin_role = AdminRole::create($input + ['guard_name' => 'web', 'is_custom' => ArIsCustom::YES]);
 
             $permissions = $input['_permissions'] ?? [];
             if ($permissions) {
                 foreach ($permissions as $item) {
-                    $staff_role->givePermissionTo($item);
+                    $admin_role->givePermissionTo($item);
                 }
             }
         });
@@ -102,17 +102,17 @@ class StaffRoleController extends Controller
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function edit(Request $request, StaffRole $staff_role): Response
+    public function edit(Request $request, AdminRole $admin_role): Response
     {
-        abort_if(config('setting.super_role.name') == $staff_role->name, 403, 'You Cannot Edit Super Admin Role!');
+        abort_if(config('setting.super_role.name') == $admin_role->name, 403, 'You Cannot Edit Super Admin Role!');
 
         $this->response()->withExtras(
-            StaffPermission::options(),
+            AdminPermission::options(),
         );
 
-        $permissions = $staff_role->permissions;
+        $permissions = $admin_role->permissions;
 
-        $staff_role->_permissions = $permissions->pluck('name')->toArray();
+        $admin_role->_permissions = $permissions->pluck('name')->toArray();
 
         $groupedPermissions = $permissions->groupBy(fn ($row) => $row->group_name)
             ->map(
@@ -121,23 +121,23 @@ class StaffRoleController extends Controller
             ->toArray()
         ;
 
-        $staff_role->_group_permissions = (object) $groupedPermissions;
+        $admin_role->_group_permissions = (object) $groupedPermissions;
 
-        return $this->response()->withData($staff_role)->respond();
+        return $this->response()->withData($admin_role)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function update(Request $request, StaffRole $staff_role): Response
+    public function update(Request $request, AdminRole $admin_role): Response
     {
         $validator = Validator::make(
             $request->all(),
             [
-                'name'         => ['required', Rule::unique(StaffRole::class, 'name')->ignore($staff_role)],
+                'name'         => ['required', Rule::unique(AdminRole::class, 'name')->ignore($admin_role)],
                 '_permissions' => ['nullable'],
                 'title'        => ['nullable'],
             ],
             [],
-            trans_property(StaffRole::class)
+            trans_property(AdminRole::class)
         );
 
         if ($validator->fails()) {
@@ -146,14 +146,14 @@ class StaffRoleController extends Controller
 
         $input = $validator->validated();
 
-        abort_if(config('setting.super_role.name') == $staff_role->name, 403, 'You Cannot Edit Super Admin Role!');
+        abort_if(config('setting.super_role.name') == $admin_role->name, 403, 'You Cannot Edit Super Admin Role!');
 
-        DB::transaction(function () use (&$input, &$staff_role) {
+        DB::transaction(function () use (&$input, &$admin_role) {
             $permissions = $input['_permissions'] ?? [];
 
-            $staff_role->fill($input);
-            $staff_role->syncPermissions($permissions);
-            $staff_role->save();
+            $admin_role->fill($input);
+            $admin_role->syncPermissions($permissions);
+            $admin_role->save();
         });
 
         $this->response()->withMessages(message_success(__METHOD__));
@@ -162,14 +162,14 @@ class StaffRoleController extends Controller
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function destroy(StaffRole $staff_role): Response
+    public function destroy(AdminRole $admin_role): Response
     {
-        abort_if(config('setting.super_role.name') == $staff_role->name, 403, 'You Cannot delete Super Admin Role!');
+        abort_if(config('setting.super_role.name') == $admin_role->name, 403, 'You Cannot delete Super Admin Role!');
 
-        DB::transaction(function () use (&$staff_role) {
-            DB::table(config('permission.table_names.model_has_roles'))->where('role_id', $staff_role->id)->delete();
-            DB::table(config('permission.table_names.role_has_permissions'))->where('role_id', $staff_role->id)->delete();
-            $staff_role->delete();
+        DB::transaction(function () use (&$admin_role) {
+            DB::table(config('permission.table_names.model_has_roles'))->where('role_id', $admin_role->id)->delete();
+            DB::table(config('permission.table_names.role_has_permissions'))->where('role_id', $admin_role->id)->delete();
+            $admin_role->delete();
         });
 
         $this->response()->withMessages(message_success(__METHOD__));
@@ -178,13 +178,13 @@ class StaffRoleController extends Controller
     }
 
     #[PermissionAction(PermissionAction::READ)]
-    public function show(Request $request, StaffRole $staff_role): Response
+    public function show(Request $request, AdminRole $admin_role): Response
     {
-        abort_if(config('setting.super_role.name') == $staff_role->name, 403, 'You Cannot Edit Super Admin Role!');
+        abort_if(config('setting.super_role.name') == $admin_role->name, 403, 'You Cannot Edit Super Admin Role!');
 
-        $staff_role->_permissionsNames = $staff_role->getPermissionNames();
+        $admin_role->_permissionsNames = $admin_role->getPermissionNames();
 
-        return $this->response()->withData($staff_role)->respond();
+        return $this->response()->withData($admin_role)->respond();
     }
 
     public static function labelOptions(Controller $controller): void

@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('高风险违章车辆管理')]
+#[PermissionType('高风险违章车辆')]
 class ViolationCountController extends Controller
 {
     public static function labelOptions(Controller $controller): void

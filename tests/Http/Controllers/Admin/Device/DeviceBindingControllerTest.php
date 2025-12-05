@@ -3,7 +3,7 @@
 namespace Tests\Http\Controllers\Admin\Device;
 
 use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Iot\IotDevice;
 use App\Models\Iot\IotDeviceBinding;
 use App\Models\Vehicle\Vehicle;
@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 /**
  * @property IotDevice $device
- * @property Staff     $admin
+ * @property Admin     $admin
  * @property Vehicle   $vehicle
  *
  * @internal
@@ -26,8 +26,8 @@ class DeviceBindingControllerTest extends TestCase
     {
         parent::setUp();
 
-        Staff::query()->whereLike('name', 'test-%')->delete();
-        $this->admin = Staff::factory()->create([
+        Admin::query()->whereLike('name', 'test-%')->delete();
+        $this->admin = Admin::factory()->create([
             'name' => 'test-admin',
         ]);
 

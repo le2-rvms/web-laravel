@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin\_;
 
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
@@ -45,7 +45,7 @@ class LoginController extends Controller
         if ($this->attemptLogin($request)) {
             $this->clearLoginAttempts($request);
 
-            /** @var Staff $admin */
+            /** @var Admin $admin */
             $admin = $this->guard()->user();
 
             if ($response = $this->authenticated($request, $admin)) {

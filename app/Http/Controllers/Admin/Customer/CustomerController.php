@@ -8,7 +8,7 @@ use App\Console\Commands\Sys\ImportAdminAndRoles;
 use App\Enum\Customer\CuCuType;
 use App\Enum\Customer\CuiCuiGender;
 use App\Http\Controllers\Controller;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerCompany;
 use App\Models\Customer\CustomerIndividual;
@@ -30,7 +30,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('顾客管理')]
+#[PermissionType('顾客')]
 class CustomerController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -131,8 +131,8 @@ class CustomerController extends Controller
                 'cu_cert_valid_to'     => ['nullable', 'date'],
                 'cu_remark'            => ['nullable', 'string', 'max:255'],
 
-                'sales_manager'  => ['nullable', Rule::exists(Staff::class)],
-                'driver_manager' => ['nullable', Rule::exists(Staff::class)],
+                'sales_manager'  => ['nullable', Rule::exists(Admin::class)],
+                'driver_manager' => ['nullable', Rule::exists(Admin::class)],
             ],
             [],
             trans_property(Customer::class),
@@ -249,7 +249,7 @@ class CustomerController extends Controller
         $this->options();
 
         $this->response()->withExtras(
-            Staff::optionsWithRoles(),
+            Admin::optionsWithRoles(),
         );
 
         $customer = new Customer([
@@ -265,7 +265,7 @@ class CustomerController extends Controller
         $this->options();
 
         $this->response()->withExtras(
-            Staff::optionsWithRoles(),
+            Admin::optionsWithRoles(),
         );
 
         $this->response()->withExtras(

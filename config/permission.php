@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Admin\StaffPermission;
-use App\Models\Admin\StaffRole;
+use App\Models\Admin\AdminPermission;
+use App\Models\Admin\AdminRole;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -16,7 +16,7 @@ return [
          * `Spatie\Permission\Contracts\Permission` contract.
          */
 
-        'permission' => StaffPermission::class,
+        'permission' => AdminPermission::class,
 
         /*
          * When using the "HasRoles" trait from this package, we need to know which
@@ -27,7 +27,7 @@ return [
          * `Spatie\Permission\Contracts\Role` contract.
          */
 
-        'role' => StaffRole::class,
+        'role' => AdminRole::class,
     ],
 
     'table_names' => [

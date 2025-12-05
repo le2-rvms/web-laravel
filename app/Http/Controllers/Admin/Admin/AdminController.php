@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Staff;
+namespace App\Http\Controllers\Admin\Admin;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Admin\AdmUserType;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\CheckAdminIsMock;
-use App\Models\Admin\Staff;
-use App\Models\Admin\StaffRole;
+use App\Models\Admin\Admin;
+use App\Models\Admin\AdminRole;
 use App\Services\PaginateService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -19,8 +19,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('员工管理')]
-class StaffController extends Controller
+#[PermissionType('员工')]
+class AdminController extends Controller
 {
     public function __construct()
     {
@@ -33,7 +33,7 @@ class StaffController extends Controller
         $this->options(true);
         $this->response()->withExtras();
 
-        $query = Staff::query()
+        $query = Admin::query()
             ->where('user_type', '!=', AdmUserType::TEMP)
             ->with('roles')
         ;
@@ -60,26 +60,26 @@ class StaffController extends Controller
     public function create(Request $request): Response
     {
         $this->response()->withExtras(
-            StaffRole::options(),
+            AdminRole::options(),
         );
 
-        $staff = new Staff();
+        $admin = new Admin();
 
-        return $this->response()->withData($staff)->respond();
+        return $this->response()->withData($admin)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function edit(Request $request, Staff $staff): Response
+    public function edit(Request $request, Admin $admin): Response
     {
-        abort_if($staff->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow edit.');
+        abort_if($admin->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow edit.');
 
         $this->response()->withExtras(
-            StaffRole::options(),
+            AdminRole::options(),
         );
 
-        $staff->roles_ = $staff->roles->pluck('id');
+        $admin->roles_ = $admin->roles->pluck('id');
 
-        return $this->response()->withData($staff)->respond();
+        return $this->response()->withData($admin)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
@@ -90,14 +90,14 @@ class StaffController extends Controller
             [
                 'name'                  => ['bail', 'required', 'string', 'max:255'],
                 'wecom_name'            => ['bail', 'nullable', 'string', 'max:255'],
-                'email'                 => ['bail', 'nullable', 'string', 'email', 'max:255', Rule::unique(Staff::class, 'email')],
+                'email'                 => ['bail', 'nullable', 'string', 'email', 'max:255', Rule::unique(Admin::class, 'email')],
                 'password'              => ['bail', 'required', 'string', 'min:8', 'confirmed'],
                 'password_confirmation' => ['bail', 'required', 'string', 'min:8'],
                 'roles_'                => ['bail', 'required'],
-                'expires_at'            => ['bail', 'nullable', 'datet'],
+                'expires_at'            => ['bail', 'nullable', 'date'],
             ],
             [],
-            trans_property(Staff::class)
+            trans_property(Admin::class)
         );
 
         if ($validator->fails()) {
@@ -118,11 +118,11 @@ class StaffController extends Controller
             return AdmUserType::COMMON;
         })();
 
-        DB::transaction(function () use (&$input, &$staff) {
-            /** @var Staff $staff */
-            $staff = Staff::query()->create($input);
+        DB::transaction(function () use (&$input, &$admin) {
+            /** @var Admin $admin */
+            $admin = Admin::query()->create($input);
 
-            $staff->assignRole($input['roles_'] ?? []);
+            $admin->assignRole($input['roles_'] ?? []);
         });
 
         $this->response()->withMessages(message_success(__METHOD__));
@@ -131,21 +131,21 @@ class StaffController extends Controller
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function update(Request $request, Staff $staff): Response
+    public function update(Request $request, Admin $admin): Response
     {
         $validator = Validator::make(
             $request->all(),
             [
                 'name'                  => ['bail', 'required', 'string', 'max:255'],
                 'wecom_name'            => ['bail', 'nullable', 'string', 'max:255'],
-                'email'                 => ['bail', 'nullable', 'string', 'email', 'max:255', Rule::unique(Staff::class)->ignore($staff)],
+                'email'                 => ['bail', 'nullable', 'string', 'email', 'max:255', Rule::unique(Admin::class)->ignore($admin)],
                 'roles_'                => ['bail', 'nullable'],
                 'password'              => ['bail', 'nullable', 'required_with:password_confirmation', 'string', 'min:8', 'confirmed'],
                 'password_confirmation' => ['bail', 'nullable', 'required_with:password', 'string', 'min:8'],
                 'expires_at'            => ['bail', 'nullable', 'date'],
             ],
             [],
-            trans_property(Staff::class)
+            trans_property(Admin::class)
         );
 
         if ($validator->fails()) {
@@ -166,12 +166,12 @@ class StaffController extends Controller
             return AdmUserType::COMMON;
         })();
 
-        DB::transaction(function () use (&$input, &$staff) {
-            $staff->update($input);
+        DB::transaction(function () use (&$input, &$admin) {
+            $admin->update($input);
 
             $roles_ = $input['roles_'] ?? [];
-            $staff->syncRoles($roles_);
-            unset($staff->roles);
+            $admin->syncRoles($roles_);
+            unset($admin->roles);
         });
 
         $this->response()->withMessages(message_success(__METHOD__));
@@ -180,14 +180,14 @@ class StaffController extends Controller
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function destroy(Staff $staff): Response
+    public function destroy(Admin $admin): Response
     {
-        abort_if($staff->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow destroy.');
+        abort_if($admin->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow destroy.');
 
-        DB::transaction(function () use (&$staff) {
-            $staff->delete();
-            DB::table(config('permission.table_names.model_has_roles'))->where('model_id', $staff->id)->delete();
-            DB::table(config('permission.table_names.model_has_permissions'))->where('model_id', $staff->id)->delete();
+        DB::transaction(function () use (&$admin) {
+            $admin->delete();
+            DB::table(config('permission.table_names.model_has_roles'))->where('model_id', $admin->id)->delete();
+            DB::table(config('permission.table_names.model_has_permissions'))->where('model_id', $admin->id)->delete();
         });
 
         $this->response()->withMessages(message_success(__METHOD__));
@@ -196,11 +196,11 @@ class StaffController extends Controller
     }
 
     #[PermissionAction(PermissionAction::READ)]
-    public function show(Staff $staff): Response
+    public function show(Admin $admin): Response
     {
-        abort_if($staff->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow edit.');
+        abort_if($admin->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow edit.');
 
-        return $this->response()->withData($staff)->respond();
+        return $this->response()->withData($admin)->respond();
     }
 
     public static function labelOptions(Controller $controller): void

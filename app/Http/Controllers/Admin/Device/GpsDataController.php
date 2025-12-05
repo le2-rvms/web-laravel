@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('轨迹数据管理')]
+#[PermissionType('轨迹数据')]
 class GpsDataController extends Controller
 {
     public static function labelOptions(Controller $controller): void

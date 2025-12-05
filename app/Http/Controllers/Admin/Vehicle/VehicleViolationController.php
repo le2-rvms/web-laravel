@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('违章管理')]
+#[PermissionType('违章')]
 class VehicleViolationController extends Controller
 {
     public static function labelOptions(Controller $controller): void

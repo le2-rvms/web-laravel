@@ -22,7 +22,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('文档模板管理')]
+#[PermissionType('文档模板')]
 class DocTplController extends Controller
 {
     public static function labelOptions(Controller $controller): void

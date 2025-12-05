@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\_;
 
 use App\Http\Controllers\Controller;
 use App\Mail\PasswordResetCodeMail;
-use App\Models\Admin\Staff;
+use App\Models\Admin\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +30,7 @@ class PasswordResetController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'email' => ['required', 'email', Rule::exists(Staff::class, 'email')],
+                'email' => ['required', 'email', Rule::exists(Admin::class, 'email')],
             ]
         )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey, &$cacheIpKey) {
             if (!$validator->failed()) {
@@ -84,7 +84,7 @@ class PasswordResetController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'email'                 => ['required', 'email', Rule::exists(Staff::class, 'email')],
+                'email'                 => ['required', 'email', Rule::exists(Admin::class, 'email')],
                 'code'                  => ['required', 'numeric'],
                 'password'              => ['required', 'min:8', 'confirmed'],
                 'password_confirmation' => ['required', 'min:8'],
@@ -105,7 +105,7 @@ class PasswordResetController extends Controller
         $input = $validator->validated();
 
         // 更新用户密码
-        Staff::query()->where('email', $input['email'])->update([
+        Admin::query()->where('email', $input['email'])->update([
             'password'             => Hash::make($input['password']),
             'password_verified_at' => now(),
         ]);

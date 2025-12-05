@@ -20,7 +20,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('预定车辆管理')]
+#[PermissionType('预定车辆')]
 class BookingVehicleController extends Controller
 {
     public static function labelOptions(Controller $controller): void

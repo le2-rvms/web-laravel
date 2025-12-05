@@ -18,7 +18,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('企业微信群机器人管理')]
+#[PermissionType('企业微信群机器人')]
 class DeliveryWecomGroupController extends Controller
 {
     public static function labelOptions(Controller $controller): void

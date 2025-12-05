@@ -25,6 +25,7 @@ class InitController extends Controller
             'php_version' => phpversion(),
             'os'          => PHP_OS,
             'mock_enable' => config('setting.mock.enable'),
+            'host_manual' => config('setting.host_manual'),
         ];
 
         return $this->response()->withData($data)->respond();

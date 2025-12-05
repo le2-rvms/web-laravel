@@ -1,16 +1,20 @@
 <?php
 
 return [
-    'Staff' => [
+    'Admin' => [
         'name'   => '员工',
         'suffix' => '',
     ],
-    'StaffPermission' => [
+    'AdminPermission' => [
         'name'   => '员工权限',
         'suffix' => '',
     ],
-    'StaffRole' => [
+    'AdminRole' => [
         'name'   => '员工角色',
+        'suffix' => '',
+    ],
+    'AdminTeam' => [
+        'name'   => '车队',
         'suffix' => '',
     ],
     'Customer' => [

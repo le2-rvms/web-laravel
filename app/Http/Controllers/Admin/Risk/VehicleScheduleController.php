@@ -19,7 +19,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('待年检管理')]
+#[PermissionType('待年检')]
 class VehicleScheduleController extends Controller
 {
     public static function labelOptions(Controller $controller): void

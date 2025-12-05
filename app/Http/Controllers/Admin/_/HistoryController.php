@@ -23,10 +23,12 @@ class HistoryController extends Controller
 
     public function __invoke(Request $request): Response
     {
-        $model_keys           = array_keys($this->config['models']);
-        $class_basename_array = array_map(function ($class_name) {
-            return class_basename($class_name);
-        }, $model_keys);
+        $class_basename_array = $class_basename_models = [];
+        foreach ($this->config['models'] as $model_name => $pk_name) {
+            $class_basename_array[] = $class_basename = class_basename($model_name);
+
+            $class_basename_models[$class_basename] = $model_name;
+        }
 
         $validator = Validator::make(
             $request->route()->parameters(),
@@ -43,15 +45,13 @@ class HistoryController extends Controller
         $input = $validator->validated();
 
         $class_basename = $input['class_basename'];
-        $class_name     = getModel($class_basename);
         $pk             = $input['pk'];
+        $class_name     = $class_basename_models[$class_basename];
 
         /** @var Model $model */
         $model = new $class_name();
 
         $table = $model->getTable();
-
-        //        $row = $model->query()->findOrFail($pk);
 
         $unions = $this->config['union'][$class_name] ?? [];
         if ($unions) {
@@ -112,6 +112,9 @@ class HistoryController extends Controller
 
         $properties = trans('property.'.$class_basename);
         $this->response()->withLang($properties);
+
+        $table_trans = trans('model.'.$class_basename);
+        $this->response()->withLang(['model.'.$table => $table_trans['name']]);
 
         if ($unions) {
             foreach ($unions as $key => $union) {

@@ -43,7 +43,7 @@ class PermissionImport3 extends Command
 
             File::put($filePath, '<?php return '.var_export($this->lang_zh_CN, true).';');
 
-            $this->info("Language package file generated at {$filePath}.");
+            $this->info("Language package file generated at {$filePath}");
         })();
 
         DB::transaction(function () {

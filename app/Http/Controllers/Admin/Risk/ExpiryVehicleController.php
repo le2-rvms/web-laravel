@@ -10,7 +10,7 @@ use App\Services\PaginateService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('车证到期管理')]
+#[PermissionType('车证到期')]
 class ExpiryVehicleController extends Controller
 {
     public static function labelOptions(Controller $controller): void

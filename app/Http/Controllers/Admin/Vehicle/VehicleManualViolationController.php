@@ -18,7 +18,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('手动违章管理')]
+#[PermissionType('手动违章')]
 class VehicleManualViolationController extends Controller
 {
     public static function labelOptions(Controller $controller): void

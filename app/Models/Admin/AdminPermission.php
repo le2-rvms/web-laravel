@@ -12,7 +12,7 @@ use Spatie\Permission\Models\Permission;
  * @property string $title      权限标题
  * @property string $guard_name
  */
-class StaffPermission extends Permission
+class AdminPermission extends Permission
 {
     protected $table = 'permissions';
 
