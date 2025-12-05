@@ -11,8 +11,8 @@ use App\Http\Controllers\Admin\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\Admin\AdminTeamController;
 use App\Http\Controllers\Admin\Config\CompanyController;
-use App\Http\Controllers\Admin\Config\Configuration0Controller;
-use App\Http\Controllers\Admin\Config\Configuration1Controller;
+use App\Http\Controllers\Admin\Config\ConfigurationAppController;
+use App\Http\Controllers\Admin\Config\ConfigurationSysController;
 use App\Http\Controllers\Admin\Config\DocTplController;
 use App\Http\Controllers\Admin\Config\ImportController;
 use App\Http\Controllers\Admin\Customer\CustomerController;
@@ -85,8 +85,8 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     Route::singleton('admin-profile', AdminProfileController::class);
 
-    Route::resource('configuration-app', Configuration0Controller::class)->parameters(['configuration-app' => 'configuration']);
-    Route::resource('configuration-system', Configuration1Controller::class)->parameters(['configuration-system' => 'configuration']);
+    Route::resource('configuration-sys', ConfigurationSysController::class)->parameters(['configuration-sys' => 'configuration']);
+    Route::resource('configuration-app', ConfigurationAppController::class)->parameters(['configuration-app' => 'configuration']);
 
     Route::put('doc-tpls/{doc_tpl}/status', [DocTplController::class, 'status']);
     Route::get('doc-tpls/{doc_tpl}/preview', [DocTplController::class, 'preview']);

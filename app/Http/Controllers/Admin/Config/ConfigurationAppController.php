@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('应用设定值')]
-class Configuration0Controller extends ConfigurationController
+class ConfigurationAppController extends ConfigurationController
 {
     public function __construct()
     {

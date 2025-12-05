@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Console\Commands\Sys\ImportAdminAndRoles;
+use App\Console\Commands\Sys\AdminRoleImport;
 use App\Enum\Admin\AdmUserType;
 use App\Models\Admin\Admin;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -108,7 +108,7 @@ trait UsesJsonFixture
         static $datas = null;
 
         if (null === $datas) {
-            $query = Admin::query()->where('user_type', '!=', AdmUserType::TEMP)->whereLike('name', '%'.ImportAdminAndRoles::role_vehicle_service.'%');
+            $query = Admin::query()->where('user_type', '!=', AdmUserType::TEMP)->whereLike('name', '%'.AdminRoleImport::role_vehicle_service.'%');
             $datas = $query->pluck('id')->toArray();
         }
 

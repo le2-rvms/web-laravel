@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'Configuration0'         => '应用设定值',
-    'Configuration1'         => '系统设定值',
+    'ConfigurationApp'       => '应用设定值',
+    'ConfigurationSys'       => '系统设定值',
     'Admin'                  => '员工',
     'AdminPermission'        => '员工权限',
     'AdminRole'              => '员工角色',
@@ -18,7 +18,7 @@ return [
     'DeliveryLog'            => '消息',
     'DeliveryWecomGroup'     => '企业微信群机器人',
     'DeliveryWecomMember'    => '企业微信机器人',
-    'Import'                 => '导入导出',
+    'Import'                 => '导入',
     'Vehicle'                => '车辆',
     'VehicleInspection'      => '验车',
     'VehicleManualViolation' => '手动违章',
@@ -37,6 +37,8 @@ return [
     'BookingOrder'           => '预定订单',
     'Payment'                => '收付款',
     'Inout'                  => '账户流水',
+    'SaleOrderSignPayment'   => '签约收款',
+    'SaleOrderRentPayment'   => '收租金',
     'VehicleSchedule'        => '待年检',
     'VehicleInsurance'       => '待续保',
     'VehicleForceTake'       => '风控收车',

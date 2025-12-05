@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Payment;
 
+use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Payment\PaPaStatus;
 use App\Enum\Payment\RpPayStatus;
@@ -29,6 +30,7 @@ class SaleOrderRentPaymentController extends Controller
 
     public function index() {}
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(string $so_id): Response
     {
         abort_if(!is_numeric($so_id), 404);
@@ -58,6 +60,7 @@ class SaleOrderRentPaymentController extends Controller
         return $this->response()->withData($saleOrder)->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request, SaleOrder $saleOrder): Response
     {
         $selectedData = $request->input('unpaid_rent_rental_payments')[$request->input('selectedIndex')] ?? null;

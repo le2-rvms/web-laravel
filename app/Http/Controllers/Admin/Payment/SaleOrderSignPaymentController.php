@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Payment;
 
+use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Payment\PaPaStatus;
 use App\Enum\Payment\RpPayStatus;
@@ -32,6 +33,7 @@ class SaleOrderSignPaymentController extends Controller
 
     public function index() {}
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function create(string $so_id): Response
     {
         abort_if(!is_numeric($so_id), 404);
@@ -71,6 +73,7 @@ class SaleOrderSignPaymentController extends Controller
         return $this->response()->withData($saleOrder)->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request, SaleOrder $saleOrder)
     {
         $is_long_term  = SoRentalType::LONG_TERM === $saleOrder->rental_type->value;

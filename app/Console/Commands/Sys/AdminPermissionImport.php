@@ -18,12 +18,12 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
  * 以控制器为单位，叠加「读、写」维度。
  */
 #[AsCommand(
-    name: '_sys:permission:import',
+    name: '_sys:admin-permission:import',
     description: ''
 )]
-class PermissionImport extends Command
+class AdminPermissionImport extends Command
 {
-    protected $signature   = '_sys:permission:import';
+    protected $signature   = '_sys:admin-permission:import';
     protected $description = '';
 
     private array $permissions = [];
@@ -120,7 +120,7 @@ class PermissionImport extends Command
 
             $groupName = Str::afterLast($reflectionClass->getNamespaceName(), '\\');
 
-            $this->permissions[$groupName][$className][$permissionAttributeIns->name] = $classTitle.'-'.trans('app.permission_groups.'.$permissionAttributeIns->name);
+            $this->permissions[$groupName][$className][$permissionAttributeIns->name] = trans('app.permission_groups.'.$permissionAttributeIns->name).$classTitle;
 
             $this->lang_zh_CN[$className] = $classTitle;
         }

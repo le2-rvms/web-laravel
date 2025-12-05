@@ -24,9 +24,10 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('导入导出')]
+#[PermissionType('导入')]
 class ImportController extends Controller
 {
+    #[PermissionAction(PermissionAction::WRITE)]
     public function show(Request $request): Response
     {
         $this->response()->withExtras(
@@ -37,6 +38,7 @@ class ImportController extends Controller
         return $this->response()->withData([])->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function template(Request $request): Response
     {
         $validator = Validator::make(
@@ -146,6 +148,7 @@ class ImportController extends Controller
         return $this->response()->withData($result)->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request): Response
     {
         // 验证上传文件

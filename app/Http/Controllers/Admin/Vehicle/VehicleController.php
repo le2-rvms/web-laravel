@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Vehicle;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Console\Commands\Sys\ImportAdminAndRoles;
+use App\Console\Commands\Sys\AdminRoleImport;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
@@ -56,7 +56,7 @@ class VehicleController extends Controller
         // 如果是管理员和经理，则可以看到所有的车辆；如果不是管理员和经理，则只能看到车管为自己的车辆。
         $user = auth()->user();
 
-        $role_vehicle_manager = $user->hasRole(ImportAdminAndRoles::role_vehicle_mgr);
+        $role_vehicle_manager = $user->hasRole(AdminRoleImport::role_vehicle_mgr);
 
         if ($role_vehicle_manager) {
             $query->whereNull('vehicle_manager')->orWhere('vehicle_manager', '=', $user->id);

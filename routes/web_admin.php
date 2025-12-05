@@ -5,8 +5,8 @@ use App\Http\Controllers\Admin\Admin\AdminController;
 use App\Http\Controllers\Admin\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\Admin\AdminRoleController;
-use App\Http\Controllers\Admin\Config\Configuration0Controller;
-use App\Http\Controllers\Admin\Config\Configuration1Controller;
+use App\Http\Controllers\Admin\Config\ConfigurationAppController;
+use App\Http\Controllers\Admin\Config\ConfigurationSysController;
 use App\Http\Middleware\CheckPermission;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -27,9 +27,9 @@ Route::group(['middleware' => ['auth', CheckPermission::class]], function () {
         Route::put('/profile/update', 'update')->name('profile.update');
     });
 
-    Route::resource('config0', Configuration0Controller::class)->parameters(['config0' => 'configuration']);
+    Route::resource('config0', ConfigurationAppController::class)->parameters(['config0' => 'configuration']);
 
-    Route::resource('config1', Configuration1Controller::class)->parameters(['config1' => 'configuration']);
+    Route::resource('config1', ConfigurationSysController::class)->parameters(['config1' => 'configuration']);
 
     // Roles
     //        Route::resource('roles', AdminRoleController::class);

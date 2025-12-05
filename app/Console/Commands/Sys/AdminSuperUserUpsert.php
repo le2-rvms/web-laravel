@@ -7,18 +7,19 @@ use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command as CommandAlias;
 
 #[AsCommand(
-    name: '_sys:super-user:create',
+    name: '_sys:admin-super-user:upsert',
     description: 'Create or update super-admin user from config/setting.php'
 )]
-class SuperUserCreate extends Command
+class AdminSuperUserUpsert extends Command
 {
-    protected $signature   = '_sys:super-user:create';
+    protected $signature   = '_sys:admin-super-user:upsert';
     protected $description = 'Create or update super-admin user from config/setting.php';
 
     public function handle(): int
@@ -49,16 +50,20 @@ class SuperUserCreate extends Command
         );
 
         // 创建或更新管理员并同步角色
-        Admin::query()->updateOrCreate(
-            ['email' => $email],
-            [
-                'name'                 => $name,
-                'password'             => Hash::make($password),
-                'password_verified_at' => now(),
-                'user_type'            => AdmUserType::TEMP,
-                'expires_at'           => Carbon::now()->addDays(3),
-            ]
-        )->syncRoles([$roleName]);
+        DB::transaction(function () use ($email, $name, $password, $roleName) {
+            Admin::query()->updateOrCreate(
+                ['email' => $email],
+                [
+                    'name'                 => $name,
+                    'password'             => Hash::make($password),
+                    'password_verified_at' => now(),
+                    'user_type'            => AdmUserType::TEMP,
+                    'expires_at'           => Carbon::now()->addDays(3),
+                ]
+            )
+                ->syncRoles([$roleName])
+            ;
+        });
 
         // 输出最终信息（包括生成或提供的密码）
         $this->info("Super-admin 已同步: Email={$email}, Name={$name}, Password={$password}, Role={$roleName}");
