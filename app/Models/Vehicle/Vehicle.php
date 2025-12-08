@@ -249,7 +249,8 @@ class Vehicle extends Model
         return DB::query()
             ->from('vehicles', 've')
             ->leftJoin('vehicle_models as vm', 've.vm_id', '=', 'vm.vm_id')
-            ->select('ve.*', 'vm.brand_name', 'vm.model_name')
+            ->leftJoin('admins as adm', 've.vehicle_manager', '=', 'adm.id')
+            ->select('ve.*', 'vm.brand_name', 'vm.model_name', 'adm.name as vehicle_manager_name')
             ->addSelect(
                 DB::raw(VeStatusService::toCaseSQL()),
                 DB::raw(VeStatusService::toColorSQL()),

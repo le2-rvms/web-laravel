@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Admin\Vehicle;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Console\Commands\Sys\AdminRoleImport;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Enum\Vehicle\VeVeType;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
+use App\Models\Admin\AdminRole;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleManualViolation;
@@ -48,6 +48,9 @@ class VehicleController extends Controller
         $this->options(true);
         $this->response()->withExtras(
             VehicleModel::options(),
+            Admin::options(function (\Illuminate\Database\Eloquent\Builder $builder) {
+                $builder->role(AdminRole::role_vehicle_mgr);
+            })
         );
 
         $query   = Vehicle::indexQuery();
@@ -56,7 +59,7 @@ class VehicleController extends Controller
         // 如果是管理员和经理，则可以看到所有的车辆；如果不是管理员和经理，则只能看到车管为自己的车辆。
         $user = auth()->user();
 
-        $role_vehicle_manager = $user->hasRole(AdminRoleImport::role_vehicle_mgr);
+        $role_vehicle_manager = $user->hasRole(AdminRole::role_vehicle_mgr);
 
         if ($role_vehicle_manager) {
             $query->whereNull('vehicle_manager')->orWhere('vehicle_manager', '=', $user->id);
@@ -65,7 +68,7 @@ class VehicleController extends Controller
         $paginate = new PaginateService(
             [],
             [['ve.ve_id', 'desc']],
-            ['kw', 've_vm_id', 've_status_service', 've_status_repair', 've_status_rental', 've_status_dispatch'],
+            ['kw', 've_vm_id', 've_status_service', 've_status_repair', 've_status_rental', 've_status_dispatch', 've_vehicle_manager'],
             []
         );
 
@@ -184,7 +187,9 @@ class VehicleController extends Controller
 
         $this->response()->withExtras(
             VehicleModel::options(),
-            Admin::optionsWithRoles(),
+            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+                $builder->role(AdminRole::role_vehicle_mgr);
+            }),
         );
 
         $vehicle = new Vehicle();
@@ -199,7 +204,9 @@ class VehicleController extends Controller
 
         $this->response()->withExtras(
             VehicleModel::options(),
-            Admin::optionsWithRoles(),
+            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+                $builder->role(AdminRole::role_vehicle_mgr);
+            }),
         );
 
         $this->response()->withExtras(

@@ -6,6 +6,7 @@ use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Enum\Vehicle\VeVeType;
+use App\Models\Admin\AdminRole;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleModel;
 use Database\Factories\UsesJsonFixture;
@@ -78,7 +79,7 @@ class VehicleFactory extends Factory
             've_mileage'                  => $this->faker->numberBetween(0, 300000),
             've_color'                    => $this->faker->safeColorName(),
 
-            'vehicle_manager' => $this->faker->boolean(70) ? $this->randomAdminID(1) : null,
+            'vehicle_manager' => $this->faker->boolean(70) ? $this->randomAdmin(AdminRole::role_vehicle_mgr) : null,
 
             // 车证信息
             've_cert_no'       => strtoupper(Str::random(20)),

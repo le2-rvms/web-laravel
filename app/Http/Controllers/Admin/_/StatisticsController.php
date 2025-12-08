@@ -92,12 +92,12 @@ class StatisticsController extends Controller
         $user = auth()->user();
 
         $sql_permission_array = [
-            'sale_orders'         => 'SaleOrder',
-            'sale_settlements'    => 'SaleSettlement',
-            'payments'            => 'Payment',
-            'actual_payments'     => 'Payment',
-            'vehicle_inspections' => 'VehicleInspection',
-            'vehicle_repairs'     => 'VehicleRepair',
+            'sale_orders'         => 'SaleOrder::read',
+            'sale_settlements'    => 'SaleSettlement::read',
+            'payments'            => 'Payment::read',
+            'actual_payments'     => 'Payment::read',
+            'vehicle_inspections' => 'VehicleInspection::read',
+            'vehicle_repairs'     => 'VehicleRepair::read',
         ];
 
         $sql_array = [

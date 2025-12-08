@@ -44,13 +44,13 @@ class AdminSuperUserUpsert extends Command
         }
 
         // 创建或更新角色
-        AdminRole::query()->updateOrCreate(
+        $role = AdminRole::query()->updateOrCreate(
             ['name' => $roleName],
             ['guard_name' => config('auth.defaults.guard')]
         );
 
         // 创建或更新管理员并同步角色
-        DB::transaction(function () use ($email, $name, $password, $roleName) {
+        DB::transaction(function () use ($email, $name, $password, $role) {
             Admin::query()->updateOrCreate(
                 ['email' => $email],
                 [
@@ -61,7 +61,7 @@ class AdminSuperUserUpsert extends Command
                     'expires_at'           => Carbon::now()->addDays(3),
                 ]
             )
-                ->syncRoles([$roleName])
+                ->syncRoles([$role])
             ;
         });
 

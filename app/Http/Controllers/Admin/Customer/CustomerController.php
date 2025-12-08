@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Admin\Customer;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Console\Commands\Sys\AdminRoleImport;
 use App\Enum\Customer\CuCuType;
 use App\Enum\Customer\CuiCuiGender;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
+use App\Models\Admin\AdminRole;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerCompany;
 use App\Models\Customer\CustomerIndividual;
@@ -52,12 +52,12 @@ class CustomerController extends Controller
         // 如果是管理员或经理，则可以看到所有的用户；如果不是管理员或经理，则只能看到销售或驾管为自己的用户。
         $user = auth()->user();
 
-        $role_sales_manager = $user->hasRole(AdminRoleImport::role_sales);
+        $role_sales_manager = $user->hasRole(AdminRole::role_sales);
         if ($role_sales_manager) {
             $query->whereNull('cu.sales_manager')->orWhere('cu.sales_manager', '=', $user->id);
         }
 
-        $has_role_driver = $user->hasRole(AdminRoleImport::role_driver_mgr);
+        $has_role_driver = $user->hasRole(AdminRole::role_driver_mgr);
         if ($has_role_driver) {
             $query->whereNull('cu.driver_manager')->orWhere('cu.driver_manager', '=', $user->id);
         }

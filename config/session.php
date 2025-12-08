@@ -3,7 +3,6 @@
 use Illuminate\Support\Str;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Default Session Driver
@@ -86,7 +85,7 @@ return [
     |
     */
 
-    'table' => env('SESSION_TABLE', 'sessions'),
+    'table' => env('SESSION_TABLE', '_sessions'),
 
     /*
     |--------------------------------------------------------------------------
@@ -213,5 +212,4 @@ return [
     */
 
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
-
 ];

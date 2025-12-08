@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
-use App\Console\Commands\Sys\AdminRoleImport;
 use App\Enum\Admin\AdmUserType;
 use App\Models\Admin\Admin;
+use App\Models\Admin\AdminRole;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * @extends Factory
@@ -108,7 +109,7 @@ trait UsesJsonFixture
         static $datas = null;
 
         if (null === $datas) {
-            $query = Admin::query()->where('user_type', '!=', AdmUserType::TEMP)->whereLike('name', '%'.AdminRoleImport::role_vehicle_service.'%');
+            $query = Admin::query()->where('user_type', '!=', AdmUserType::TEMP)->whereLike('name', '%'.AdminRole::role_vehicle_service.'%');
             $datas = $query->pluck('id')->toArray();
         }
 
@@ -119,5 +120,54 @@ trait UsesJsonFixture
         }
 
         return $result = array_intersect_key($datas, array_flip($rand_keys));
+    }
+
+    protected function randomAdmin(string $role)
+    {
+        static $pools = [];
+
+        $className = Admin::class;
+
+        if (!array_key_exists($role, $pools)) {
+            /** @var Admin $classObject */
+            $classObject = new $className();
+            //            $keyName     = $classObject->getKeyName();
+            $datas = $classObject->query()->role($role)->get();
+
+            if ($datas->isempty()) {
+                throw new \RuntimeException("class: {$className} 获取数据失败");
+            }
+
+            $pools[$role] = $datas;
+        } else {
+            $datas = $pools[$role];
+        }
+
+        return $datas->random();
+    }
+
+    /**
+     * 自动根据模型名计算出数据文件，返回随机一条数据，源数据不变。
+     */
+    protected function randomModelFromPools(string $className): Model
+    {
+        static $pools = [];
+
+        if (!array_key_exists($className, $pools)) {
+            /** @var Model $classObject */
+            $classObject = new $className();
+            //            $keyName     = $classObject->getKeyName();
+            $datas = $classObject->query()->get();
+
+            if ($datas->isempty()) {
+                throw new \RuntimeException("class: {$className} 获取数据失败");
+            }
+
+            $pools[$className] = $datas;
+        } else {
+            $datas = $pools[$className];
+        }
+
+        return $datas->random();
     }
 }

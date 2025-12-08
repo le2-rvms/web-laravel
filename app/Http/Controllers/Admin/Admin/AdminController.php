@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Middleware\CheckAdminIsMock;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
+use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -35,6 +36,9 @@ class AdminController extends Controller
 
         $query = Admin::query()
             ->where('user_type', '!=', AdmUserType::TEMP)
+            ->addSelect([
+                'vehicle_manager_count' => Vehicle::query()->selectRaw('count(*)')->whereColumn('vehicles.vehicle_manager', 'admins.id'),
+            ])
             ->with('roles')
         ;
 

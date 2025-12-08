@@ -3,19 +3,26 @@
 namespace Database\Factories\Admin;
 
 use App\Enum\Admin\AdmUserType;
+use App\Models\Admin\Admin;
+use App\Models\Admin\AdminRole;
+use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Admin\Admin>
+ * @extends Factory<Admin>
  */
 class AdminFactory extends Factory
 {
+    use UsesJsonFixture;
+
     /**
      * The current password being used by the factory.
      */
     protected static ?string $password;
+
+    protected $model = Admin::class;
 
     public function definition(): array
     {
@@ -37,5 +44,28 @@ class AdminFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Configure the model factory.
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (Admin $admin) {
+            // ...
+        })->afterCreating(function (Admin $admin) {
+            // ...
+            while (true) {
+                /** @var AdminRole $adminRole */
+                $adminRole = $this->randomModelFromPools(AdminRole::class);
+
+                $super_role_name = config('setting.super_role.name');
+                if ($adminRole->name !== $super_role_name) {
+                    break;
+                }
+            }
+
+            $admin->assignRole($adminRole);
+        });
     }
 }

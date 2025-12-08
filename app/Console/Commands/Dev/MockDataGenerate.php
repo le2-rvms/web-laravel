@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Dev;
 
+use App\Enum\Admin\AdmUserType;
 use App\Enum\Customer\CuCuType;
 use App\Enum\Payment\RpPtId;
 use App\Enum\Sale\SoOrderStatus;
@@ -12,6 +13,7 @@ use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Enum\Vehicle\ViInspectionType;
 use App\Http\Controllers\Admin\Sale\SaleOrderController;
+use App\Models\Admin\Admin;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerIndividual;
 use App\Models\Payment\Payment;
@@ -89,10 +91,15 @@ class MockDataGenerate extends Command
 
             //            Vehicle::query()->update(['status_service' => VeStatusService::YES, 'status_rental' => VeStatusRental::LISTED, 'status_dispatch' => VeStatusDispatch::NOT_DISPATCHED]);
 
+            Admin::query()->where('user_type', '=', AdmUserType::COMMON)->delete();
+            DB::table(config('permission.table_names.model_has_roles'))->whereRaw('model_id not in (select id from admins)')->delete();
+
             DB::statement('call reset_identity_sequences(?)', ['public']);
         });
 
         DB::transaction(function () {
+            Admin::factory()->count(20)->create();
+
             VehicleModel::factory()->count(20)->create();
 
             Vehicle::factory()->count(500)->create();

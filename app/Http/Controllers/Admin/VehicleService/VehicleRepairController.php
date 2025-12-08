@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin\VehicleService;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Console\Commands\Sys\AdminRoleImport;
 use App\Enum\Payment\RpIsValid;
 use App\Enum\Payment\RpPayStatus;
 use App\Enum\Payment\RpPtId;
@@ -19,6 +18,7 @@ use App\Enum\Vehicle\VrSettlementStatus;
 use App\Exceptions\ClientException;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
+use App\Models\Admin\AdminRole;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Sale\SaleOrder;
@@ -62,7 +62,7 @@ class VehicleRepairController extends Controller
         $this->response()->withExtras(
             Vehicle::options(),
             ServiceCenter::options(function (Builder $query) use ($user) {
-                if ($user->hasRole(AdminRoleImport::role_vehicle_service)) {
+                if ($user->hasRole(AdminRole::role_vehicle_service)) {
                     $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
 
                     $query->whereIn('vr.sc_id', $sc_id_array);
@@ -73,7 +73,7 @@ class VehicleRepairController extends Controller
         $query   = VehicleRepair::indexQuery();
         $columns = VehicleRepair::indexColumns();
 
-        if ($user->hasRole(AdminRoleImport::role_vehicle_service)) {
+        if ($user->hasRole(AdminRole::role_vehicle_service)) {
             $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
 
             $query->whereIn('vr.sc_id', $sc_id_array);
@@ -113,7 +113,7 @@ class VehicleRepairController extends Controller
         $this->response()->withExtras(
             Vehicle::options(),
             ServiceCenter::options(function (Builder $query) use ($user) {
-                if ($user->hasRole(AdminRoleImport::role_vehicle_service)) {
+                if ($user->hasRole(AdminRole::role_vehicle_service)) {
                     $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
 
                     $query->whereIn('vr.sc_id', $sc_id_array);
@@ -159,7 +159,7 @@ class VehicleRepairController extends Controller
             Vehicle::options(),
             VrRepairStatus::finalValue(),
             ServiceCenter::options(function (Builder $query) use ($user) {
-                if ($user->hasRole(AdminRoleImport::role_vehicle_service)) {
+                if ($user->hasRole(AdminRole::role_vehicle_service)) {
                     $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
 
                     $query->whereIn('vr.sc_id', $sc_id_array);

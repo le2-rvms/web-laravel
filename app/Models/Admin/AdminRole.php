@@ -18,7 +18,17 @@ use Spatie\Permission\Models\Role;
  */
 class AdminRole extends Role
 {
-    protected $table = 'admin_roles';
+    public const string role_system = '系统管理';
+
+    public const string role_manager    = '经理';
+    public const string role_driver_mgr = '驾管';
+    public const string role_payment    = '财务';
+
+    public const string role_sales       = '销售';
+    public const string role_vehicle_mgr = '车管';
+
+    public const string role_vehicle_service = '修理厂';
+    protected $table                         = 'admin_roles';
 
     protected $attributes = [
         'is_custom' => ArIsCustom::NO,

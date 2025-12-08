@@ -62,13 +62,15 @@ class Admin extends Authenticatable
 
     public static function indexQuery(array $search = []): Builder
     {
-        return DB::query()->from('admins as adm');
+        return DB::query()
+            ->from('admins as adm')
+        ;
     }
 
     public static function options(?\Closure $where = null): array
     {
         $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
-        $value = static::query()->toBase()
+        $value = static::query()
             ->where($where)
             ->orderBy('id')
             ->select(DB::raw('name as text,id as value'))->get()
