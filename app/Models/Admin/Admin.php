@@ -130,8 +130,7 @@ class Admin extends Authenticatable
             'password'          => 'hashed',
             'expires_at'        => 'datetime:Y-m-d H:i:s',
             'user_type'         => AdmUserType::class,
-            //            'team_ids'          => 'array',
-            'team_limit' => AdmTeamLimit::class,
+            'team_limit'        => AdmTeamLimit::class,
         ];
     }
 

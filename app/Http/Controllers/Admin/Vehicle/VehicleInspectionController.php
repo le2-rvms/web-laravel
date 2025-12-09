@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Vehicle;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Exist;
 use App\Enum\Payment\RpIsValid;
 use App\Enum\Payment\RpPayStatus;
@@ -69,6 +70,15 @@ class VehicleInspectionController extends Controller
 
         $query   = VehicleInspection::indexQuery();
         $columns = VehicleInspection::indexColumns();
+
+        /** @var Admin $admin */
+        $admin = auth()->user();
+
+        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereIn('ve.ve_team_id', $admin->team_ids)->orwhereNull('ve.ve_team_id');
+            });
+        }
 
         $paginate = new PaginateService(
             [],

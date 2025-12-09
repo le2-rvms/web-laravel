@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin\Vehicle;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Vehicle\VeStatusService;
 use App\Enum\Vehicle\VmvStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Admin;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleManualViolation;
 use App\Services\PaginateService;
@@ -37,6 +39,15 @@ class VehicleManualViolationController extends Controller
         );
 
         $query = VehicleManualViolation::indexQuery();
+
+        /** @var Admin $admin */
+        $admin = auth()->user();
+
+        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereIn('ve.ve_team_id', $admin->team_ids)->orwhereNull('ve.ve_team_id');
+            });
+        }
 
         $paginate = new PaginateService(
             [],

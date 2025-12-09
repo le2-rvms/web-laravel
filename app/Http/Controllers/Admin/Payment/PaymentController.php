@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Payment;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Payment\PaPaStatus;
 use App\Enum\Payment\RpIsValid;
 use App\Enum\Payment\RpPayStatus;
@@ -13,6 +14,7 @@ use App\Enum\Sale\DtDtStatus;
 use App\Enum\Sale\DtDtType;
 use App\Enum\Sale\SoOrderStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Admin;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Payment\PaymentType;
@@ -48,6 +50,15 @@ class PaymentController extends Controller
 
         $query   = Payment::indexQuery();
         $columns = Payment::indexColumns();
+
+        /** @var Admin $admin */
+        $admin = auth()->user();
+
+        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereIn('cu.cu_team_id', $admin->team_ids)->orWhereNull('cu.cu_team_id');
+            });
+        }
 
         $paginate = new PaginateService(
             [],

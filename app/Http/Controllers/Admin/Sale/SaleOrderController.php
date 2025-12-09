@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Payment\RpPtId;
 use App\Enum\Sale\DtDtExportType;
 use App\Enum\Sale\DtDtStatus;
@@ -18,6 +19,7 @@ use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
 use App\Models\Customer\Customer;
 use App\Models\Payment\Payment;
@@ -76,12 +78,22 @@ class SaleOrderController extends Controller
         $query   = SaleOrder::indexQuery();
         $columns = SaleOrder::indexColumns();
 
-        // 如果是管理员或经理，则可以看到所有的用户；如果不是管理员或经理，则只能看到销售或驾管为自己的用户。
-        $user = auth()->user();
+        /** @var Admin $admin */
+        $admin = auth()->user();
 
-        $role_sales_manager = $user->hasRole(AdminRole::role_sales);
+        // 车队查询条件
+        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereIn('cu.cu_team_id', $admin->team_ids)->orWhereNull('cu.cu_team_id');
+            });
+        }
+
+        // 如果是管理员或经理，则可以看到所有的用户；如果不是管理员或经理，则只能看到销售或驾管为自己的用户。
+        $role_sales_manager = $admin->hasRole(AdminRole::role_sales);
         if ($role_sales_manager) {
-            $query->whereNull('cu.sales_manager')->orWhere('cu.sales_manager', '=', $user->id);
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereNull('cu.sales_manager')->orWhere('cu.sales_manager', '=', $admin->id);
+            });
         }
 
         $paginate = new PaginateService(
@@ -119,13 +131,23 @@ class SaleOrderController extends Controller
             'rental_start' => date('Y-m-d'),
         ]);
 
+        /** @var Admin $admin */
+        $admin = auth()->user();
+
         $this->options();
         $this->response()->withExtras(
             SaleOrderTpl::options(),
             Vehicle::options(
-                where: function (Builder $builder) {
-                    $builder->whereIn('status_rental', [VeStatusRental::LISTED])
+                where: function (Builder $builder) use ($admin) {
+                    $builder
+                        ->whereIn('status_rental', [VeStatusRental::LISTED])
                         ->whereIn('status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
+                        ->when(
+                            ($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids,
+                            function ($query) use ($admin) {
+                                $query->whereIn('ve.ve_team_id', $admin->team_ids)->orwhereNull('ve.ve_team_id');
+                            }
+                        )
                     ;
                 }
             ),

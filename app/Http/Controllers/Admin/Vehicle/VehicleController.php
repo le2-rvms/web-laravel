@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Vehicle;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
@@ -11,6 +12,7 @@ use App\Enum\Vehicle\VeVeType;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
+use App\Models\Admin\AdminTeam;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleManualViolation;
@@ -50,19 +52,29 @@ class VehicleController extends Controller
             VehicleModel::options(),
             Admin::options(function (\Illuminate\Database\Eloquent\Builder $builder) {
                 $builder->role(AdminRole::role_vehicle_mgr);
-            })
+            }),
+            AdminTeam::options(),
         );
 
         $query   = Vehicle::indexQuery();
         $columns = Vehicle::indexColumns();
 
-        // 如果是管理员和经理，则可以看到所有的车辆；如果不是管理员和经理，则只能看到车管为自己的车辆。
-        $user = auth()->user();
+        /** @var Admin $admin */
+        $admin = auth()->user();
 
-        $role_vehicle_manager = $user->hasRole(AdminRole::role_vehicle_mgr);
+        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereIn('ve.ve_team_id', $admin->team_ids)->orwhereNull('ve.ve_team_id');
+            });
+        }
+
+        // 如果是管理员和经理，则可以看到所有的车辆；如果不是管理员和经理，则只能看到车管为自己的车辆。
+        $role_vehicle_manager = $admin->hasRole(AdminRole::role_vehicle_mgr);
 
         if ($role_vehicle_manager) {
-            $query->whereNull('vehicle_manager')->orWhere('vehicle_manager', '=', $user->id);
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereNull('vehicle_manager')->orWhere('vehicle_manager', '=', $admin->id);
+            });
         }
 
         $paginate = new PaginateService(
@@ -125,6 +137,7 @@ class VehicleController extends Controller
                 'status_rental'               => ['required', Rule::in(VeStatusRental::label_keys())],
                 'status_dispatch'             => ['required', Rule::in(VeStatusDispatch::label_keys())],
                 'vehicle_manager'             => ['nullable', Rule::exists(Admin::class, 'id')],
+                've_team_id'                  => ['required', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
                 've_license_owner'            => ['nullable', 'string', 'max:100'],
                 've_license_address'          => ['nullable', 'string', 'max:255'],
                 've_license_usage'            => ['nullable', 'string', 'max:50'],
@@ -190,6 +203,7 @@ class VehicleController extends Controller
             Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
                 $builder->role(AdminRole::role_vehicle_mgr);
             }),
+            AdminTeam::options(),
         );
 
         $vehicle = new Vehicle();
@@ -207,6 +221,7 @@ class VehicleController extends Controller
             Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
                 $builder->role(AdminRole::role_vehicle_mgr);
             }),
+            AdminTeam::options(),
         );
 
         $this->response()->withExtras(

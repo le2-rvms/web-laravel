@@ -6,6 +6,8 @@ use App\Attributes\ClassName;
 use App\Enum\Admin\AdmUserType;
 use App\Enum\Admin\AtAtStatus;
 use App\Models\_\ModelTrait;
+use App\Models\Customer\Customer;
+use App\Models\Vehicle\Vehicle;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -48,8 +50,13 @@ class AdminTeam extends Model
     public static function indexQuery(array $search = []): Builder
     {
         return DB::query()
-            ->select('*')
+            ->select('at.*')
             ->from('admin_teams as at')
+            ->addSelect([
+                'admin_count'    => Admin::query()->selectRaw('count(*)')->whereRaw('admins.team_ids @> to_jsonb(array[at.at_id])'),
+                'vehicle_count'  => Vehicle::query()->selectRaw('count(*)')->whereColumn('ve_team_id', 'at.at_id'),
+                'customer_count' => Customer::query()->selectRaw('count(*)')->whereColumn('cu_team_id', 'at.at_id'),
+            ])
             ->addSelect(
                 DB::raw(AtAtStatus::toCaseSQL()),
                 DB::raw(AtAtStatus::toColorSQL()),

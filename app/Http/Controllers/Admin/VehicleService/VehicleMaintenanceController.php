@@ -51,15 +51,15 @@ class VehicleMaintenanceController extends Controller
     public function index(Request $request): Response
     {
         // 如果是维修厂，则只能看到自己的。
-        /** @var Admin $user */
-        $user = auth()->user();
+        /** @var Admin $admin */
+        $admin = auth()->user();
 
         $this->options(true);
         $this->response()->withExtras(
             Vehicle::options(),
-            ServiceCenter::options(function (Builder $query) use ($user) {
-                if ($user->hasRole(AdminRole::role_vehicle_service)) {
-                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
+            ServiceCenter::options(function (Builder $query) use ($admin) {
+                if ($admin->hasRole(AdminRole::role_vehicle_service)) {
+                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
 
                     $query->whereIn('vr.sc_id', $sc_id_array);
                 }
@@ -69,8 +69,8 @@ class VehicleMaintenanceController extends Controller
         $query   = VehicleMaintenance::indexQuery();
         $columns = VehicleMaintenance::indexColumns();
 
-        if ($user->hasRole(AdminRole::role_vehicle_service)) {
-            $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
+        if ($admin->hasRole(AdminRole::role_vehicle_service)) {
+            $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
 
             $query->whereIn('vm.sc_id', $sc_id_array);
         }
@@ -102,15 +102,15 @@ class VehicleMaintenanceController extends Controller
     public function create(Request $request): Response
     {
         // 如果是维修厂，则只能看到自己的。
-        /** @var Admin $user */
-        $user = auth()->user();
+        /** @var Admin $admin */
+        $admin = auth()->user();
 
         $this->options();
         $this->response()->withExtras(
             Vehicle::options(),
-            ServiceCenter::options(function (Builder $query) use ($user) {
-                if ($user->hasRole(AdminRole::role_vehicle_service)) {
-                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
+            ServiceCenter::options(function (Builder $query) use ($admin) {
+                if ($admin->hasRole(AdminRole::role_vehicle_service)) {
+                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
 
                     $query->whereIn('vr.sc_id', $sc_id_array);
                 }
@@ -150,15 +150,15 @@ class VehicleMaintenanceController extends Controller
     public function edit(VehicleMaintenance $vehicleMaintenance): Response
     {
         // 如果是维修厂，则只能看到自己的。
-        /** @var Admin $user */
-        $user = auth()->user();
+        /** @var Admin $admin */
+        $admin = auth()->user();
 
         $this->options();
         $this->response()->withExtras(
             Vehicle::options(),
-            ServiceCenter::options(function (Builder $query) use ($user) {
-                if ($user->hasRole(AdminRole::role_vehicle_service)) {
-                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $user->id)->pluck('sc_id')->toArray();
+            ServiceCenter::options(function (Builder $query) use ($admin) {
+                if ($admin->hasRole(AdminRole::role_vehicle_service)) {
+                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
 
                     $query->whereIn('vr.sc_id', $sc_id_array);
                 }

@@ -36,7 +36,7 @@ return [
             (DocTpl::class)                 => 'dt_id',
             (Customer::class)               => 'cu_id',
             (CustomerIndividual::class)     => 'cui_id',
-            (CustomerCompany::class)        => 'cui_id',
+            (CustomerCompany::class)        => 'cuc_id',
             (VehicleModel::class)           => 'vm_id',
             (Vehicle::class)                => 've_id',
             (VehicleAccident::class)        => 'va_id',

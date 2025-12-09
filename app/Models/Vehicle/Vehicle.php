@@ -14,6 +14,7 @@ use App\Exceptions\ClientException;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use App\Models\Admin\Admin;
+use App\Models\Admin\AdminTeam;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -68,6 +69,7 @@ use Illuminate\Validation\Validator;
  * @property null|int                     $ve_mileage                  车辆当前总行驶公里数
  * @property null|string                  $ve_color                    车辆颜色
  * @property null|string                  $vehicle_manager             负责车管
+ * @property null|int                     $ve_team_id                  所属车队
  * @property null|string                  $ve_cert_no                  车证号
  * @property null|array<string>           $ve_cert_photo               车证照片
  * @property null|Carbon                  $ve_cert_valid_to            车证到期日期
@@ -114,6 +116,7 @@ class Vehicle extends Model
         'status_service'  => VeStatusService::class,
         'status_rental'   => VeStatusRental::class,
         'status_dispatch' => VeStatusDispatch::class,
+        've_team_id'      => 'integer',
     ];
 
     public function VehicleModel(): BelongsTo
@@ -149,6 +152,11 @@ class Vehicle extends Model
     public function VehicleManager(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'vehicle_manager', 'id');
+    }
+
+    public function Team(): BelongsTo
+    {
+        return $this->belongsTo(AdminTeam::class, 've_team_id', 'at_id');
     }
 
     public function scopeOnService(Builder $query): void
@@ -250,7 +258,8 @@ class Vehicle extends Model
             ->from('vehicles', 've')
             ->leftJoin('vehicle_models as vm', 've.vm_id', '=', 'vm.vm_id')
             ->leftJoin('admins as adm', 've.vehicle_manager', '=', 'adm.id')
-            ->select('ve.*', 'vm.brand_name', 'vm.model_name', 'adm.name as vehicle_manager_name')
+            ->leftJoin('admin_teams as at', 've.ve_team_id', '=', 'at.at_id')
+            ->select('ve.*', 'vm.brand_name', 'vm.model_name', 'adm.name as vehicle_manager_name', 'at.at_name as ve_team_name')
             ->addSelect(
                 DB::raw(VeStatusService::toCaseSQL()),
                 DB::raw(VeStatusService::toColorSQL()),
@@ -272,6 +281,7 @@ class Vehicle extends Model
             'Vehicle.ve_license_type'          => fn ($item) => $item->ve_license_type,
             'Vehicle.ve_license_purchase_date' => fn ($item) => $item->ve_license_purchase_date,
             'Vehicle.status_service'           => fn ($item) => $item->status_service_label,
+            'AdminTeam.at_name'                => fn ($item) => $item->ve_team_name,
         ];
     }
 
@@ -312,6 +322,7 @@ class Vehicle extends Model
             've_license_valid_until_date' => [Vehicle::class, 've_license_valid_until_date'],
             've_mileage'                  => [Vehicle::class, 've_mileage'],
             've_color'                    => [Vehicle::class, 've_color'],
+            've_team_id'                  => [Vehicle::class, 've_team_id'],
             've_cert_no'                  => [Vehicle::class, 've_cert_no'],
             've_cert_valid_to'            => [Vehicle::class, 've_cert_valid_to'],
             've_remark'                   => [Vehicle::class, 've_remark'],
@@ -344,6 +355,7 @@ class Vehicle extends Model
             've_license_valid_until_date' => ['nullable', 'date', 'after:ve_license_purchase_date'],
             've_mileage'                  => ['nullable', 'integer'],
             've_color'                    => ['nullable', 'string', 'max:30'],
+            've_team_id'                  => ['nullable', 'integer', Rule::exists(AdminTeam::class)],
             've_cert_no'                  => ['nullable', 'string', 'max:50'],
             've_cert_valid_to'            => ['nullable', 'date'],
             've_remark'                   => ['nullable', 'string', 'max:255'],

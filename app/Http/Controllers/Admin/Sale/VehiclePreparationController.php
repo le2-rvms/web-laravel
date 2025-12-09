@@ -63,11 +63,11 @@ class VehiclePreparationController extends Controller
             )
         );
 
-        /** @var Admin $user */
-        $user = auth()->user();
+        /** @var Admin $admin */
+        $admin = auth()->user();
 
-        $has_role_prep_vehicle  = $user->hasRole(AdminRole::role_vehicle_mgr) || $user->hasRole(config('setting.super_role.name'));
-        $has_role_prep_document = $user->hasRole(AdminRole::role_payment) || $user->hasRole(config('setting.super_role.name'));
+        $has_role_prep_vehicle  = $admin->hasRole(AdminRole::role_vehicle_mgr) || $admin->hasRole(config('setting.super_role.name'));
+        $has_role_prep_document = $admin->hasRole(AdminRole::role_payment) || $admin->hasRole(config('setting.super_role.name'));
 
         return $this->response()->withData([
             'role_prep_vehicle'  => $has_role_prep_vehicle,
@@ -78,10 +78,10 @@ class VehiclePreparationController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request)
     {
-        $user = auth()->user();
+        $admin = auth()->user();
 
-        $role_prep_vehicle  = $user->hasRole(AdminRole::role_vehicle_mgr) || $user->hasRole(config('setting.super_role.name'));
-        $role_prep_document = $user->hasRole(AdminRole::role_payment) || $user->hasRole(config('setting.super_role.name'));
+        $role_prep_vehicle  = $admin->hasRole(AdminRole::role_vehicle_mgr) || $admin->hasRole(config('setting.super_role.name'));
+        $role_prep_document = $admin->hasRole(AdminRole::role_payment) || $admin->hasRole(config('setting.super_role.name'));
 
         $validator = Validator::make(
             $request->all(),

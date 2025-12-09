@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin\Customer;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Customer\CuCuType;
 use App\Enum\Customer\CuiCuiGender;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
+use App\Models\Admin\AdminTeam;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerCompany;
 use App\Models\Customer\CustomerIndividual;
@@ -45,21 +47,36 @@ class CustomerController extends Controller
     public function index(Request $request): Response
     {
         $this->options(true);
+        $this->response()->withExtras(
+            AdminTeam::options(),
+        );
 
         $query   = Customer::indexQuery();
         $columns = Customer::indexColumns();
 
-        // 如果是管理员或经理，则可以看到所有的用户；如果不是管理员或经理，则只能看到销售或驾管为自己的用户。
-        $user = auth()->user();
+        /** @var Admin $admin */
+        $admin = auth()->user();
 
-        $role_sales_manager = $user->hasRole(AdminRole::role_sales);
-        if ($role_sales_manager) {
-            $query->whereNull('cu.sales_manager')->orWhere('cu.sales_manager', '=', $user->id);
+        // 车队作为查询条件
+        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereIn('cu.cu_team_id', $admin->team_ids)->orWhereNull('cu.cu_team_id');
+            });
         }
 
-        $has_role_driver = $user->hasRole(AdminRole::role_driver_mgr);
+        // 如果是管理员或经理，则可以看到所有的用户；如果不是管理员或经理，则只能看到销售或驾管为自己的用户。
+        $role_sales_manager = $admin->hasRole(AdminRole::role_sales);
+        if ($role_sales_manager) {
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereNull('cu.sales_manager')->orWhere('cu.sales_manager', '=', $admin->id);
+            });
+        }
+
+        $has_role_driver = $admin->hasRole(AdminRole::role_driver_mgr);
         if ($has_role_driver) {
-            $query->whereNull('cu.driver_manager')->orWhere('cu.driver_manager', '=', $user->id);
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereNull('cu.driver_manager')->orWhere('cu.driver_manager', '=', $admin->id);
+            });
         }
 
         $paginate = new PaginateService(
@@ -130,6 +147,7 @@ class CustomerController extends Controller
                 'cu_cert_no'           => ['nullable', 'string', 'max:50'],
                 'cu_cert_valid_to'     => ['nullable', 'date'],
                 'cu_remark'            => ['nullable', 'string', 'max:255'],
+                'cu_team_id'           => ['required', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
 
                 'sales_manager'  => ['nullable', Rule::exists(Admin::class)],
                 'driver_manager' => ['nullable', Rule::exists(Admin::class)],
@@ -250,6 +268,7 @@ class CustomerController extends Controller
 
         $this->response()->withExtras(
             Admin::optionsWithRoles(),
+            AdminTeam::options(),
         );
 
         $customer = new Customer([
@@ -266,6 +285,7 @@ class CustomerController extends Controller
 
         $this->response()->withExtras(
             Admin::optionsWithRoles(),
+            AdminTeam::options(),
         );
 
         $this->response()->withExtras(

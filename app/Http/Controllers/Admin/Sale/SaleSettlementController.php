@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Payment\RpPtId;
 use App\Enum\Payment\RsDeleteOption;
 use App\Enum\Sale\DtDtExportType;
@@ -56,6 +57,13 @@ class SaleSettlementController extends Controller
 
         $query   = SaleSettlement::indexQuery();
         $columns = SaleSettlement::indexColumns();
+
+        // 车队查询条件
+        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereIn('cu.cu_team_id', $admin->team_ids)->orWhereNull('cu.cu_team_id');
+            });
+        }
 
         $paginate = new PaginateService(
             [],

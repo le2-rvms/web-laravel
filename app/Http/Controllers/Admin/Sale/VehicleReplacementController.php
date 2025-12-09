@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Sale\SoOrderStatus;
 use App\Enum\Sale\VrReplacementStatus;
 use App\Enum\Sale\VrReplacementType;
@@ -44,6 +45,13 @@ class VehicleReplacementController extends Controller
 
         $query   = VehicleReplacement::indexQuery();
         $columns = VehicleReplacement::indexColumns();
+
+        // 车队查询条件
+        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+            $query->where(function (Builder $query) use ($admin) {
+                $query->whereIn('cu.cu_team_id', $admin->team_ids)->orWhereNull('cu.cu_team_id');
+            });
+        }
 
         $paginate = new PaginateService(
             [],

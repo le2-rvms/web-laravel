@@ -88,8 +88,8 @@ class StatisticsController extends Controller
 
         $endDate = $endDate->format('Y-m-d');
 
-        /** @var Admin $user */
-        $user = auth()->user();
+        /** @var Admin $admin */
+        $admin = auth()->user();
 
         $sql_permission_array = [
             'sale_orders'         => 'SaleOrder::read',
@@ -167,7 +167,7 @@ class StatisticsController extends Controller
         ];
         $result = [];
         foreach ($sql_array as $key => $sql) {
-            if (!$user->can($permission = $sql_permission_array[$key])) {
+            if (!$admin->can($permission = $sql_permission_array[$key])) {
                 continue;
             }
 

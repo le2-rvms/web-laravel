@@ -11,6 +11,7 @@ use App\Exceptions\ClientException;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use App\Models\Admin\Admin;
+use App\Models\Admin\AdminTeam;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -46,6 +47,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property null|string               $contact_live_address 现住地址
  * @property null|int                  $sales_manager        负责销售
  * @property null|int                  $driver_manager       负责驾管
+ * @property null|int                  $cu_team_id           所属车队
  * @property null|string               $cu_cert_no           人证号
  * @property null|array<string>        $cu_cert_photo        人证照片
  * @property null|Carbon               $cu_cert_valid_to     人证到期日期
@@ -71,7 +73,8 @@ class Customer extends Authenticatable
     protected $guarded = ['cu_id'];
 
     protected $casts = [
-        'cu_type' => CuCuType::class,
+        'cu_type'    => CuCuType::class,
+        'cu_team_id' => 'integer',
     ];
 
     protected $appends = [
@@ -136,12 +139,14 @@ class Customer extends Authenticatable
             })
             ->leftjoin('admins as admin_sm', 'cu.sales_manager', '=', 'admin_sm.id')
             ->leftjoin('admins as admin_dm', 'cu.driver_manager', '=', 'admin_dm.id')
+            ->leftJoin('admin_teams as at', 'cu.cu_team_id', '=', 'at.at_id')
             ->select('cuc.*', 'cui.*', 'cu.*') // cu.* 在最后，这样可以让空值在前
             ->addSelect(
                 DB::raw(CuCuType::toCaseSQL()),
                 DB::raw(CuiCuiGender::toCaseSQL()),
                 'admin_sm.name as sales_manager_name',
                 'admin_dm.name as driver_manager_name',
+                'at.at_name as cu_team_name',
             )
         ;
     }
@@ -158,6 +163,7 @@ class Customer extends Authenticatable
             'Customer.contact_live_city'                        => fn ($item) => $item->contact_live_city,
             'Customer.contact_live_address'                     => fn ($item) => $item->contact_live_address,
             'Customer.cu_remark'                                => fn ($item) => $item->cu_remark,
+            'AdminTeam.at_name'                                 => fn ($item) => $item->cu_team_name,
             'CustomerIndividual.cui_name'                       => fn ($item) => $item->cui_name,
             'CustomerIndividual.cui_gender'                     => fn ($item) => $item->cui_gender_label,
             'CustomerIndividual.cui_date_of_birth'              => fn ($item) => $item->cui_date_of_birth,
@@ -194,6 +200,11 @@ class Customer extends Authenticatable
         return $this->belongsTo(Admin::class, 'driver_manager', 'cu_id');
     }
 
+    public function Team(): BelongsTo
+    {
+        return $this->belongsTo(AdminTeam::class, 'cu_team_id', 'at_id');
+    }
+
     public static function importColumns(): array
     {
         return [
@@ -204,6 +215,7 @@ class Customer extends Authenticatable
             'contact_wechat'                 => [Customer::class, 'contact_wechat'],
             'contact_live_city'              => [Customer::class, 'contact_live_city'],
             'contact_live_address'           => [Customer::class, 'contact_live_address'],
+            'cu_team_id'                     => [Customer::class, 'cu_team_id'],
             'cu_cert_no'                     => [Customer::class, 'cu_cert_no'],
             'cu_cert_valid_to'               => [Customer::class, 'cu_cert_valid_to'],
             'cu_remark'                      => [Customer::class, 'cu_remark'],
@@ -244,6 +256,7 @@ class Customer extends Authenticatable
             'contact_wechat'       => ['nullable', 'string', 'max:255'],
             'contact_live_city'    => ['nullable', 'string', 'max:64'],
             'contact_live_address' => ['nullable', 'string', 'max:255'],
+            'cu_team_id'           => ['nullable', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
             'cu_cert_no'           => ['nullable', 'string', 'max:50'],
             'cu_cert_valid_to'     => ['nullable', 'date'],
             'cu_remark'            => ['nullable', 'string', 'max:255'],
