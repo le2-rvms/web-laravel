@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 #[ClassName('换车')]
 /**
  * @property int                        $vr_id                  换车记录序号
- * @property int                        $so_id                  订单序号；指向租赁订单表
+ * @property int                        $so_id                  租车合同序号
  * @property string|VrReplacementType   $replacement_type       换车类型；临时或永久
  * @property int                        $current_ve_id          需换车车辆序号
  * @property int                        $new_ve_id              新车车辆序号

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 #[ClassName('行程')]
 /**
  * @property int         $vu_id       行程记录序号
- * @property int         $so_id       订单序号；指向订单表
+ * @property int         $so_id       租车合同序号
  * @property int         $ve_id       车辆序号
  * @property int         $start_vi_id 行程开始的验车序号
  * @property null|int    $end_vi_id   行程结束的验车序号

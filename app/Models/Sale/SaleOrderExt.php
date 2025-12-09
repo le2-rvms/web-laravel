@@ -9,8 +9,8 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
- * @property int    $soe_id              扩展订单ID
- * @property int    $so_id               订单ID
+ * @property int    $soe_id              扩展租车合同ID
+ * @property int    $so_id               租车合同ID
  * @property string $soe_wecom_group_url 微信群机器人url
  *
  * -- relation

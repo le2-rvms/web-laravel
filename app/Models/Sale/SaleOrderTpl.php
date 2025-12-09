@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
-#[ClassName('租车订单模板')]
+#[ClassName('租车合同模板')]
 /**
  * @property int         $sot_id                          签约模板序号
  * @property string      $sot_name                        签约模板名称
@@ -38,7 +38,7 @@ use Illuminate\Support\Facades\DB;
  * @property null|string $cus_2                           自定义合同内容2
  * @property null|string $cus_3                           自定义合同内容3
  * @property null|string $discount_plan                   优惠方案
- * @property null|string $so_remark                       订单备注
+ * @property null|string $so_remark                       合同备注
  */
 class SaleOrderTpl extends Model
 {

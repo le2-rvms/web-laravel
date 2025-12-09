@@ -41,7 +41,7 @@ use PhpOffice\PhpWord\Element\Table;
 use PhpOffice\PhpWord\SimpleType\Jc;
 use PhpOffice\PhpWord\SimpleType\TblWidth;
 
-#[ClassName('租车订单')]
+#[ClassName('租车合同')]
 #[ColumnDesc('so_id')]
 #[ColumnDesc('rental_type', required: true, enum_class: SoRentalType_Short::class)]
 #[ColumnDesc('payment_day_type', required: true, enum_class: SoPaymentDayType::class)]
@@ -105,7 +105,7 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
  * @property null|string                            $total_amount__zh                    总计金额-中文大写
  * @property mixed|SoOrderStatus                    $order_status                        合同状态；例如未签约、已签约、已完成等
  * @property null|string                            $order_status_label                  合同状态-中文
- * @property null|Carbon                            $order_at                            订单日时
+ * @property null|Carbon                            $order_at                            订单日时; //todo 再想想名字
  * @property null|Carbon                            $signed_at                           签约日时
  * @property null|Carbon                            $canceled_at                         取消日时
  * @property Carbon                                 $completed_at                        结算日时
@@ -117,7 +117,7 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
  * @property null|string                            $cus_2                               自定义合同内容2
  * @property null|string                            $cus_3                               自定义合同内容3
  * @property null|string                            $discount_plan                       优惠方案
- * @property null|string                            $so_remark                           订单备注
+ * @property null|string                            $so_remark                           租车合同备注
  *                                                                                       --
  * @property Customer                               $Customer
  * @property SaleSettlement                         $SaleSettlement

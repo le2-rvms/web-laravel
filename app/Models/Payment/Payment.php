@@ -45,7 +45,7 @@ use Illuminate\Validation\ValidationException;
 #[ColumnDesc('vi_id')]
 /**
  * @property int                $rp_id             财务记录序号
- * @property int                $so_id             租车订单序号；指向订单表
+ * @property int                $so_id             租车合同序号
  * @property int                $pt_id             付款类型序号；引用payment_types表
  * @property Carbon|string      $should_pay_date   应收/应付日期
  * @property string             $day_of_week_name  应收/应付星期

@@ -58,7 +58,7 @@ return [
         'suffix' => '信息',
     ],
     'BookingOrder' => [
-        'name'   => '预定订单',
+        'name'   => '预定租车',
         'suffix' => '',
     ],
     'BookingVehicle' => [
@@ -70,11 +70,11 @@ return [
         'suffix' => '',
     ],
     'SaleOrder' => [
-        'name'   => '租车订单',
+        'name'   => '租车合同',
         'suffix' => '',
     ],
     'SaleOrderTpl' => [
-        'name'   => '租车订单模板',
+        'name'   => '租车合同模板',
         'suffix' => '',
     ],
     'SaleSettlement' => [

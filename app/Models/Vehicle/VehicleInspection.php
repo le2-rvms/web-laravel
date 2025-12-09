@@ -26,8 +26,8 @@ use Illuminate\Support\Facades\DB;
 #[ClassName('验车')]
 /**
  * @property int                         $vi_id                       验车序号
- * @property int                         $so_id                       订单序号
- * @property int                         $ve_id                       车辆序号；订单可能换车
+ * @property int                         $so_id                       租车合同序号
+ * @property int                         $ve_id                       车辆序号
  * @property string|ViInspectionType     $inspection_type             验车类型；发车或退车
  * @property null|int|ViPolicyCopy       $policy_copy                 保单复印件
  * @property null|int|ViDrivingLicense   $driving_license             行驶证

@@ -49,7 +49,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * @property int           $vm_id                   保养序号
  * @property int           $ve_id                   车辆序号
- * @property null|int      $so_id                   订单序号
+ * @property null|int      $so_id                   租车合同序号
  * @property int           $sc_id                   修理厂序号
  * @property Carbon        $entry_datetime          进厂日时
  * @property float         $maintenance_amount      保养金额;元

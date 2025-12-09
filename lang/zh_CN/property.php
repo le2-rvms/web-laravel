@@ -173,7 +173,7 @@ return [
     ],
     'Payment' => [
         'rp_id'             => '财务记录序号',
-        'so_id'             => '租车订单序号',
+        'so_id'             => '租车合同序号',
         'pt_id'             => '付款类型序号',
         'should_pay_date'   => '应收/应付日期',
         'day_of_week_name'  => '应收/应付星期',
@@ -221,9 +221,9 @@ return [
         'pt_description' => '描述',
     ],
     'BookingOrder' => [
-        'bo_id'                => '订单序号',
-        'bo_no'                => '订单编号',
-        'bo_source'            => '订单来源',
+        'bo_id'                => '预定租车序号',
+        'bo_no'                => '预定租车编号',
+        'bo_source'            => '预定租车来源',
         'cu_id'                => '客户ID',
         'plate_no'             => '车牌号',
         'b_type'               => '租期类型',
@@ -236,7 +236,7 @@ return [
         'service_interval'     => '保养周期',
         'min_rental_periods'   => '最短租期',
         'payment_status'       => '支付状态',
-        'order_status'         => '订单状态',
+        'order_status'         => '预定租车状态',
         'refund_status'        => '退款状态',
         'b_note'               => '其他信息',
         'earnest_amount'       => '定金',
@@ -323,11 +323,11 @@ return [
         'cus_2'                               => '自定义合同内容2',
         'cus_3'                               => '自定义合同内容3',
         'discount_plan'                       => '优惠方案',
-        'so_remark'                           => '订单备注',
+        'so_remark'                           => '租车合同备注',
     ],
     'SaleOrderExt' => [
-        'soe_id'              => '扩展订单ID',
-        'so_id'               => '订单ID',
+        'soe_id'              => '扩展租车合同ID',
+        'so_id'               => '租车合同ID',
         'soe_wecom_group_url' => '微信群机器人url',
     ],
     'SaleOrderTpl' => [
@@ -352,11 +352,11 @@ return [
         'cus_2'                           => '自定义合同内容2',
         'cus_3'                           => '自定义合同内容3',
         'discount_plan'                   => '优惠方案',
-        'so_remark'                       => '订单备注',
+        'so_remark'                       => '合同备注',
     ],
     'SaleSettlement' => [
         'ss_id'                      => '结算序号',
-        'so_id'                      => '订单序号',
+        'so_id'                      => '租车合同序号',
         'deposit_amount'             => '合同押金',
         'received_deposit'           => '实收押金',
         'early_return_penalty'       => '提前退车违约金',
@@ -388,7 +388,7 @@ return [
     ],
     'VehicleReplacement' => [
         'vr_id'                  => '换车记录序号',
-        'so_id'                  => '订单序号',
+        'so_id'                  => '租车合同序号',
         'replacement_type'       => '换车类型',
         'current_ve_id'          => '需换车车辆序号',
         'new_ve_id'              => '新车车辆序号',
@@ -454,7 +454,7 @@ return [
     'VehicleAccident' => [
         'va_id'              => '出险序号',
         've_id'              => '车辆序号',
-        'so_id'              => '订单序号',
+        'so_id'              => '租车合同序号',
         'sc_id'              => '修理厂序号',
         'accident_location'  => '事故地点',
         'accident_dt'        => '出险日时',
@@ -487,7 +487,7 @@ return [
     ],
     'VehicleInspection' => [
         'vi_id'                       => '验车序号',
-        'so_id'                       => '订单序号',
+        'so_id'                       => '租车合同序号',
         've_id'                       => '车辆序号',
         'inspection_type'             => '验车类型',
         'policy_copy'                 => '保单复印件',
@@ -549,7 +549,7 @@ return [
     'VehicleMaintenance' => [
         'vm_id'                   => '保养序号',
         've_id'                   => '车辆序号',
-        'so_id'                   => '订单序号',
+        'so_id'                   => '租车合同序号',
         'sc_id'                   => '修理厂序号',
         'entry_datetime'          => '进厂日时',
         'maintenance_amount'      => '保养金额',
@@ -605,7 +605,7 @@ return [
     'VehicleRepair' => [
         'vr_id'                   => '维修记录序号',
         've_id'                   => '车辆序号',
-        'so_id'                   => '订单序号',
+        'so_id'                   => '租车合同序号',
         'sc_id'                   => '修理厂序号',
         'entry_datetime'          => '进厂日时',
         'vr_mileage'              => '维修公里数',
@@ -647,7 +647,7 @@ return [
     ],
     'VehicleUsage' => [
         'vu_id'       => '行程记录序号',
-        'so_id'       => '订单序号',
+        'so_id'       => '租车合同序号',
         've_id'       => '车辆序号',
         'start_vi_id' => '行程开始的验车序号',
         'end_vi_id'   => '行程结束的验车序号',

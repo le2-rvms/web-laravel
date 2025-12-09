@@ -18,11 +18,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
-#[ClassName('预定订单')]
+#[ClassName('预定租车')]
 /**
- * @property int                    $bo_id                订单序号
- * @property string                 $bo_no                订单编号
- * @property BoBoSource|string      $bo_source            订单来源
+ * @property int                    $bo_id                预定租车序号
+ * @property string                 $bo_no                预定租车编号
+ * @property BoBoSource|string      $bo_source            预定租车来源
  * @property int                    $cu_id                客户ID
  * @property string                 $plate_no             车牌号
  * @property BoBType|string         $b_type               租期类型
@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\DB;
  * @property int                    $service_interval     保养周期;(公里)
  * @property int                    $min_rental_periods   最短租期;(天、周、月)
  * @property BoPaymentStatus|string $payment_status       支付状态
- * @property BoOrderStatus|string   $order_status         订单状态
+ * @property BoOrderStatus|string   $order_status         预定租车状态
  * @property BoRefundStatus|string  $refund_status        退款状态
  * @property string                 $b_note               其他信息
  * @property string                 $earnest_amount       定金;(元)

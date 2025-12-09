@@ -27,7 +27,7 @@ class AdminController extends Controller
 {
     public function __construct()
     {
-        //        $this->middleware(CheckAdminIsMock::class);
+        $this->middleware(CheckAdminIsMock::class);
     }
 
     #[PermissionAction(PermissionAction::READ)]
@@ -90,7 +90,6 @@ class AdminController extends Controller
         );
 
         $admin->roles_ = $admin->roles->pluck('id');
-        //        $admin->team_ids = array_map('intval', $admin->team_ids ?? []);
 
         return $this->response()->withData($admin)->respond();
     }

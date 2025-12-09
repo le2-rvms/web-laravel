@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 #[ClassName('结算')]
 /**
  * @property int                       $ss_id                      结算序号
- * @property int                       $so_id                      订单序号
+ * @property int                       $so_id                      租车合同序号
  * @property null|float                $deposit_amount             合同押金
  * @property null|float                $received_deposit           实收押金
  * @property null|float                $early_return_penalty       提前退车违约金

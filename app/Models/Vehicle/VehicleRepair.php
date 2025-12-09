@@ -54,7 +54,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * @property int               $vr_id                   维修记录序号
  * @property int               $ve_id                   车辆序号；指向车辆表
- * @property null|int          $so_id                   订单序号
+ * @property null|int          $so_id                   租车合同序号
  * @property int               $sc_id                   修理厂序号
  * @property Carbon            $entry_datetime          进厂日时
  * @property null|int          $vr_mileage              维修公里数

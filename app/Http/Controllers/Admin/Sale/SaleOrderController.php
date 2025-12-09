@@ -52,7 +52,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('订单')]
+#[PermissionType('租车合同')]
 class SaleOrderController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -571,7 +571,7 @@ class SaleOrderController extends Controller
             // 创建备注信息
             $beginDateText = 1 === $installmentNumber ? '白天' : '0点';
             $endDateText   = $installmentNumber === (int) $input['installments'] ? '白天' : '24点';
-            $remark        = sprintf('第%d期租金（%d天，账单周期：%s %s ~ %s %s）', $installmentNumber, $days, $billingPeriodStart->toDateString(), $beginDateText, $billingPeriodEnd->toDateString(), $endDateText);
+            $remark        = sprintf('第%d期租金(%d天,账单周期：%s %s ~ %s %s)', $installmentNumber, $days, $billingPeriodStart->toDateString(), $beginDateText, $billingPeriodEnd->toDateString(), $endDateText);
 
             // 添加租金付款
             $payment = new Payment([

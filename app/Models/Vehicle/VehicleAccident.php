@@ -52,7 +52,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * @property int                            $va_id              出险序号
  * @property int                            $ve_id              车辆序号
- * @property null|int                       $so_id              订单序号
+ * @property null|int                       $so_id              租车合同序号
  * @property int                            $sc_id              修理厂序号
  * @property null|string                    $accident_location  事故地点
  * @property Carbon                         $accident_dt        出险日时
