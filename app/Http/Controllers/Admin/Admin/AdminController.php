@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin\Admin;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Admin\AdmUserType;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\CheckAdminIsMock;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
+use App\Models\Admin\AdminTeam;
 use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,7 +27,7 @@ class AdminController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(CheckAdminIsMock::class);
+        //        $this->middleware(CheckAdminIsMock::class);
     }
 
     #[PermissionAction(PermissionAction::READ)]
@@ -63,11 +65,15 @@ class AdminController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
+        $this->options();
         $this->response()->withExtras(
             AdminRole::options(),
+            AdminTeam::options(),
         );
 
-        $admin = new Admin();
+        $admin = new Admin([
+            'team_limit' => AdmTeamLimit::NOT_LIMITED,
+        ]);
 
         return $this->response()->withData($admin)->respond();
     }
@@ -77,11 +83,14 @@ class AdminController extends Controller
     {
         abort_if($admin->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow edit.');
 
+        $this->options();
         $this->response()->withExtras(
             AdminRole::options(),
+            AdminTeam::options(),
         );
 
         $admin->roles_ = $admin->roles->pluck('id');
+        //        $admin->team_ids = array_map('intval', $admin->team_ids ?? []);
 
         return $this->response()->withData($admin)->respond();
     }
@@ -99,6 +108,14 @@ class AdminController extends Controller
                 'password_confirmation' => ['bail', 'required', 'string', 'min:8'],
                 'roles_'                => ['bail', 'required'],
                 'expires_at'            => ['bail', 'nullable', 'date'],
+                'team_limit'            => ['bail', 'required', Rule::in(AdmTeamLimit::label_keys())],
+                'team_ids'              => [
+                    'bail',
+                    Rule::excludeIf(AdmTeamLimit::LIMITED !== (int) $request->team_limit),
+                    Rule::when(fn ($input) => AdmTeamLimit::LIMITED === (int) $input->team_limit, 'required', 'nullable'),
+                    'array',
+                ],
+                'team_ids.*' => ['bail', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
             ],
             [],
             trans_property(Admin::class)
@@ -147,6 +164,14 @@ class AdminController extends Controller
                 'password'              => ['bail', 'nullable', 'required_with:password_confirmation', 'string', 'min:8', 'confirmed'],
                 'password_confirmation' => ['bail', 'nullable', 'required_with:password', 'string', 'min:8'],
                 'expires_at'            => ['bail', 'nullable', 'date'],
+                'team_limit'            => ['bail', 'required', Rule::in(AdmTeamLimit::label_keys())],
+                'team_ids'              => [
+                    'bail',
+                    Rule::excludeIf(AdmTeamLimit::LIMITED !== (int) $request->team_limit),
+                    Rule::when(fn ($input) => AdmTeamLimit::LIMITED === (int) $input->team_limit, 'required', 'nullable'),
+                    'array',
+                ],
+                'team_ids.*' => ['bail', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
             ],
             [],
             trans_property(Admin::class)
@@ -210,12 +235,14 @@ class AdminController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
+            AdmTeamLimit::labelOptions(),
         );
     }
 
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
+            AdmTeamLimit::options(),
         );
     }
 }

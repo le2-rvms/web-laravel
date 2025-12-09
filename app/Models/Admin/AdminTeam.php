@@ -60,10 +60,12 @@ class AdminTeam extends Model
     public static function options(?\Closure $where = null): array
     {
         $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
-        $value = static::query()->toBase()
-            ->where($where)
+        $value = static::query()
+            ->when($where, fn ($query) => $query->where($where))
+            ->orderBy('at_sort')
             ->orderBy('at_id')
-            ->select(DB::raw('name as text,at_id as value'))->get()
+            ->selectRaw('at_name as text, at_id as value')
+            ->get()
         ;
 
         return [$key => $value];

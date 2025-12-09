@@ -11,6 +11,8 @@ return [
         'remember_token'        => '',
         'password_confirmation' => '确认密码',
         'roles_'                => '角色',
+        'team_ids'              => '关联车队',
+        'team_limit'            => '车队限制',
         'user_type'             => '账号类型',
         'expires_at'            => '账号过期时间',
         'is_mock'               => '',
