@@ -7,7 +7,6 @@ use App\Enum\Sale\SoOrderStatus;
 use App\Enum\Sale\SoPaymentDayType;
 use App\Enum\Sale\SoRentalType_ShortOnlyShort;
 use App\Enum\Sale\VrReplacementStatus;
-use App\Enum\Sale\VrReplacementType;
 use App\Models\_\ModelTrait;
 use App\Models\Vehicle\Vehicle;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -21,7 +20,6 @@ use Illuminate\Support\Facades\DB;
 /**
  * @property int                        $vr_id                  换车记录序号
  * @property int                        $so_id                  租车合同序号
- * @property string|VrReplacementType   $replacement_type       换车类型；临时或永久
  * @property int                        $current_ve_id          需换车车辆序号
  * @property int                        $new_ve_id              新车车辆序号
  * @property null|Carbon                $replacement_date       换车日期
@@ -50,7 +48,6 @@ class VehicleReplacement extends Model
     ];
 
     protected $casts = [
-        'replacement_type'       => VrReplacementType::class,
         'replacement_status'     => VrReplacementStatus::class,
         'replacement_start_date' => 'datetime:Y-m-d',
     ];
@@ -98,7 +95,6 @@ class VehicleReplacement extends Model
             )
             ->select('vr.*', 'so.*', 'cu.*', 've1.plate_no as current_ve_plate_no', 've2.plate_no as new_ve_plate_no')
             ->addSelect(
-                DB::raw(VrReplacementType::toCaseSQL()),
                 DB::raw(VrReplacementStatus::toCaseSQL()),
             )
         ;
@@ -109,7 +105,6 @@ class VehicleReplacement extends Model
         return [
             'Customer.contact_name'                     => fn ($item) => $item->contact_name,
             'Customer.contact_phone'                    => fn ($item) => $item->contact_phone,
-            'VehicleReplacement.replacement_type'       => fn ($item) => $item->replacement_type_label,
             'VehicleReplacement.current_ve_plate_no'    => fn ($item) => $item->current_ve_plate_no,
             'VehicleReplacement.new_ve_plate_no'        => fn ($item) => $item->new_ve_plate_no,
             'VehicleReplacement.replacement_date'       => fn ($item) => $item->replacement_date,

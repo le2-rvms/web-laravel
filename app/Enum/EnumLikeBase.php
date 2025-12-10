@@ -218,6 +218,6 @@ abstract class EnumLikeBase implements Castable
 
     public static function configDic(): array
     {
-        return [preg_replace('/^.*\\\/', '', get_called_class()).'configDic' => static::CONFIGS];
+        return [preg_replace('/^.*\\\/', '', get_called_class()).'configDic' => static::CONFIGS]; // todo
     }
 }

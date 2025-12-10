@@ -16,7 +16,7 @@ class ViInspectionType extends EnumLikeBase
     public const array LABELS = [
         self::SO_DISPATCH => '发车',
         self::SO_RETURN   => '退车',
-        self::VR_DISPATCH => '换车发车',
-        self::VR_RETURN   => '换车退车',
+        self::VR_DISPATCH => '临时车发车',
+        self::VR_RETURN   => '临时车退车',
     ];
 }

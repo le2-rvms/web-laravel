@@ -77,6 +77,7 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
  * @property null|string                            $payment_day_type_label              付款类型-中文
  * @property int                                    $cu_id                               客户序号；指向客户表
  * @property int                                    $ve_id                               车辆序号；指向车辆表
+ * @property null|int                               $so_ve_id_replace                    临时车辆序号
  * @property string                                 $contract_number                     合同编号
  * @property int                                    $free_days                           免租天数
  * @property Carbon                                 $rental_start                        合同开始日期
@@ -105,7 +106,7 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
  * @property null|string                            $total_amount__zh                    总计金额-中文大写
  * @property mixed|SoOrderStatus                    $order_status                        合同状态；例如未签约、已签约、已完成等
  * @property null|string                            $order_status_label                  合同状态-中文
- * @property null|Carbon                            $order_at                            订单日时; //todo 再想想名字
+ * @property null|Carbon                            $order_at                            合同生成日时
  * @property null|Carbon                            $signed_at                           签约日时
  * @property null|Carbon                            $canceled_at                         取消日时
  * @property Carbon                                 $completed_at                        结算日时
@@ -122,6 +123,7 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
  * @property Customer                               $Customer
  * @property SaleSettlement                         $SaleSettlement
  * @property Vehicle                                $Vehicle
+ * @property Vehicle                                $VehicleReplace
  * @property Collection<Payment>                    $Payments
  * @property SaleOrderExt                           $SaleOrderExt
  */
@@ -177,6 +179,11 @@ class SaleOrder extends Model
     public function Vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class, 've_id', 've_id')->with('VehicleModel');
+    }
+
+    public function VehicleReplace(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class, 'so_ve_id_replace', 've_id')->with('VehicleModel');
     }
 
     public function Payments(): HasMany
@@ -327,6 +334,31 @@ class SaleOrder extends Model
             )
             ->get()->toArray()
         ;
+    }
+
+    public static function optionsVeReplace(?\Closure $where = null): array
+    {
+        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+
+        $value = DB::query()
+            ->from('sale_orders', 'so')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'so.so_ve_id_replace')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
+            ->where($where)
+            ->orderBy('so.so_id', 'desc')
+            ->select(
+                DB::raw(sprintf(
+                    "CONCAT(cu.contact_name,'|',%s,'|', ve.plate_no ,'|',  %s, %s ,'|', %s ) as text,so.so_id as value",
+                    "(CONCAT(SUBSTRING(cu.contact_phone, 1, 0), '', SUBSTRING(cu.contact_phone, 8, 4)) )",
+                    SoPaymentDayType::toCaseSQL(false),
+                    SoRentalType_ShortOnlyShort::toCaseSQL(false),
+                    SoOrderStatus::toCaseSQL(false)
+                ))
+            )
+            ->get()->toArray()
+        ;
+
+        return [$key => $value];
     }
 
     public function getRentalStartZhAttribute(): ?string
