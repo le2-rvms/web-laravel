@@ -15,6 +15,7 @@ use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminTeam;
+use App\Models\One\OneAccount;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -44,6 +45,7 @@ use Illuminate\Validation\Validator;
 #[ColumnDesc('ve_cert_no')]
 #[ColumnDesc('ve_cert_valid_to', type: ColumnType::DATE)]
 #[ColumnDesc('ve_remark')]
+#[ColumnDesc('ve_oa_id')]
 /**
  * @property int                          $ve_id                       车辆序号
  * @property string                       $plate_no                    车牌号
@@ -68,6 +70,7 @@ use Illuminate\Validation\Validator;
  * @property null|Carbon                  $ve_license_valid_until_date 检验有效期至
  * @property null|int                     $ve_mileage                  车辆当前总行驶公里数
  * @property null|string                  $ve_color                    车辆颜色
+ * @property null|int                     $ve_oa_id                    查违章账号序号
  * @property null|string                  $vehicle_manager             负责车管
  * @property null|int                     $ve_team_id                  所属车队
  * @property null|string                  $ve_cert_no                  车证号
@@ -78,6 +81,7 @@ use Illuminate\Validation\Validator;
  *                                                                     -
  * @property VehicleModel                 $VehicleModel
  * @property Admin                        $VehicleManager
+ * @property null|OneAccount              $ViolationAccount
  *                                                                     -
  * @property string|VeVeType              $ve_type_label               车辆类型-中文
  * @property null|string                  $vehicle_brand_model_name    车牌品牌车型
@@ -117,6 +121,7 @@ class Vehicle extends Model
         'status_rental'   => VeStatusRental::class,
         'status_dispatch' => VeStatusDispatch::class,
         've_team_id'      => 'integer',
+        'oa_id'           => 'integer',
     ];
 
     public function VehicleModel(): BelongsTo
@@ -157,6 +162,11 @@ class Vehicle extends Model
     public function Team(): BelongsTo
     {
         return $this->belongsTo(AdminTeam::class, 've_team_id', 'at_id');
+    }
+
+    public function ViolationAccount(): BelongsTo
+    {
+        return $this->belongsTo(OneAccount::class, 'oa_id', 've_oa_id');
     }
 
     public function scopeOnService(Builder $query): void
@@ -259,7 +269,8 @@ class Vehicle extends Model
             ->leftJoin('vehicle_models as vm', 've.vm_id', '=', 'vm.vm_id')
             ->leftJoin('admins as adm', 've.vehicle_manager', '=', 'adm.id')
             ->leftJoin('admin_teams as at', 've.ve_team_id', '=', 'at.at_id')
-            ->select('ve.*', 'vm.brand_name', 'vm.model_name', 'adm.name as vehicle_manager_name', 'at.at_name as ve_team_name')
+            ->leftJoin('one_accounts as oa', 've.ve_oa_id', '=', 'oa.oa_id')
+            ->select('ve.*', 'vm.brand_name', 'vm.model_name', 'adm.name as vehicle_manager_name', 'at.at_name as ve_team_name', 'oa.oa_name')
             ->addSelect(
                 DB::raw(VeStatusService::toCaseSQL()),
                 DB::raw(VeStatusService::toColorSQL()),
@@ -282,6 +293,7 @@ class Vehicle extends Model
             'Vehicle.ve_license_purchase_date' => fn ($item) => $item->ve_license_purchase_date,
             'Vehicle.status_service'           => fn ($item) => $item->status_service_label,
             'AdminTeam.at_name'                => fn ($item) => $item->ve_team_name,
+            'OneAccount.oa_name'               => fn ($item) => $item->oa_name,
         ];
     }
 
@@ -326,6 +338,7 @@ class Vehicle extends Model
             've_cert_no'                  => [Vehicle::class, 've_cert_no'],
             've_cert_valid_to'            => [Vehicle::class, 've_cert_valid_to'],
             've_remark'                   => [Vehicle::class, 've_remark'],
+            've_oa_id'                    => [Vehicle::class, 've_oa_id'],
         ];
     }
 
@@ -359,6 +372,7 @@ class Vehicle extends Model
             've_cert_no'                  => ['nullable', 'string', 'max:50'],
             've_cert_valid_to'            => ['nullable', 'date'],
             've_remark'                   => ['nullable', 'string', 'max:255'],
+            've_oa_id'                    => ['nullable', 'integer', Rule::exists(OneAccount::class, 'oa_id')],
         ];
 
         $validator = \Illuminate\Support\Facades\Validator::make($item, $rules, [], $fieldAttributes);

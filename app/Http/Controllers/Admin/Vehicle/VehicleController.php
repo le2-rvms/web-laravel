@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
 use App\Models\Admin\AdminTeam;
+use App\Models\One\OneAccount;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleManualViolation;
@@ -54,6 +55,7 @@ class VehicleController extends Controller
                 $builder->role(AdminRole::role_vehicle_mgr);
             }),
             AdminTeam::options(),
+            OneAccount::options(),
         );
 
         $query   = Vehicle::indexQuery();
@@ -152,6 +154,7 @@ class VehicleController extends Controller
                 've_cert_no'                  => ['nullable', 'string', 'max:50'],
                 've_cert_valid_to'            => ['nullable', 'date'],
                 've_remark'                   => ['nullable', 'string', 'max:255'],
+                've_oa_id'                    => ['nullable', 'integer', Rule::exists(OneAccount::class, 'oa_id')],
             ]
             + Uploader::validator_rule_upload_object('ve_license_face_photo')
             + Uploader::validator_rule_upload_object('ve_license_back_photo')
@@ -204,6 +207,7 @@ class VehicleController extends Controller
                 $builder->role(AdminRole::role_vehicle_mgr);
             }),
             AdminTeam::options(),
+            OneAccount::options(),
         );
 
         $vehicle = new Vehicle();
@@ -222,6 +226,7 @@ class VehicleController extends Controller
                 $builder->role(AdminRole::role_vehicle_mgr);
             }),
             AdminTeam::options(),
+            OneAccount::options(),
         );
 
         $this->response()->withExtras(

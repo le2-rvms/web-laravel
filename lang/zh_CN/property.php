@@ -438,6 +438,7 @@ return [
         've_license_valid_until_date' => '检验有效期至',
         've_mileage'                  => '车辆当前总行驶公里数',
         've_color'                    => '车辆颜色',
+        've_oa_id'                    => '查违章账号序号',
         'vehicle_manager'             => '负责车管',
         've_team_id'                  => '所属车队',
         've_cert_no'                  => '车证号',

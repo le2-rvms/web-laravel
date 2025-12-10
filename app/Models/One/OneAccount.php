@@ -7,11 +7,14 @@ use App\Enum\One\OaOaIsSyncRentalContract;
 use App\Enum\One\OaOaProvince;
 use App\Enum\One\OaOaType;
 use App\Models\_\ModelTrait;
+use App\Models\Vehicle\Vehicle;
 use GuzzleHttp\Cookie\FileCookieJar;
 use GuzzleHttp\Cookie\SetCookie;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +29,8 @@ use Illuminate\Support\Facades\Storage;
  * @property null|string                   $cookie_string              cookie信息
  * @property null|Carbon                   $cookie_refresh_at          cookie更新时间
  * @property bool|OaOaIsSyncRentalContract $oa_is_sync_rental_contract 是否同步租赁合同
+ *                                                                     -
+ * @property null|Collection|Vehicle[]     $Vehicles
  */
 class OneAccount extends Model
 {
@@ -124,7 +129,30 @@ class OneAccount extends Model
 
     public static function options(?\Closure $where = null): array
     {
-        return [];
+        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+
+        $value = static::query()
+            ->when($where, fn ($query) => $query->where($where))
+            ->orderByDesc('oa_id')
+            ->get()
+            ->map(function (self $account) {
+                return [
+                    'text'               => $account->oa_name,
+                    'value'              => $account->oa_id,
+                    'oa_type_label'      => $account->oa_type_label,
+                    'oa_province'        => $account->oa_province,
+                    'oa_province_label'  => $account->oa_province_value['name'] ?? null,
+                    'cookie_refresh_at_' => $account->cookie_refresh_at,
+                ];
+            })
+        ;
+
+        return [$key => $value];
+    }
+
+    public function Vehicles(): HasMany
+    {
+        return $this->hasMany(Vehicle::class, 'oa_id', 'oa_id');
     }
 
     protected function oaTypeLabel(): Attribute
