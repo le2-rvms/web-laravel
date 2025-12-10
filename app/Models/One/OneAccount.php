@@ -3,6 +3,7 @@
 namespace App\Models\One;
 
 use App\Attributes\ClassName;
+use App\Enum\One\OaOaIsSyncRentalContract;
 use App\Enum\One\OaOaProvince;
 use App\Enum\One\OaOaType;
 use App\Models\_\ModelTrait;
@@ -18,12 +19,13 @@ use Illuminate\Support\Facades\Storage;
 
 #[ClassName('122账号信息')]
 /**
- * @property int             $oa_id             122账号序号
- * @property OaOaType|string $oa_type           账号类型；个人、公司
- * @property string          $oa_name           账号名称
- * @property null|string     $oa_province
- * @property null|string     $cookie_string     cookie信息
- * @property null|Carbon     $cookie_refresh_at cookie更新时间
+ * @property int                           $oa_id                      122账号序号
+ * @property OaOaType|string               $oa_type                    账号类型；个人、公司
+ * @property string                        $oa_name                    账号名称
+ * @property null|string                   $oa_province
+ * @property null|string                   $cookie_string              cookie信息
+ * @property null|Carbon                   $cookie_refresh_at          cookie更新时间
+ * @property bool|OaOaIsSyncRentalContract $oa_is_sync_rental_contract 是否同步租赁合同
  */
 class OneAccount extends Model
 {
@@ -39,8 +41,9 @@ class OneAccount extends Model
     ];
 
     protected $casts = [
-        'cookie_refresh_at' => 'datetime:Y-m-d H:i:s',
-        'oa_type'           => OaOaType::class,
+        'cookie_refresh_at'       => 'datetime:Y-m-d H:i:s',
+        'oa_type'                 => OaOaType::class,
+        'is_sync_rental_contract' => OaOaIsSyncRentalContract::class,
     ];
 
     private static ?Filesystem $disk = null;

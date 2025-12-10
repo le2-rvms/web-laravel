@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Vehicle;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\One\OaOaIsSyncRentalContract;
 use App\Enum\One\OaOaProvince;
 use App\Enum\One\OaOaType;
 use App\Http\Controllers\Controller;
@@ -22,6 +23,7 @@ class OneAccountController extends Controller
     {
         $controller->response()->withExtras(
             OaOaType::labelOptions(),
+            OaOaIsSyncRentalContract::labelOptions(),
         );
     }
 
@@ -86,10 +88,11 @@ class OneAccountController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'oa_type'       => ['required', Rule::in(OaOaType::label_keys())],
-                'oa_name'       => ['required', 'string', 'max:255', Rule::unique(OneAccount::class)->ignore($oneAccount)],
-                'oa_province'   => ['required', 'string', Rule::in(OaOaProvince::getKeys())],
-                'cookie_string' => ['nullable', 'string'],
+                'oa_type'                    => ['required', Rule::in(OaOaType::label_keys())],
+                'oa_name'                    => ['required', 'string', 'max:255', Rule::unique(OneAccount::class)->ignore($oneAccount)],
+                'oa_province'                => ['required', 'string', Rule::in(OaOaProvince::getKeys())],
+                'cookie_string'              => ['nullable', 'string'],
+                'oa_is_sync_rental_contract' => ['nullable', Rule::in(OaOaIsSyncRentalContract::label_keys())],
             ],
             [],
             trans_property(OneAccount::class)
@@ -127,6 +130,7 @@ class OneAccountController extends Controller
     {
         $this->response()->withExtras(
             OaOaType::options(),
+            OaOaIsSyncRentalContract::options(),
             ['how_cookie_url' => config('setting.host_manual').'/config/122']
         );
     }
