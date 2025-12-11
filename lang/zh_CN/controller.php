@@ -30,7 +30,7 @@ return [
     'VehiclePreparation'     => '整备',
     'SaleOrder'              => '租车合同',
     'SaleOrderCancel'        => '取消租车合同',
-    'VehicleReplacement'     => '换车',
+    'VehicleReplacement'     => '临时车',
     'SaleSettlement'         => '退车结算',
     'SaleSettlementApprove'  => '退车结算审核',
     'BookingVehicle'         => '预定车辆',

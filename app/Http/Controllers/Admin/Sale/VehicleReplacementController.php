@@ -24,7 +24,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('换车')]
+#[PermissionType('临时车')]
 class VehicleReplacementController extends Controller
 {
     public static function labelOptions(Controller $controller): void

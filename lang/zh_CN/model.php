@@ -82,7 +82,7 @@ return [
         'suffix' => '',
     ],
     'VehicleReplacement' => [
-        'name'   => '换车',
+        'name'   => '临时派车',
         'suffix' => '',
     ],
     'Vehicle' => [

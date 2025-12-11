@@ -16,18 +16,17 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
-#[ClassName('换车')]
+#[ClassName('临时派车')]
 /**
- * @property int                        $vr_id                  换车记录序号
+ * @property int                        $vr_id                  临时派车记录序号
  * @property int                        $so_id                  租车合同序号
- * @property int                        $current_ve_id          需换车车辆序号
+ * @property int                        $current_ve_id          车辆序号
  * @property int                        $new_ve_id              新车车辆序号
- * @property null|Carbon                $replacement_date       换车日期
- * @property null|Carbon                $replacement_start_date 换车开始日期
- * @property null|Carbon                $replacement_end_date   换车结束日期
- * @property string|VrReplacementStatus $replacement_status     换车状态
+ * @property null|Carbon                $replacement_start_date 临时派车开始日期
+ * @property null|Carbon                $replacement_end_date   临时派车结束日期
+ * @property string|VrReplacementStatus $replacement_status     临时派车状态
  * @property null|mixed                 $additional_photos      附加照片；存储照片路径的 JSON 数组
- * @property null|string                $vr_remark              换车备注
+ * @property null|string                $vr_remark              临时派车备注
  * @property SaleOrder                  $SaleOrder
  * @property Vehicle                    $CurrentVehicle
  * @property Vehicle                    $NewVehicle
@@ -107,7 +106,6 @@ class VehicleReplacement extends Model
             'Customer.contact_phone'                    => fn ($item) => $item->contact_phone,
             'VehicleReplacement.current_ve_plate_no'    => fn ($item) => $item->current_ve_plate_no,
             'VehicleReplacement.new_ve_plate_no'        => fn ($item) => $item->new_ve_plate_no,
-            'VehicleReplacement.replacement_date'       => fn ($item) => $item->replacement_date,
             'VehicleReplacement.replacement_start_date' => fn ($item) => $item->replacement_start_date,
             'VehicleReplacement.replacement_end_date'   => fn ($item) => $item->replacement_end_date,
             'VehicleReplacement.replacement_status'     => fn ($item) => $item->replacement_status_label,
