@@ -35,7 +35,7 @@ class DocTplService
     public function GenerateDoc(DocTpl $docTpl, string $mode, ?Model $model = null): array
     {
         $tempDocx = (function () use ($docTpl) {
-            // 从 MinIO 获取模板文件流
+            // 从 S3 获取模板文件流
             $filepath = $docTpl->dt_file['path_'];
             $stream   = $this->diskS3->readStream($filepath);
             if (!$stream) {
