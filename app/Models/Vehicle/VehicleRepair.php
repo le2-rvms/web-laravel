@@ -18,7 +18,7 @@ use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentType;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,7 +34,7 @@ use Illuminate\Validation\ValidationException;
 #[ColumnDesc('vr_id')]
 #[ColumnDesc('ve_id')]
 #[ColumnDesc('plate_no', required: true)]
-#[ColumnDesc('so_id')]
+#[ColumnDesc('sc_id')]
 #[ColumnDesc('entry_datetime', required: true, type: ColumnType::DATETIME)]
 #[ColumnDesc('vr_mileage')]
 #[ColumnDesc('repair_cost')]
@@ -54,8 +54,8 @@ use Illuminate\Validation\ValidationException;
 /**
  * @property int               $vr_id                   维修记录序号
  * @property int               $ve_id                   车辆序号；指向车辆表
- * @property null|int          $so_id                   租车合同序号
- * @property int               $sc_id                   修理厂序号
+ * @property null|int          $sc_id                   租车合同序号
+ * @property int               $vc_id                   修理厂序号
  * @property Carbon            $entry_datetime          进厂日时
  * @property null|int          $vr_mileage              维修公里数
  * @property null|float        $repair_cost             维修金额（元）
@@ -82,7 +82,7 @@ use Illuminate\Validation\ValidationException;
  * @property mixed             $repair_attribute_label  维修属性-中文
  * @property Payment           $Payment
  * @property Payment           $PaymentAll
- * @property ServiceCenter     $ServiceCenter
+ * @property VehicleCenter     $VehicleCenter
  */
 class VehicleRepair extends Model
 {
@@ -124,14 +124,14 @@ class VehicleRepair extends Model
         return $this->belongsTo(Vehicle::class, 've_id', 've_id');
     }
 
-    public function SaleOrder(): BelongsTo
+    public function SaleContract(): BelongsTo
     {
-        return $this->belongsTo(SaleOrder::class, 'so_id', 'so_id');
+        return $this->belongsTo(SaleContract::class, 'sc_id', 'sc_id');
     }
 
-    public function ServiceCenter(): BelongsTo
+    public function VehicleCenter(): BelongsTo
     {
-        return $this->belongsTo(ServiceCenter::class, 'sc_id', 'sc_id');
+        return $this->belongsTo(VehicleCenter::class, 'vc_id', 'vc_id');
     }
 
     public function Payment(): HasOne
@@ -169,7 +169,7 @@ class VehicleRepair extends Model
             'VehicleRepair.vr_mileage'         => fn ($item) => $item->vr_mileage,
             'VehicleRepair.repair_cost'        => fn ($item) => $item->repair_cost,
             'VehicleRepair.delay_days'         => fn ($item) => $item->delay_days,
-            'ServiceCenter.sc_name'            => fn ($item) => $item->sc_name,
+            'VehicleCenter.vc_name'            => fn ($item) => $item->vc_name,
             'VehicleRepair.repair_content'     => fn ($item) => $item->repair_content,
             'VehicleRepair.departure_datetime' => fn ($item) => $item->departure_datetime_,
             'VehicleRepair.repair_status'      => fn ($item) => $item->repair_status_label,
@@ -185,31 +185,31 @@ class VehicleRepair extends Model
     public static function indexQuery(array $search = []): Builder
     {
         $ve_id = $search['ve_id'] ?? null;
-        $so_id = $search['so_id'] ?? null;
-        $cu_id = $search['cu_id'] ?? null;
         $sc_id = $search['sc_id'] ?? null;
+        $cu_id = $search['cu_id'] ?? null;
+        $vc_id = $search['vc_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_repairs', 'vr')
-            ->leftJoin('service_centers as sc', 'sc.sc_id', '=', 'vr.sc_id')
+            ->leftJoin('vehicle_centers as vc', 'vc.vc_id', '=', 'vr.vc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vr.ve_id')
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.vm_id')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'vr.so_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vr.sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
             ->when($ve_id, function (Builder $query) use ($ve_id) {
                 $query->where('vr.ve_id', '=', $ve_id);
-            })
-            ->when($so_id, function (Builder $query) use ($so_id) {
-                $query->where('vr.so_id', '=', $so_id);
-            })
-            ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('so.cu_id', '=', $cu_id);
             })
             ->when($sc_id, function (Builder $query) use ($sc_id) {
                 $query->where('vr.sc_id', '=', $sc_id);
             })
+            ->when($cu_id, function (Builder $query) use ($cu_id) {
+                $query->where('sc.cu_id', '=', $cu_id);
+            })
+            ->when($vc_id, function (Builder $query) use ($vc_id) {
+                $query->where('vr.vc_id', '=', $vc_id);
+            })
             ->when(
-                null === $ve_id && null === $so_id && null === $cu_id,
+                null === $ve_id && null === $sc_id && null === $cu_id,
                 function (Builder $query) {
                     $query->orderByDesc('vr.vr_id');
                 },
@@ -217,7 +217,7 @@ class VehicleRepair extends Model
                     $query->orderBy('vr.vr_id');
                 }
             )
-            ->select('vr.*', 'sc.sc_name', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', '_vm.brand_name', '_vm.model_name')
+            ->select('vr.*', 'vc.vc_name', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', '_vm.brand_name', '_vm.model_name')
             ->addSelect(
                 DB::raw(VrRepairAttribute::toCaseSQL()),
                 DB::raw(VrCustodyVehicle::toCaseSQL()),
@@ -254,7 +254,7 @@ class VehicleRepair extends Model
             'vr_mileage'         => [VehicleRepair::class, 'vr_mileage'],
             'repair_cost'        => [VehicleRepair::class, 'repair_cost'],
             'delay_days'         => [VehicleRepair::class, 'delay_days'],
-            'sc_name'            => [ServiceCenter::class, 'sc_name'],
+            'vc_name'            => [VehicleCenter::class, 'vc_name'],
             'repair_content'     => [VehicleRepair::class, 'repair_content'],
             'departure_datetime' => [VehicleRepair::class, 'departure_datetime'],
             'repair_status'      => [VehicleRepair::class, 'repair_status'],
@@ -271,7 +271,7 @@ class VehicleRepair extends Model
     {
         return function (&$item) {
             $item['ve_id']             = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['sc_id']             = ServiceCenter::nameKv($item['sc_name'] ?? null);
+            $item['vc_id']             = VehicleCenter::nameKv($item['vc_name'] ?? null);
             $item['repair_status']     = VrRepairStatus::searchValue($item['repair_status'] ?? null);
             $item['settlement_status'] = VrSettlementStatus::searchValue($item['settlement_status'] ?? null);
             $item['pickup_status']     = VrPickupStatus::searchValue($item['pickup_status'] ?? null);
@@ -289,7 +289,7 @@ class VehicleRepair extends Model
             'vr_mileage'         => ['nullable', 'integer', 'min:0'],
             'repair_cost'        => ['nullable', 'decimal:0,2', 'gte:0'],
             'delay_days'         => ['nullable', 'integer', 'min:0'],
-            'sc_id'              => ['required', 'integer'],
+            'vc_id'              => ['required', 'integer'],
             'repair_content'     => ['required', 'string'],
             'departure_datetime' => ['nullable', 'date'],
             'repair_status'      => ['required', 'string', Rule::in(VrRepairStatus::label_keys())],

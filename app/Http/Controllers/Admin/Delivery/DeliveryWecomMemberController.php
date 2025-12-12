@@ -6,7 +6,7 @@ use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
-use App\Models\Sale\SaleOrderExt;
+use App\Models\Sale\SaleContractExt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -31,7 +31,7 @@ class DeliveryWecomMemberController extends Controller
         );
 
         $items = Admin::indexQuery()
-            ->select('id as adm_id', 'name', 'wecom_name')
+            ->select('id', 'name', 'wecom_name')
             ->orderByDesc('adm.id')
             ->get()
         ;
@@ -46,11 +46,11 @@ class DeliveryWecomMemberController extends Controller
             $request->all(),
             [
                 'items'              => ['bail', 'nullable', 'array'],
-                'items.*.adm_id'     => ['bail', 'required', 'integer', Rule::exists(Admin::class, 'id')],
+                'items.*.id'         => ['bail', 'required', 'integer', Rule::exists(Admin::class, 'id')],
                 'items.*.wecom_name' => ['bail', 'nullable', 'max:255'],
             ],
             [],
-            trans_property(SaleOrderExt::class)
+            trans_property(SaleContractExt::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
                 if (!$validator->failed()) {
@@ -69,7 +69,7 @@ class DeliveryWecomMemberController extends Controller
             foreach ($items->chunk(50) as $chunks) {
                 Admin::query()->upsert($chunks->all(), ['id'], ['wecom_name']);
             }
-            Admin::query()->whereNotIn('adm_id', $items->pluck('id')->all())->delete();
+            Admin::query()->whereNotIn('id', $items->pluck('id')->all())->delete();
         });
 
         return $this->response()->respond();

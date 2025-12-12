@@ -125,7 +125,7 @@ class BookingOrderController extends Controller
                 'b_props'            => ['bail', Rule::excludeIf(null !== $bookingOrder), 'nullable', 'array'],
                 'b_props.*'          => ['bail', Rule::excludeIf(null !== $bookingOrder), 'string', Rule::in(array_keys(RbvProps::kv))],
                 'registration_date'  => ['bail', Rule::excludeIf(null !== $bookingOrder), 'required', 'date_format:Y-m-d'],
-                'v_mileage'          => ['bail', Rule::excludeIf(null !== $bookingOrder), 'nullable', 'integer', 'min:0'],
+                'b_mileage'          => ['bail', Rule::excludeIf(null !== $bookingOrder), 'nullable', 'integer', 'min:0'],
                 'service_interval'   => ['bail', Rule::excludeIf(null !== $bookingOrder), 'nullable', 'integer', 'min:0'],
                 'min_rental_periods' => ['bail', Rule::excludeIf(null !== $bookingOrder), 'required', 'integer', 'min:0'],
                 'payment_status'     => ['bail', 'required', Rule::in(BoPaymentStatus::label_keys())],

@@ -66,14 +66,14 @@ return [
         'suffix' => '',
     ],
     'DocTpl' => [
-        'name'   => '合同模板',
+        'name'   => '生成合同文件模板',
         'suffix' => '',
     ],
-    'SaleOrder' => [
+    'SaleContract' => [
         'name'   => '租车合同',
         'suffix' => '',
     ],
-    'SaleOrderTpl' => [
+    'SaleContractTpl' => [
         'name'   => '租车合同模板',
         'suffix' => '',
     ],

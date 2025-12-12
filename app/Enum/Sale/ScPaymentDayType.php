@@ -4,7 +4,7 @@ namespace App\Enum\Sale;
 
 use App\Enum\EnumLikeBase;
 
-class SoPaymentDayType extends EnumLikeBase
+class ScPaymentDayType extends EnumLikeBase
 {
     public const string MONTHLY_PREPAID      = 'monthly_prepaid';
     public const string MONTHLY_POSTPAID     = 'monthly_postpaid';
@@ -44,15 +44,15 @@ class SoPaymentDayType extends EnumLikeBase
     ];
 
     public const array payment_day_classes = [
-        self::MONTHLY_PREPAID      => SoPaymentDay_Month::class,
-        self::MONTHLY_POSTPAID     => SoPaymentDay_Month::class,
-        self::QUARTERLY_PREPAID    => SoPaymentDay_Month::class,
-        self::QUARTERLY_POSTPAID   => SoPaymentDay_Month::class,
-        self::WEEKLY_PREPAID       => SoPaymentDay_Week::class,
-        self::WEEKLY_POSTPAID      => SoPaymentDay_Week::class,
-        self::SEMI_ANNUAL_PREPAID  => SoPaymentDay_Month::class,
-        self::SEMI_ANNUAL_POSTPAID => SoPaymentDay_Month::class,
-        self::ANNUAL_PREPAID       => SoPaymentDay_Month::class,
-        self::ANNUAL_POSTPAID      => SoPaymentDay_Month::class,
+        self::MONTHLY_PREPAID      => ScPaymentDay_Month::class,
+        self::MONTHLY_POSTPAID     => ScPaymentDay_Month::class,
+        self::QUARTERLY_PREPAID    => ScPaymentDay_Month::class,
+        self::QUARTERLY_POSTPAID   => ScPaymentDay_Month::class,
+        self::WEEKLY_PREPAID       => ScPaymentDay_Week::class,
+        self::WEEKLY_POSTPAID      => ScPaymentDay_Week::class,
+        self::SEMI_ANNUAL_PREPAID  => ScPaymentDay_Month::class,
+        self::SEMI_ANNUAL_POSTPAID => ScPaymentDay_Month::class,
+        self::ANNUAL_PREPAID       => ScPaymentDay_Month::class,
+        self::ANNUAL_POSTPAID      => ScPaymentDay_Month::class,
     ];
 }

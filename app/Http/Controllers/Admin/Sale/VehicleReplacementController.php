@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Admin\Sale;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Admin\AdmTeamLimit;
-use App\Enum\Sale\SoOrderStatus;
+use App\Enum\Sale\ScScStatus;
 use App\Enum\Sale\VrReplacementStatus;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use App\Models\Sale\VehicleReplacement;
 use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
@@ -66,24 +66,24 @@ class VehicleReplacementController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
-        /** @var SaleOrder $saleOrder */
-        $saleOrder = null;
-        $validator = Validator::make(
+        /** @var SaleContract $saleContract */
+        $saleContract = null;
+        $validator    = Validator::make(
             $request->all(),
             [
-                'so_id' => ['nullable', 'integer'],
+                'sc_id' => ['nullable', 'integer'],
             ],
             [],
             []
         )
-            ->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$saleOrder, &$vehicle0) {
+            ->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$saleContract, &$vehicle0) {
                 if (!$validator->failed()) {
-                    if ($so_id = $request->get('so_id')) {
-                        $saleOrder = SaleOrder::query()->findOrFail($so_id);
+                    if ($sc_id = $request->get('sc_id')) {
+                        $saleContract = SaleContract::query()->findOrFail($sc_id);
 
-                        $saleOrder->load('Vehicle');
+                        $saleContract->load('Vehicle');
 
-                        $vehicle0 = $saleOrder->Vehicle;
+                        $vehicle0 = $saleContract->Vehicle;
 
                         $pass = $vehicle0->check_status(VeStatusService::YES, [VeStatusRental::RESERVED], [VeStatusDispatch::NOT_DISPATCHED], $validator);
                         if (!$pass) {
@@ -100,9 +100,9 @@ class VehicleReplacementController extends Controller
 
         $this->options();
         $this->response()->withExtras(
-            SaleOrder::options(
+            SaleContract::options(
                 where: function (Builder $builder) {
-                    $builder->whereIn('so.order_status', [SoOrderStatus::SIGNED]);
+                    $builder->whereIn('sc.sc_status', [ScScStatus::SIGNED]);
                 }
             ),
             Vehicle::options(
@@ -115,7 +115,7 @@ class VehicleReplacementController extends Controller
         );
 
         $vehicleReplacement = new VehicleReplacement([
-            //            'so_id'                  => $saleOrder?->so_id,
+            //            'sc_id'                  => $saleContract?->sc_id,
             'replacement_start_date' => now(),
             'replacement_status'     => VrReplacementStatus::IN_PROGRESS,
         ]);
@@ -128,13 +128,13 @@ class VehicleReplacementController extends Controller
     {
         /** @var Vehicle $vehicle0 */
         /** @var Vehicle $vehicle */
-        /** @var SaleOrder $saleOrder */
-        $vehicle0 = $vehicle = $saleOrder = null;
+        /** @var SaleContract $saleContract */
+        $vehicle0 = $vehicle = $saleContract = null;
 
         $validator = Validator::make(
             $request->all(),
             [
-                'so_id'                  => ['bail', 'required', 'integer'],
+                'sc_id'                  => ['bail', 'required', 'integer'],
                 'replacement_start_date' => ['bail', 'nullable', 'required', 'date'],
                 'replacement_end_date'   => ['bail', 'nullable', 'required', 'date', 'afterOrEqual:replacement_start_date'],
                 'replacement_status'     => ['bail', 'nullable', 'required', Rule::in(VrReplacementStatus::label_keys())],
@@ -146,11 +146,11 @@ class VehicleReplacementController extends Controller
             trans_property(VehicleReplacement::class)
         );
 
-        $validator->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$saleOrder, &$vehicle0, &$vehicle) {
+        $validator->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$saleContract, &$vehicle0, &$vehicle) {
             if (!$validator->failed()) {
-                $saleOrder = SaleOrder::query()->findOrFail($request->input('so_id'));
+                $saleContract = SaleContract::query()->findOrFail($request->input('sc_id'));
 
-                $vehicle0 = $saleOrder->Vehicle;
+                $vehicle0 = $saleContract->Vehicle;
 
                 $pass = $vehicle0->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [VeStatusDispatch::DISPATCHED], $validator);
                 if (!$pass) {
@@ -170,7 +170,7 @@ class VehicleReplacementController extends Controller
                     return;
                 }
 
-                if ($vehicle->ve_id === $saleOrder->ve_id) {
+                if ($vehicle->ve_id === $saleContract->ve_id) {
                     $validator->errors()->add('new_ve_id', '请选择另外一辆车。');
 
                     return;
@@ -184,21 +184,21 @@ class VehicleReplacementController extends Controller
 
         $input = $validator->validated();
 
-        DB::transaction(function () use (&$input, &$vehicleReplacement, &$saleOrder, $vehicle) {
+        DB::transaction(function () use (&$input, &$vehicleReplacement, &$saleContract, $vehicle) {
             $vehicleReplacement = VehicleReplacement::query()
-                ->create($input + ['current_ve_id' => $saleOrder->ve_id])
+                ->create($input + ['current_ve_id' => $saleContract->ve_id])
             ;
 
             switch ($input['replacement_status']) {
                 case VrReplacementStatus::IN_PROGRESS:
-                    $saleOrder->so_ve_id_replace = $vehicle->ve_id;
-                    $saleOrder->save();
+                    $saleContract->sc_ve_id_replace = $vehicle->ve_id;
+                    $saleContract->save();
 
                     break;
 
                 case VrReplacementStatus::COMPLETED:
-                    $saleOrder->so_ve_id_replace = null;
-                    $saleOrder->save();
+                    $saleContract->sc_ve_id_replace = null;
+                    $saleContract->save();
 
                     break;
             }
@@ -262,18 +262,18 @@ class VehicleReplacementController extends Controller
 
             $replacement_status_changed = $vehicleReplacement->wasChanged('replacement_status');
             if ($replacement_status_changed) {
-                $saleOrder = $vehicleReplacement->SaleOrder;
+                $saleContract = $vehicleReplacement->SaleContract;
 
                 switch ($input['replacement_status']) {
                     case VrReplacementStatus::IN_PROGRESS:
-                        $saleOrder->so_ve_id_replace = $vehicleReplacement->new_ve_id;
-                        $saleOrder->save();
+                        $saleContract->sc_ve_id_replace = $vehicleReplacement->new_ve_id;
+                        $saleContract->save();
 
                         break;
 
                     case VrReplacementStatus::COMPLETED:
-                        $saleOrder->so_ve_id_replace = null;
-                        $saleOrder->save();
+                        $saleContract->sc_ve_id_replace = null;
+                        $saleContract->save();
 
                         break;
                 }

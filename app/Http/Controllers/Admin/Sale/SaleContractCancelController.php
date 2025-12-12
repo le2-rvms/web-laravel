@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Admin\Sale;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Payment\RpIsValid;
-use App\Enum\Sale\SoOrderStatus;
+use App\Enum\Sale\ScScStatus;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -18,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('取消租车合同')]
-class SaleOrderCancelController extends Controller
+class SaleContractCancelController extends Controller
 {
     public static function labelOptions(Controller $controller): void
     {
@@ -27,18 +27,18 @@ class SaleOrderCancelController extends Controller
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function update(Request $request, SaleOrder $saleOrder): Response
+    public function update(Request $request, SaleContract $saleContract): Response
     {
         $validator = Validator::make(
             $request->all(),
             []
         )
-            ->after(function (\Illuminate\Validation\Validator $validator) use ($saleOrder) {
-                if (!$saleOrder->check_order_status([SoOrderStatus::PENDING, SoOrderStatus::SIGNED], $validator)) {
+            ->after(function (\Illuminate\Validation\Validator $validator) use ($saleContract) {
+                if (!$saleContract->check_sc_status([ScScStatus::PENDING, ScScStatus::SIGNED], $validator)) {
                     return;
                 }
 
-                if (!$vehicle = $saleOrder->Vehicle) {
+                if (!$vehicle = $saleContract->Vehicle) {
                     $validator->errors()->add('ve_id', 'The vehicle does not exist.');
 
                     return;
@@ -56,27 +56,27 @@ class SaleOrderCancelController extends Controller
 
         $input = $validator->validated();
 
-        DB::transaction(function () use (&$saleOrder) {
-            $saleOrder = $saleOrder->newQuery()->useWritePdo()
-                ->whereKey($saleOrder->getKey())->lockForUpdate()->firstOrFail()
+        DB::transaction(function () use (&$saleContract) {
+            $saleContract = $saleContract->newQuery()->useWritePdo()
+                ->whereKey($saleContract->getKey())->lockForUpdate()->firstOrFail()
             ;
 
-            match ($saleOrder->order_status->value) {
-                SoOrderStatus::PENDING => (function () use ($saleOrder) {
-                    $saleOrder->Vehicle->updateStatus(
+            match ($saleContract->sc_status->value) {
+                ScScStatus::PENDING => (function () use ($saleContract) {
+                    $saleContract->Vehicle->updateStatus(
                         status_rental: VeStatusRental::LISTED,
                     );
 
-                    $saleOrder->Payments()->update([
+                    $saleContract->Payments()->update([
                         'is_valid' => RpIsValid::INVALID,
                     ]);
                 })(),
-                SoOrderStatus::SIGNED => (function () use ($saleOrder) {
-                    $saleOrder->Vehicle->updateStatus(
+                ScScStatus::SIGNED => (function () use ($saleContract) {
+                    $saleContract->Vehicle->updateStatus(
                         status_rental: VeStatusRental::PENDING,
                     );
 
-                    $saleOrder->Payments->each(function ($item, $key) {
+                    $saleContract->Payments->each(function ($item, $key) {
                         $item->update([
                             'is_valid' => RpIsValid::INVALID,
                         ]);
@@ -84,14 +84,14 @@ class SaleOrderCancelController extends Controller
                 })(),
             };
 
-            $saleOrder->order_status = SoOrderStatus::CANCELLED;
-            $saleOrder->canceled_at  = now();
-            $saleOrder->save();
+            $saleContract->sc_status   = ScScStatus::CANCELLED;
+            $saleContract->canceled_at = now();
+            $saleContract->save();
         });
 
-        $saleOrder->refresh();
+        $saleContract->refresh();
 
-        return $this->response()->withData($saleOrder)->respond();
+        return $this->response()->withData($saleContract)->respond();
     }
 
     protected function options(?bool $with_group_count = false): void

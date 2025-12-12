@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Middleware\CheckAdminIsMock;
 use App\Models\_\Configuration;
 use App\Services\PaginateService;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -122,7 +124,7 @@ abstract class ConfigurationController extends Controller
         return $this->response()->withData($config)->respond();
     }
 
-    public function createConfirm(Request $request): Response
+    public function createConfirm(Request $request): View
     {
         $input = $this->validatedCreateRequest($request);
 

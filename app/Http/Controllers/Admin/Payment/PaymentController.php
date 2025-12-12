@@ -12,14 +12,14 @@ use App\Enum\Payment\RpPtId;
 use App\Enum\Sale\DtDtExportType;
 use App\Enum\Sale\DtDtStatus;
 use App\Enum\Sale\DtDtType;
-use App\Enum\Sale\SoOrderStatus;
+use App\Enum\Sale\ScScStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Payment\PaymentType;
 use App\Models\Sale\DocTpl;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use App\Services\DocTplService;
 use App\Services\PaginateService;
 use Illuminate\Database\Query\Builder;
@@ -73,7 +73,7 @@ class PaymentController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->whereLike('so.contract_number', '%'.$value.'%')
+                        $builder->whereLike('sc.contract_number', '%'.$value.'%')
                             ->orWhereLike('rp.rp_remark', '%'.$value.'%')
                             ->orWhereLike('ve.plate_no', '%'.$value.'%')
                             ->orWhereLike('cu.contact_name', '%'.$value.'%')
@@ -93,9 +93,9 @@ class PaymentController extends Controller
     {
         $this->options();
         $this->response()->withExtras(
-            SaleOrder::options(
+            SaleContract::options(
                 where: function (Builder $builder) {
-                    $builder->whereIn('so.order_status', [SoOrderStatus::PENDING, SoOrderStatus::SIGNED]);
+                    $builder->whereIn('sc.sc_status', [ScScStatus::PENDING, ScScStatus::SIGNED]);
                 }
             ),
         );
@@ -112,7 +112,7 @@ class PaymentController extends Controller
     #[PermissionAction(PermissionAction::READ)]
     public function show(Payment $payment): Response
     {
-        $payment->load(['SaleOrder', 'PaymentType', 'SaleOrder.Customer']);
+        $payment->load(['SaleContract', 'PaymentType', 'SaleContract.Customer']);
 
         return $this->response()->withData($payment)->respond();
     }
@@ -122,7 +122,7 @@ class PaymentController extends Controller
     {
         $idsArray = explode(',', $id); // 将 $id 按照逗号分割成数组
 
-        $payments = Payment::query()->whereIn('rp_id', $idsArray)->with(['SaleOrder', 'PaymentType', 'SaleOrder.Customer'])->get();
+        $payments = Payment::query()->whereIn('rp_id', $idsArray)->with(['SaleContract', 'PaymentType', 'SaleContract.Customer'])->get();
 
         return $this->response()->withData($payments)->respond();
     }
@@ -139,7 +139,7 @@ class PaymentController extends Controller
         );
 
         if ($payment) {
-            $payment->load(['SaleOrder', 'PaymentType', 'SaleOrder.Customer']);
+            $payment->load(['SaleContract', 'PaymentType', 'SaleContract.Customer']);
         }
 
         return $this->response()->withData($payment)->respond();
@@ -154,7 +154,7 @@ class PaymentController extends Controller
                 Rule::exists(DocTpl::class)->where('dt_type', DtDtType::PAYMENT)->where('dt_status', DtDtStatus::ENABLED)],
         ]);
 
-        $payment->load(['SaleOrder', 'PaymentType', 'SaleOrder.Customer']); // toto 名字有变化
+        $payment->load(['SaleContract', 'PaymentType', 'SaleContract.Customer']); // toto 名字有变化
 
         $docTpl = DocTpl::query()->find($input['dt_id']);
 
@@ -205,7 +205,7 @@ class PaymentController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'so_id'             => ['bail', 'required', 'integer', Rule::exists(SaleOrder::class)],
+                'sc_id'             => ['bail', 'required', 'integer', Rule::exists(SaleContract::class)],
                 'pt_id'             => ['bail', 'required', Rule::in(RpPtId::label_keys())],
                 'should_pay_date'   => ['bail', 'required', 'date'],
                 'should_pay_amount' => ['bail', 'required', 'numeric'],

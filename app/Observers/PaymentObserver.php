@@ -58,7 +58,7 @@ class PaymentObserver
 
             $MoneyIo = PaymentInout::query()->create([
                 'io_type'         => $io_type,
-                'cu_id'           => $payment->SaleOrder->cu_id,
+                'cu_id'           => $payment->SaleContract->cu_id,
                 'pa_id'           => $account->pa_id,
                 'occur_datetime'  => now(),
                 'occur_amount'    => $occur_amount,

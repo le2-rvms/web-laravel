@@ -49,7 +49,7 @@ class InoutController extends Controller
                         $builder->where('cu.contact_name', 'like', '%'.$value.'%')
                             ->orWhere('ve.plate_no', 'like', '%'.$value.'%')
                             ->orWhere('rp.rp_remark', 'like', '%'.$value.'%')
-                            ->orWhere('so.contract_number', 'like', '%'.$value.'%')
+                            ->orWhere('sc.contract_number', 'like', '%'.$value.'%')
                         ;
                     });
                 },

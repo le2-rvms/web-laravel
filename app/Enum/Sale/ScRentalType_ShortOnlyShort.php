@@ -2,7 +2,7 @@
 
 namespace App\Enum\Sale;
 
-class SoRentalType_ShortOnlyShort extends SoRentalType
+class ScRentalType_ShortOnlyShort extends ScRentalType
 {
     public const array LABELS = [
         self::SHORT_TERM => '短租',

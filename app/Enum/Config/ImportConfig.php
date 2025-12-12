@@ -4,7 +4,7 @@ namespace App\Enum\Config;
 
 use App\Models\Customer\Customer;
 use App\Models\Payment\Payment;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleAccident;
 use App\Models\Vehicle\VehicleInsurance;
@@ -20,8 +20,8 @@ class ImportConfig
         Customer::class,
         VehicleSchedule::class,
         VehicleInsurance::class,
-        SaleOrder::class,
-        Payment::class,  // 必须先导入 SaleOrder
+        SaleContract::class,
+        Payment::class,  // 必须先导入 SaleContract
         VehicleRepair::class,
         VehicleMaintenance::class,
         VehicleAccident::class,

@@ -70,7 +70,7 @@ class DocTplController extends Controller
         ]);
 
         $this->response()->withExtras(
-            DtDtType::tryFrom(DtDtType::SALE_ORDER)->getFieldsAndRelations(true),
+            DtDtType::tryFrom(DtDtType::SALE_CONTRACT)->getFieldsAndRelations(true),
             DtDtType::tryFrom(DtDtType::SALE_SETTLEMENT)->getFieldsAndRelations(true),
             DtDtType::tryFrom(DtDtType::PAYMENT)->getFieldsAndRelations(true),
             DtDtType::tryFrom(DtDtType::VEHICLE_INSPECTION)->getFieldsAndRelations(true),
@@ -114,7 +114,7 @@ class DocTplController extends Controller
         $this->options();
 
         $this->response()->withExtras(
-            DtDtType::tryFrom(DtDtType::SALE_ORDER)->getFieldsAndRelations(true),
+            DtDtType::tryFrom(DtDtType::SALE_CONTRACT)->getFieldsAndRelations(true),
             DtDtType::tryFrom(DtDtType::SALE_SETTLEMENT)->getFieldsAndRelations(true),
             DtDtType::tryFrom(DtDtType::PAYMENT)->getFieldsAndRelations(true),
             DtDtType::tryFrom(DtDtType::VEHICLE_INSPECTION)->getFieldsAndRelations(true),

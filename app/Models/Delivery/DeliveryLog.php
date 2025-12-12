@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Http;
  * @property DlDcKey|string $dc_key 消息类型key
  * @property string         $dl_key 消息key
  * @property int            $rp_id  关联对象ID
- * @property string         $so_id  关联对象ID
+ * @property string         $sc_id  关联对象ID
  *
  * -- 收件人与消息体
  * @property array  $recipients      收件人

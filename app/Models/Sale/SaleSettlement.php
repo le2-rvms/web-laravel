@@ -4,9 +4,9 @@ namespace App\Models\Sale;
 
 use App\Attributes\ClassName;
 use App\Enum\Payment\RsDeleteOption;
-use App\Enum\Sale\SoOrderStatus;
-use App\Enum\Sale\SoPaymentDayType;
-use App\Enum\Sale\SoRentalType;
+use App\Enum\Sale\ScPaymentDayType;
+use App\Enum\Sale\ScRentalType;
+use App\Enum\Sale\ScScStatus;
 use App\Enum\Sale\SsReturnStatus;
 use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 #[ClassName('结算')]
 /**
  * @property int                       $ss_id                      结算序号
- * @property int                       $so_id                      租车合同序号
+ * @property int                       $sc_id                      租车合同序号
  * @property null|float                $deposit_amount             合同押金
  * @property null|float                $received_deposit           实收押金
  * @property null|float                $early_return_penalty       提前退车违约金
@@ -49,7 +49,7 @@ use Illuminate\Support\Facades\DB;
  * @property null|int                  $approved_by                审核人
  * @property null|Carbon               $approved_at                审核时间
  *                                                                 -
- * @property SaleOrder                 $SaleOrder
+ * @property SaleContract              $SaleContract
  */
 class SaleSettlement extends Model
 {
@@ -90,30 +90,30 @@ class SaleSettlement extends Model
 
     protected $guarded = ['ss_id'];
 
-    public function SaleOrder(): BelongsTo
+    public function SaleContract(): BelongsTo
     {
-        return $this->belongsTo(SaleOrder::class, 'so_id', 'so_id');
+        return $this->belongsTo(SaleContract::class, 'sc_id', 'sc_id');
     }
 
     public static function indexQuery(array $search = []): Builder
     {
         $cu_id = $search['cu_id'] ?? null;
-        $so_id = $search['so_id'] ?? null;
+        $sc_id = $search['sc_id'] ?? null;
 
         return DB::query()
             ->from('sale_settlements', 'ss')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'ss.so_id')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'so.ve_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'ss.sc_id')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.ve_id')
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.vm_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
             ->when($cu_id, function (Builder $query) use ($cu_id) {
                 $query->where('cu.cu_id', '=', $cu_id);
             })
-            ->when($so_id, function (Builder $query) use ($so_id) {
-                $query->where('ss.so_id', '=', $so_id);
+            ->when($sc_id, function (Builder $query) use ($sc_id) {
+                $query->where('ss.sc_id', '=', $sc_id);
             })
             ->when(
-                null === $cu_id && null === $so_id,
+                null === $cu_id && null === $sc_id,
                 function (Builder $query) {
                     $query->orderByDesc('ss.ss_id');
                 },
@@ -121,13 +121,13 @@ class SaleSettlement extends Model
                     $query->orderBy('ss.ss_id');
                 }
             )
-            ->select('ss.*', 'so.*', 'cu.*', 've.*', '_vm.brand_name', '_vm.model_name')
+            ->select('ss.*', 'sc.*', 'cu.*', 've.*', '_vm.brand_name', '_vm.model_name')
             ->addSelect(
                 DB::raw(SsReturnStatus::toCaseSQL()),
                 DB::raw(SsReturnStatus::toColorSQL()),
-                DB::raw(SoRentalType::toCaseSQL()),
-                DB::raw(SoPaymentDayType::toCaseSQL()),
-                DB::raw(SoOrderStatus::toCaseSQL()),
+                DB::raw(ScRentalType::toCaseSQL()),
+                DB::raw(ScPaymentDayType::toCaseSQL()),
+                DB::raw(ScScStatus::toCaseSQL()),
                 DB::raw("to_char(ss.return_datetime, 'YYYY-MM-DD HH24:MI') as return_datetime_"),
             )
         ;

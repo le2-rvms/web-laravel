@@ -32,6 +32,7 @@ class SaleSettlementFactory extends Factory
             'refund_amount'              => $this->faker->randomFloat(2, 0, 1000),
             'refund_details'             => $this->faker->randomFloat(2, 0, 1000),
             'settlement_amount'          => $this->faker->randomFloat(2, -5000, 5000),
+            'deposit_return_amount'      => $this->faker->randomFloat(2, -5000, 5000),
             'deposit_return_date'        => fake_current_period_d(),
             'return_status'              => SsReturnStatus::label_key_random(),
             'return_datetime'            => fake_current_period_dt(),

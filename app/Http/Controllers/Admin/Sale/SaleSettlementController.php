@@ -10,7 +10,7 @@ use App\Enum\Payment\RsDeleteOption;
 use App\Enum\Sale\DtDtExportType;
 use App\Enum\Sale\DtDtStatus;
 use App\Enum\Sale\DtDtType;
-use App\Enum\Sale\SoOrderStatus;
+use App\Enum\Sale\ScScStatus;
 use App\Enum\Sale\SsReturnStatus;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
@@ -18,7 +18,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Payment\Payment;
 use App\Models\Sale\DocTpl;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleSettlement;
 use App\Models\Sale\VehicleReplacement;
 use App\Models\Vehicle\VehicleInspection;
@@ -98,20 +98,20 @@ class SaleSettlementController extends Controller
         $this->options();
         $this->response()->withExtras();
 
-        $saleOrder = null;
+        $saleContract = null;
 
         $validator = Validator::make(
             $request->all(),
             [
-                'so_id' => ['required', 'integer'],
+                'sc_id' => ['required', 'integer'],
             ],
             [],
             trans_property(SaleSettlement::class)
         )
-            ->after(function ($validator) use ($request, &$saleOrder) {
+            ->after(function ($validator) use ($request, &$saleContract) {
                 if (!$validator->failed()) {
-                    /** @var SaleOrder $saleOrder */
-                    $saleOrder = SaleOrder::query()->findOrFail($request->input('so_id'));
+                    /** @var SaleContract $saleContract */
+                    $saleContract = SaleContract::query()->findOrFail($request->input('sc_id'));
                 }
             })
         ;
@@ -122,13 +122,13 @@ class SaleSettlementController extends Controller
 
         $input = $validator->validated();
 
-        $saleSettlement = $saleOrder->SaleSettlement;
+        $saleSettlement = $saleContract->SaleSettlement;
         if (!$saleSettlement) { // 是新增
             /** @var Payment $payment */
-            $payment = $saleOrder->Payments()->where('pt_id', '=', RpPtId::DEPOSIT)->first();
+            $payment = $saleContract->Payments()->where('pt_id', '=', RpPtId::DEPOSIT)->first();
 
             $saleSettlement = new SaleSettlement([
-                'so_id'                      => $saleOrder->so_id,
+                'sc_id'                      => $saleContract->sc_id,
                 'deposit_amount'             => $payment->should_pay_amount ?? 0, // 押金应收金额
                 'received_deposit'           => $payment->actual_pay_amount ?? 0, // 押金实收金额
                 'early_return_penalty'       => '0',
@@ -162,21 +162,21 @@ class SaleSettlementController extends Controller
             );
         }
 
-        $saleOrder->load('Customer', 'Vehicle', 'Payments');
+        $saleContract->load('Customer', 'Vehicle', 'Payments');
 
         $this->response()->withExtras(
-            ['sale_order' => $saleOrder],
-            VehicleReplacement::kvList(so_id: $saleOrder->so_id),
-            VehicleInspection::kvList(so_id: $saleOrder->so_id),
-            Payment::kvList(so_id: $saleOrder->so_id),
+            ['saleContract' => $saleContract],
+            VehicleReplacement::kvList(sc_id: $saleContract->sc_id),
+            VehicleInspection::kvList(sc_id: $saleContract->sc_id),
+            Payment::kvList(sc_id: $saleContract->sc_id),
             Payment::kvStat(),
-            SaleSettlement::kvList(so_id: $saleOrder->so_id),
-            VehicleUsage::kvList(so_id: $saleOrder->so_id),
-            VehicleRepair::kvList(so_id: $saleOrder->so_id),
+            SaleSettlement::kvList(sc_id: $saleContract->sc_id),
+            VehicleUsage::kvList(sc_id: $saleContract->sc_id),
+            VehicleRepair::kvList(sc_id: $saleContract->sc_id),
             VehicleRepair::kvStat(),
-            VehicleViolation::kvList(so_id: $saleOrder->so_id),
+            VehicleViolation::kvList(sc_id: $saleContract->sc_id),
             VehicleViolation::kvStat(),
-            VehicleManualViolation::kvList(so_id: $saleOrder->so_id),
+            VehicleManualViolation::kvList(sc_id: $saleContract->sc_id),
             VehicleManualViolation::kvStat(),
         );
 
@@ -226,7 +226,7 @@ class SaleSettlementController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'so_id'                      => ['required', 'integer'],
+                'sc_id'                      => ['required', 'integer'],
                 'deposit_amount'             => ['nullable', 'numeric'],
                 'received_deposit'           => ['nullable', 'numeric'],
                 'early_return_penalty'       => ['nullable', 'numeric'],
@@ -255,7 +255,7 @@ class SaleSettlementController extends Controller
             + Uploader::validator_rule_upload_array('additional_photos'),
             [],
             trans_property(SaleSettlement::class)
-        )->after(function ($validator) use ($request, &$saleSettlement, &$saleOrder) {
+        )->after(function ($validator) use ($request, &$saleSettlement, &$saleContract) {
             if (!$validator->failed()) {
                 // 计算结算费
                 $result = '0';
@@ -286,14 +286,14 @@ class SaleSettlementController extends Controller
                     }
                 }
 
-                $saleOrder = SaleOrder::query()->findOrFail($request->input('so_id'));
+                $saleContract = SaleContract::query()->findOrFail($request->input('sc_id'));
 
-                if (!$saleOrder->check_order_status([SoOrderStatus::SIGNED], $validator)) {
+                if (!$saleContract->check_sc_status([ScScStatus::SIGNED], $validator)) {
                     return;
                 }
 
                 // vehicle
-                $vehicle = $saleOrder->Vehicle;
+                $vehicle = $saleContract->Vehicle;
 
                 $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [], $validator);
                 if (!$pass) {
@@ -310,7 +310,7 @@ class SaleSettlementController extends Controller
 
         DB::transaction(function () use (&$input, &$saleSettlement) {
             $_saleSettlement = SaleSettlement::query()->updateOrCreate(
-                array_intersect_key($input, array_flip(['so_id'])),
+                array_intersect_key($input, array_flip(['sc_id'])),
                 $input + ['return_status' => SsReturnStatus::UNCONFIRMED],
             );
 

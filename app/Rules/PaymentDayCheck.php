@@ -2,7 +2,7 @@
 
 namespace App\Rules;
 
-use App\Enum\Sale\SoPaymentDayType;
+use App\Enum\Sale\ScPaymentDayType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Translation\PotentiallyTranslatedString;
 
@@ -21,7 +21,7 @@ readonly class PaymentDayCheck implements ValidationRule
             return;
         }
 
-        $day_labels = SoPaymentDayType::payment_day_classes[$this->payment_day_type]::LABELS;
+        $day_labels = ScPaymentDayType::payment_day_classes[$this->payment_day_type]::LABELS;
 
         $exist = array_key_exists($value, $day_labels);
 

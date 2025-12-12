@@ -33,7 +33,7 @@ class AdminFactory extends Factory
             'password'          => static::$password ??= Hash::make('password'),
             'remember_token'    => Str::random(10),
             'user_type'         => AdmUserType::COMMON,
-            'expires_at'        => $this->faker->boolean(20) ? $this->faker->dateTimeBetween('+1 years', 'now') : null,
+            'expires_at'        => $this->faker->boolean(20) ? $this->faker->dateTimeBetween('now', '+1 years') : null,
         ];
     }
 

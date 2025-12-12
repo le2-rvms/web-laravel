@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Admin\Delivery;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Sale\SoOrderStatus;
-use App\Enum\Sale\SoPaymentDayType;
-use App\Enum\Sale\SoRentalType_ShortOnlyShort;
+use App\Enum\Sale\ScPaymentDayType;
+use App\Enum\Sale\ScRentalType_ShortOnlyShort;
+use App\Enum\Sale\ScScStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Sale\SaleOrder;
-use App\Models\Sale\SaleOrderExt;
+use App\Models\Sale\SaleContract;
+use App\Models\Sale\SaleContractExt;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,23 +32,23 @@ class DeliveryWecomGroupController extends Controller
     {
         $this->options();
         $this->response()->withExtras(
-            SaleOrder::options(
+            SaleContract::options(
                 where: function (Builder $builder) {
-                    $builder->whereIn('so.order_status', [SoOrderStatus::SIGNED]);
+                    $builder->whereIn('sc.sc_status', [ScScStatus::SIGNED]);
                 }
             ),
         );
 
-        $items = SaleOrderExt::indexQuery()
-            ->orderByDesc('soe.soe_id')
-            ->whereIn('so.order_status', [SoOrderStatus::SIGNED])
+        $items = SaleContractExt::indexQuery()
+            ->orderByDesc('sce.sce_id')
+            ->whereIn('sc.sc_status', [ScScStatus::SIGNED])
             ->addSelect(
                 DB::raw(sprintf(
-                    "CONCAT(cu.contact_name,'|',%s,'|', ve.plate_no ,'|',  %s, %s ,'|', %s ) as text,so.so_id as value",
+                    "CONCAT(cu.contact_name,'|',%s,'|', ve.plate_no ,'|',  %s, %s ,'|', %s ) as text,sc.sc_id as value",
                     '((SUBSTRING(cu.contact_phone, 1, 0)  || SUBSTRING(cu.contact_phone, 8, 4)) )',
-                    SoPaymentDayType::toCaseSQL(hasAs: false),
-                    SoRentalType_ShortOnlyShort::toCaseSQL(hasAs: false),
-                    SoOrderStatus::toCaseSQL(hasAs: false)
+                    ScPaymentDayType::toCaseSQL(hasAs: false),
+                    ScRentalType_ShortOnlyShort::toCaseSQL(hasAs: false),
+                    ScScStatus::toCaseSQL(hasAs: false)
                 ))
             )
             ->get()
@@ -64,11 +64,11 @@ class DeliveryWecomGroupController extends Controller
             $request->all(),
             [
                 'items'                       => ['bail', 'nullable', 'array'],
-                'items.*.so_id'               => ['bail', 'required', 'integer', Rule::exists(SaleOrder::class)],
-                'items.*.soe_wecom_group_url' => ['bail', 'required', 'max:255'],
+                'items.*.sc_id'               => ['bail', 'required', 'integer', Rule::exists(SaleContract::class)],
+                'items.*.sce_wecom_group_url' => ['bail', 'required', 'max:255'],
             ],
             [],
-            trans_property(SaleOrderExt::class)
+            trans_property(SaleContractExt::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
                 if (!$validator->failed()) {
@@ -85,10 +85,10 @@ class DeliveryWecomGroupController extends Controller
 
         DB::transaction(function () use (&$items) {
             foreach ($items->chunk(50) as $chunks) {
-                SaleOrderExt::query()->upsert($chunks->all(), ['so_id'], ['soe_wecom_group_url']);
+                SaleContractExt::query()->upsert($chunks->all(), ['sc_id'], ['sce_wecom_group_url']);
             }
 
-            SaleOrderExt::query()->whereNotIn('so_id', $items->pluck('so_id')->all())->delete();
+            SaleContractExt::query()->whereNotIn('sc_id', $items->pluck('sc_id')->all())->delete();
         });
 
         return $this->response()->respond();

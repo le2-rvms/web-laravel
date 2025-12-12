@@ -174,7 +174,14 @@ class VehiclePreparationController extends Controller
 
     public function update(Request $request, VehiclePreparation $vehiclePreparation) {}
 
-    public function destroy(VehiclePreparation $vehiclePreparation) {}
+    public function destroy(VehiclePreparation $vehiclePreparation)
+    {
+        DB::transaction(function () use ($vehiclePreparation) {
+            $vehiclePreparation->delete();
+        });
+
+        return $this->response()->withData($vehiclePreparation)->respond();
+    }
 
     protected function options(?bool $with_group_count = false): void
     {

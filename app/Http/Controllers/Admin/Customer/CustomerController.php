@@ -15,7 +15,7 @@ use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerCompany;
 use App\Models\Customer\CustomerIndividual;
 use App\Models\Payment\Payment;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleSettlement;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleManualViolation;
@@ -119,7 +119,7 @@ class CustomerController extends Controller
 
         $this->response()->withExtras(
             VehicleInspection::kvList(cu_id: $customer->cu_id),
-            SaleOrder::kvList(cu_id: $customer->cu_id),
+            SaleContract::kvList(cu_id: $customer->cu_id),
             Payment::kvList(cu_id: $customer->cu_id),
             SaleSettlement::kvList(cu_id: $customer->cu_id),
             VehicleUsage::kvList(cu_id: $customer->cu_id),
@@ -290,7 +290,7 @@ class CustomerController extends Controller
 
         $this->response()->withExtras(
             VehicleInspection::kvList(cu_id: $customer->cu_id),
-            SaleOrder::kvList(cu_id: $customer->cu_id),
+            SaleContract::kvList(cu_id: $customer->cu_id),
             Payment::kvList(cu_id: $customer->cu_id),
             SaleSettlement::kvList(cu_id: $customer->cu_id),
             VehicleUsage::kvList(cu_id: $customer->cu_id),

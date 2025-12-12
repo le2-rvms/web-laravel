@@ -3,9 +3,9 @@
 namespace App\Models\Sale;
 
 use App\Attributes\ClassName;
-use App\Enum\Sale\SoOrderStatus;
-use App\Enum\Sale\SoPaymentDayType;
-use App\Enum\Sale\SoRentalType_ShortOnlyShort;
+use App\Enum\Sale\ScPaymentDayType;
+use App\Enum\Sale\ScRentalType_ShortOnlyShort;
+use App\Enum\Sale\ScScStatus;
 use App\Enum\Sale\VrReplacementStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Vehicle\Vehicle;
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 #[ClassName('临时派车')]
 /**
  * @property int                        $vr_id                  临时派车记录序号
- * @property int                        $so_id                  租车合同序号
+ * @property int                        $sc_id                  租车合同序号
  * @property int                        $current_ve_id          车辆序号
  * @property int                        $new_ve_id              新车车辆序号
  * @property null|Carbon                $replacement_start_date 临时派车开始日期
@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|VrReplacementStatus $replacement_status     临时派车状态
  * @property null|mixed                 $additional_photos      附加照片；存储照片路径的 JSON 数组
  * @property null|string                $vr_remark              临时派车备注
- * @property SaleOrder                  $SaleOrder
+ * @property SaleContract               $SaleContract
  * @property Vehicle                    $CurrentVehicle
  * @property Vehicle                    $NewVehicle
  * @property string                     $current_ve_plate_no    旧车车牌号
@@ -51,9 +51,9 @@ class VehicleReplacement extends Model
         'replacement_start_date' => 'datetime:Y-m-d',
     ];
 
-    public function SaleOrder(): BelongsTo
+    public function SaleContract(): BelongsTo
     {
-        return $this->belongsTo(SaleOrder::class, 'so_id', 'so_id');
+        return $this->belongsTo(SaleContract::class, 'sc_id', 'sc_id');
     }
 
     public function CurrentVehicle(): BelongsTo
@@ -68,23 +68,23 @@ class VehicleReplacement extends Model
 
     public static function indexQuery(array $search = []): Builder
     {
-        $so_id = $search['so_id'] ?? null;
+        $sc_id = $search['sc_id'] ?? null;
         $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_replacements', 'vr')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'vr.so_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vr.sc_id')
             ->leftJoin('vehicles as ve1', 've1.ve_id', '=', 'vr.current_ve_id')
             ->leftJoin('vehicles as ve2', 've2.ve_id', '=', 'vr.new_ve_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
-            ->when($so_id, function (Builder $query) use ($so_id) {
-                $query->where('so.so_id', '=', $so_id);
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
+            ->when($sc_id, function (Builder $query) use ($sc_id) {
+                $query->where('sc.sc_id', '=', $sc_id);
             })
             ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('so.cu_id', '=', $cu_id);
+                $query->where('sc.cu_id', '=', $cu_id);
             })
             ->when(
-                null === $so_id && null === $cu_id,
+                null === $sc_id && null === $cu_id,
                 function (Builder $query) {
                     $query->orderByDesc('vr.vr_id');
                 },
@@ -92,7 +92,7 @@ class VehicleReplacement extends Model
                     $query->orderBy('vr.vr_id');
                 }
             )
-            ->select('vr.*', 'so.*', 'cu.*', 've1.plate_no as current_ve_plate_no', 've2.plate_no as new_ve_plate_no')
+            ->select('vr.*', 'sc.*', 'cu.*', 've1.plate_no as current_ve_plate_no', 've2.plate_no as new_ve_plate_no')
             ->addSelect(
                 DB::raw(VrReplacementStatus::toCaseSQL()),
             )
@@ -126,18 +126,18 @@ class VehicleReplacement extends Model
     {
         return DB::query()
             ->from('vehicle_replacements', 'vr')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'vr.so_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vr.sc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vr.new_ve_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
             ->where($where)
             ->orderBy('vr.vr_id', 'desc')
             ->select(
                 DB::raw(sprintf(
                     "CONCAT(cu.contact_name,'|',%s,'|', ve.plate_no ,'|',  %s, %s ,'|', %s ) as text,vr.vr_id as value",
                     "(CONCAT(SUBSTRING(cu.contact_phone, 1, 0), '', SUBSTRING(cu.contact_phone, 8, 4)) )",
-                    SoPaymentDayType::toCaseSQL(false),
-                    SoRentalType_ShortOnlyShort::toCaseSQL(false),
-                    SoOrderStatus::toCaseSQL(false)
+                    ScPaymentDayType::toCaseSQL(false),
+                    ScRentalType_ShortOnlyShort::toCaseSQL(false),
+                    ScScStatus::toCaseSQL(false)
                 ))
             )
             ->get()->toArray()

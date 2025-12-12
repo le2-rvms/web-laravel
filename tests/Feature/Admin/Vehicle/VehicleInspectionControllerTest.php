@@ -30,14 +30,14 @@ class VehicleInspectionControllerTest extends BaseVehicleControllerTestCase
         $this->assertSame(200, $response->getStatusCode());
     }
 
-    public function testSaleOrdersOptionRequiresType(): void
+    public function testSaleContractsOptionRequiresType(): void
     {
         // 缺少 inspection_type
-        $resp = $this->getJson(action([VehicleInspectionController::class, 'saleOrdersOption']));
+        $resp = $this->getJson(action([VehicleInspectionController::class, 'saleContractsOption']));
         $resp->assertStatus(422);
 
         // 正确的 inspection_type 参数
-        $resp = $this->getJson(action([VehicleInspectionController::class, 'saleOrdersOption']).'?inspection_type='.ViInspectionType::SO_DISPATCH);
+        $resp = $this->getJson(action([VehicleInspectionController::class, 'saleContractsOption']).'?inspection_type='.ViInspectionType::SC_DISPATCH);
         $resp->assertStatus(200);
         $this->assertCommonJsonStructure($resp->json());
     }

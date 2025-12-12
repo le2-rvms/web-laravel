@@ -2,22 +2,22 @@
 
 namespace Database\Factories\Sale;
 
-use App\Enum\Sale\SoOrderStatus;
-use App\Enum\Sale\SoPaymentDay_Month;
-use App\Enum\Sale\SoPaymentDayType;
-use App\Enum\Sale\SoRentalType;
-use App\Models\Sale\SaleOrder;
+use App\Enum\Sale\ScPaymentDay_Month;
+use App\Enum\Sale\ScPaymentDayType;
+use App\Enum\Sale\ScRentalType;
+use App\Enum\Sale\ScScStatus;
+use App\Models\Sale\SaleContract;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<SaleOrder>
+ * @extends Factory<SaleContract>
  */
-class SaleOrderFactory extends Factory
+class SaleContractFactory extends Factory
 {
     public function definition(): array
     {
-        $rental_type = SoRentalType::label_key_random();
+        $rental_type = ScRentalType::label_key_random();
 
         $rental_start = fake_current_period_d();
 
@@ -29,12 +29,12 @@ class SaleOrderFactory extends Factory
 
         $deposit_amount = $this->faker->randomFloat(2, 100, 10000);
 
-        if (SoRentalType::LONG_TERM === $rental_type) {
-            $payment_day_type      = SoPaymentDayType::label_key_random();
-            $payment_day_type_rule = SoPaymentDayType::interval[$payment_day_type]; // ['interval_unit']
+        if (ScRentalType::LONG_TERM === $rental_type) {
+            $payment_day_type      = ScPaymentDayType::label_key_random();
+            $payment_day_type_rule = ScPaymentDayType::interval[$payment_day_type]; // ['interval_unit']
 
-            /** @var SoPaymentDay_Month $payment_day_class */
-            $payment_day_class = SoPaymentDayType::payment_day_classes[$payment_day_type];
+            /** @var ScPaymentDay_Month $payment_day_class */
+            $payment_day_class = ScPaymentDayType::payment_day_classes[$payment_day_type];
             $payment_day       = $payment_day_class::label_key_random();
 
             $installments = $this->faker->numberBetween(10, 60);
@@ -59,7 +59,7 @@ class SaleOrderFactory extends Factory
 
             $total_amount = $deposit_amount + $management_fee_amount + $total_rent_amount + $insurance_base_fee_amount + $insurance_additional_fee_amount + $other_fee_amount;
         }
-        $order_status = SoOrderStatus::label_key_random();
+        $sc_status = ScScStatus::label_key_random();
 
         return [
             'rental_type'                     => $rental_type,
@@ -79,12 +79,12 @@ class SaleOrderFactory extends Factory
             'insurance_additional_fee_amount' => $insurance_additional_fee_amount ?? null,
             'other_fee_amount'                => $other_fee_amount ?? null,
             'total_amount'                    => $total_amount,
-            'order_status'                    => $order_status,
+            'sc_status'                       => $sc_status,
             'order_at'                        => fake_current_period_dt(),
-            'signed_at'                       => SoOrderStatus::SIGNED === $order_status ? fake_current_period_dt() : null,
-            'canceled_at'                     => SoOrderStatus::CANCELLED === $order_status ? fake_current_period_dt() : null,
-            'completed_at'                    => SoOrderStatus::COMPLETED === $order_status ? fake_current_period_dt() : null,
-            'early_termination_at'            => SoOrderStatus::EARLY_TERMINATION === $order_status ? fake_current_period_dt() : null,
+            'signed_at'                       => ScScStatus::SIGNED === $sc_status ? fake_current_period_dt() : null,
+            'canceled_at'                     => ScScStatus::CANCELLED === $sc_status ? fake_current_period_dt() : null,
+            'completed_at'                    => ScScStatus::COMPLETED === $sc_status ? fake_current_period_dt() : null,
+            'early_termination_at'            => ScScStatus::EARLY_TERMINATION === $sc_status ? fake_current_period_dt() : null,
         ];
     }
 }

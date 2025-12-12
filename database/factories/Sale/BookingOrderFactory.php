@@ -49,7 +49,7 @@ class BookingOrderFactory extends Factory
             //            'min_rental_periods' => $this->faker->numberBetween(1, 12),
 
             'payment_status' => BoPaymentStatus::label_key_random(),
-            'order_status'   => BoOrderStatus::label_key_random(),
+            'sc_status'      => BoOrderStatus::label_key_random(),
             'refund_status'  => BoRefundStatus::label_key_random(),
             //            'b_notes'      => $this->faker->optional()->sentence(),
             'earnest_amount' => $this->faker->numberBetween(500, 1000),

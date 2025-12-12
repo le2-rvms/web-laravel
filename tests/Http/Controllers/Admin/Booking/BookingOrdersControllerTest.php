@@ -162,7 +162,7 @@ class BookingOrdersControllerTest extends TestCase
         $payload = [
             // update 请求里，仅这些枚举必填（其余在 update 中 excludeIf）
             'payment_status' => BoPaymentStatus::PAID,
-            'order_status'   => BoOrderStatus::PROCESSED,
+            'sc_status'      => BoOrderStatus::PROCESSED,
             'refund_status'  => BoRefundStatus::REFUNDED,
             'earnest_amount' => $bookingOrder->earnest_amount,
         ];
@@ -177,7 +177,7 @@ class BookingOrdersControllerTest extends TestCase
                 [
                     'data' => [
                         'payment_status' => BoPaymentStatus::PAID,
-                        'order_status'   => BoOrderStatus::PROCESSED,
+                        'sc_status'      => BoOrderStatus::PROCESSED,
                         'refund_status'  => BoRefundStatus::REFUNDED,
                     ],
                 ]
@@ -186,7 +186,7 @@ class BookingOrdersControllerTest extends TestCase
 
         $bookingOrder->refresh();
         $this->assertEquals(BoPaymentStatus::PAID, $bookingOrder->payment_status);
-        $this->assertEquals(BoOrderStatus::PROCESSED, $bookingOrder->order_status);
+        $this->assertEquals(BoOrderStatus::PROCESSED, $bookingOrder->sc_status);
     }
 
     public function testDestroyDeletesTheOrder()

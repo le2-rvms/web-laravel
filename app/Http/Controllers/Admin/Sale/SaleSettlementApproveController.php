@@ -8,7 +8,7 @@ use App\Enum\Payment\RpIsValid;
 use App\Enum\Payment\RpPayStatus;
 use App\Enum\Payment\RpPtId;
 use App\Enum\Payment\RsDeleteOption;
-use App\Enum\Sale\SoOrderStatus;
+use App\Enum\Sale\ScScStatus;
 use App\Enum\Sale\SsReturnStatus;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Http\Controllers\Controller;
@@ -50,28 +50,28 @@ class SaleSettlementApproveController extends Controller
 
         //        $input = $validator->validated();
 
-        $saleOrder = $saleSettlement->SaleOrder;
+        $saleContract = $saleSettlement->SaleContract;
 
         $unPayCount = Payment::query()
-            ->where('so_id', '=', $saleOrder->so_id)
+            ->where('sc_id', '=', $saleContract->sc_id)
             ->where('is_valid', '=', RpIsValid::VALID)
             ->where('pay_status', '=', RpPayStatus::UNPAID)
             ->where('pt_id', '!=', RpPtId::VEHICLE_RETURN_SETTLEMENT_FEE)
             ->count()
         ;
 
-        DB::transaction(function () use ($saleOrder, $unPayCount, $saleSettlement) {
-            $saleOrder->update([
-                'order_status'                                            => $unPayCount > 0 ? SoOrderStatus::EARLY_TERMINATION : SoOrderStatus::COMPLETED,
+        DB::transaction(function () use ($saleContract, $unPayCount, $saleSettlement) {
+            $saleContract->update([
+                'sc_status'                                               => $unPayCount > 0 ? ScScStatus::EARLY_TERMINATION : ScScStatus::COMPLETED,
                 $unPayCount > 0 ? 'early_termination_at' : 'completed_at' => now(),
             ]);
 
-            $saleOrder->Vehicle->updateStatus(status_rental: VeStatusRental::PENDING);
+            $saleContract->Vehicle->updateStatus(status_rental: VeStatusRental::PENDING);
 
             switch ($saleSettlement->delete_option) {
                 case RsDeleteOption::DELETE:
                     Payment::query()
-                        ->where('so_id', '=', $saleOrder->so_id)
+                        ->where('sc_id', '=', $saleContract->sc_id)
                         ->where('pay_status', '=', RpPayStatus::UNPAID)
                         ->where('pt_id', '!=', RpPtId::VEHICLE_RETURN_SETTLEMENT_FEE)
                         ->update([
@@ -88,7 +88,7 @@ class SaleSettlementApproveController extends Controller
 
             if ($saleSettlement->settlement_amount > 0 || $saleSettlement->deposit_return_amount > 0) {
                 Payment::query()->updateOrCreate([
-                    'so_id' => $saleOrder->so_id,
+                    'sc_id' => $saleContract->sc_id,
                     'pt_id' => $saleSettlement->deposit_return_amount > 0 ? RpPtId::REFUND_DEPOSIT : RpPtId::VEHICLE_RETURN_SETTLEMENT_FEE,
                 ], [
                     'should_pay_date'   => $saleSettlement->deposit_return_date,
@@ -105,7 +105,7 @@ class SaleSettlementApproveController extends Controller
                 ]);
             }
             //                Payment::query()->where([
-            //                    'so_id' => $saleOrder->so_id,
+            //                    'sc_id' => $saleContract->sc_id,
             //                ])->delete();
 
             $saleSettlement->update([

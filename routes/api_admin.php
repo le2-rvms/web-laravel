@@ -27,8 +27,8 @@ use App\Http\Controllers\Admin\Payment\InoutController;
 use App\Http\Controllers\Admin\Payment\PaymentAccountController;
 use App\Http\Controllers\Admin\Payment\PaymentController;
 use App\Http\Controllers\Admin\Payment\PaymentTypeController;
-use App\Http\Controllers\Admin\Payment\SaleOrderRentPaymentController;
-use App\Http\Controllers\Admin\Payment\SaleOrderSignPaymentController;
+use App\Http\Controllers\Admin\Payment\SaleContractRentPaymentController;
+use App\Http\Controllers\Admin\Payment\SaleContractSignPaymentController;
 use App\Http\Controllers\Admin\Risk\ExpiryDriverController;
 use App\Http\Controllers\Admin\Risk\ExpiryVehicleController;
 use App\Http\Controllers\Admin\Risk\VehicleForceTakeController;
@@ -37,9 +37,9 @@ use App\Http\Controllers\Admin\Risk\VehicleScheduleController;
 use App\Http\Controllers\Admin\Risk\ViolationCountController;
 use App\Http\Controllers\Admin\Sale\BookingOrderController;
 use App\Http\Controllers\Admin\Sale\BookingVehicleController;
-use App\Http\Controllers\Admin\Sale\SaleOrderCancelController;
-use App\Http\Controllers\Admin\Sale\SaleOrderController;
-use App\Http\Controllers\Admin\Sale\SaleOrderTplController;
+use App\Http\Controllers\Admin\Sale\SaleContractCancelController;
+use App\Http\Controllers\Admin\Sale\SaleContractController;
+use App\Http\Controllers\Admin\Sale\SaleContractTplController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementApproveController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementController;
 use App\Http\Controllers\Admin\Sale\VehiclePreparationController;
@@ -50,8 +50,8 @@ use App\Http\Controllers\Admin\Vehicle\VehicleInspectionController;
 use App\Http\Controllers\Admin\Vehicle\VehicleManualViolationController;
 use App\Http\Controllers\Admin\Vehicle\VehicleModelController;
 use App\Http\Controllers\Admin\Vehicle\VehicleViolationController;
-use App\Http\Controllers\Admin\VehicleService\ServiceCenterController;
 use App\Http\Controllers\Admin\VehicleService\VehicleAccidentController;
+use App\Http\Controllers\Admin\VehicleService\VehicleCenterController;
 use App\Http\Controllers\Admin\VehicleService\VehicleMaintenanceController;
 use App\Http\Controllers\Admin\VehicleService\VehicleRepairController;
 use App\Http\Middleware\CheckPermission;
@@ -103,11 +103,11 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     Route::resource('payment-accounts', PaymentAccountController::class);
 
-    Route::put('sale-order-tpls/{order_tpl}/status', [SaleOrderTplController::class, 'status']);
-    Route::post('sale-order-tpls/upload', [SaleOrderTplController::class, 'upload']);
-    Route::resource('sale-order-tpls', SaleOrderTplController::class);
+    Route::put('sale-contract-tpls/{order_tpl}/status', [SaleContractTplController::class, 'status']);
+    Route::post('sale-contract-tpls/upload', [SaleContractTplController::class, 'upload']);
+    Route::resource('sale-contract-tpls', SaleContractTplController::class);
 
-    Route::resource('service-centers', ServiceCenterController::class);
+    Route::resource('vehicle-centers', VehicleCenterController::class);
 
     Route::resource('delivery-channels', DeliveryChannelController::class);
 
@@ -116,14 +116,14 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
     Route::apiSingleton('delivery-wecom-group', DeliveryWecomGroupController::class);
     Route::apiSingleton('delivery-wecom-member', DeliveryWecomMemberController::class);
 
-    Route::get('imports/template', [ImportController::class, 'template']);
-    Route::post('imports/upload', [ImportController::class, 'upload']);
+    Route::get('import/template', [ImportController::class, 'template']);
+    Route::post('import/upload', [ImportController::class, 'upload']);
     Route::singleton('import', ImportController::class);
 
     Route::post('vehicles/upload', [VehicleController::class, 'upload']);
     Route::resource('vehicles', VehicleController::class);
 
-    Route::get('vehicle-inspections/sale-orders-option', [VehicleInspectionController::class, 'saleOrdersOption']); // todo 返回的时候不放在 ext 里
+    Route::get('vehicle-inspections/sale-contracts-option', [VehicleInspectionController::class, 'saleContractsOption']); // todo 返回的时候不放在 ext 里
     Route::post('vehicle-inspections/upload', [VehicleInspectionController::class, 'upload']);
     Route::get('vehicle-inspections/{vehicle_inspection}/doc', [VehicleInspectionController::class, 'doc']);
     Route::resource('vehicle-inspections', VehicleInspectionController::class);
@@ -132,30 +132,30 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     Route::resource('vehicle-violations', VehicleViolationController::class);
 
-    Route::get('vehicle-repairs/sale-orders-option', [VehicleRepairController::class, 'saleOrdersOption']);
+    Route::get('vehicle-repairs/sale-contracts-option', [VehicleRepairController::class, 'saleContractsOption']);
     Route::post('vehicle-repairs/upload', [VehicleRepairController::class, 'upload']);
     Route::resource('vehicle-repairs', VehicleRepairController::class);
 
-    Route::get('vehicle-maintenances/sale-orders-option', [VehicleMaintenanceController::class, 'saleOrdersOption']);
+    Route::get('vehicle-maintenances/sale-contracts-option', [VehicleMaintenanceController::class, 'saleContractsOption']);
     Route::post('vehicle-maintenances/upload', [VehicleMaintenanceController::class, 'upload']);
     Route::resource('vehicle-maintenances', VehicleMaintenanceController::class);
 
-    Route::get('vehicle-accidents/sale-orders-option', [VehicleAccidentController::class, 'saleOrdersOption']);
+    Route::get('vehicle-accidents/sale-contracts-option', [VehicleAccidentController::class, 'saleContractsOption']);
     Route::post('vehicle-accidents/upload', [VehicleAccidentController::class, 'upload']);
     Route::resource('vehicle-accidents', VehicleAccidentController::class);
 
     Route::post('customers/upload', [CustomerController::class, 'upload']);
     Route::resource('customers', CustomerController::class);
 
-    Route::resource('vehicle-preparations', VehiclePreparationController::class)->only('index', 'create', 'store');
+    Route::resource('vehicle-preparations', VehiclePreparationController::class)->only('index', 'create', 'store', 'destroy');
 
-    Route::get('sale-orders/payments-option', [SaleOrderController::class, 'paymentsOption']);
-    Route::get('sale-orders/{sale_order}/doc', [SaleOrderController::class, 'doc']);
-    Route::get('sale-order-tpls/{sale_order_tpl}/generate', [SaleOrderController::class, 'generate']);
-    Route::post('sale-orders/upload', [SaleOrderController::class, 'upload']);
-    Route::resource('sale-orders', SaleOrderController::class);
+    Route::get('sale-contracts/payments-option', [SaleContractController::class, 'paymentsOption']);
+    Route::get('sale-contracts/{sale_contract}/doc', [SaleContractController::class, 'doc']);
+    Route::get('sale-contract-tpls/{sale_contract_tpl}/generate', [SaleContractController::class, 'generate']);
+    Route::post('sale-contracts/upload', [SaleContractController::class, 'upload']);
+    Route::resource('sale-contracts', SaleContractController::class);
 
-    Route::apiSingleton('sale-orders.cancel', SaleOrderCancelController::class);
+    Route::apiSingleton('sale-contracts.cancel', SaleContractCancelController::class);
 
     Route::post('vehicle-replacement/upload', [VehicleReplacementController::class, 'upload']);
     Route::resource('vehicle-replacement', VehicleReplacementController::class);
@@ -180,11 +180,11 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     Route::resource('inouts', InoutController::class)->only('index');
 
-    Route::get('sale-order/{so_id}/sign-pay/create', [SaleOrderSignPaymentController::class, 'create'])->where('so_id', '[0-9]+');
-    Route::resource('sale-order.sign-pay', SaleOrderSignPaymentController::class)->only('create', 'store');
+    Route::get('sale-contract/{sc_id}/sign-pay/create', [SaleContractSignPaymentController::class, 'create'])->where('sc_id', '[0-9]+');
+    Route::resource('sale-contract.sign-pay', SaleContractSignPaymentController::class)->only('create', 'store');
 
-    Route::get('sale-order/{so_id}/rent-pay/create', [SaleOrderRentPaymentController::class, 'create'])->where('so_id', '[0-9]+');
-    Route::resource('sale-order.rent-pay', SaleOrderRentPaymentController::class)->only('create', 'store');
+    Route::get('sale-contract/{sc_id}/rent-pay/create', [SaleContractRentPaymentController::class, 'create'])->where('sc_id', '[0-9]+');
+    Route::resource('sale-contract.rent-pay', SaleContractRentPaymentController::class)->only('create', 'store');
 
     // risk
     Route::post('vehicle-schedules/upload', [VehicleScheduleController::class, 'upload']);

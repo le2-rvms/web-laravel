@@ -43,6 +43,7 @@ use Illuminate\Validation\Validator;
 #[ColumnDesc('ve_mileage')]
 #[ColumnDesc('ve_color')]
 #[ColumnDesc('ve_cert_no')]
+#[ColumnDesc('ve_team_id')]
 #[ColumnDesc('ve_cert_valid_to', type: ColumnType::DATE)]
 #[ColumnDesc('ve_remark')]
 #[ColumnDesc('ve_oa_id')]
@@ -345,9 +346,10 @@ class Vehicle extends Model
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['ve_type']              = VeVeType::searchValue($item['ve_type']);
-            static::$fields['plate_no'][] = $item['plate_no'];
-            static::$fields['vm_id'][]    = $item['vm_id'];
+            $item['ve_type']                = VeVeType::searchValue($item['ve_type']);
+            static::$fields['plate_no'][]   = $item['plate_no'];
+            static::$fields['vm_id'][]      = $item['vm_id'];
+            static::$fields['ve_team_id'][] = $item['ve_team_id']; // todo
         };
     }
 

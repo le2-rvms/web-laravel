@@ -7,13 +7,13 @@ use App\Attributes\PermissionType;
 use App\Enum\Payment\PaPaStatus;
 use App\Enum\Payment\RpPayStatus;
 use App\Enum\Payment\RpPtId;
-use App\Enum\Sale\SoOrderStatus;
-use App\Enum\Sale\SoRentalType;
+use App\Enum\Sale\ScRentalType;
+use App\Enum\Sale\ScScStatus;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +23,7 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('签约收款')]
-class SaleOrderSignPaymentController extends Controller
+class SaleContractSignPaymentController extends Controller
 {
     public static function labelOptions(Controller $controller): void
     {
@@ -34,50 +34,50 @@ class SaleOrderSignPaymentController extends Controller
     public function index() {}
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function create(string $so_id): Response
+    public function create(string $sc_id): Response
     {
-        abort_if(!is_numeric($so_id), 404);
+        abort_if(!is_numeric($sc_id), 404);
 
         $this->response()->withExtras(
             PaymentAccount::options(),
             RpPayStatus::options(),
-            SaleOrder::options(
+            SaleContract::options(
                 where: function (Builder $builder) {
-                    $builder->whereIn('so.order_status', [SoOrderStatus::PENDING]);
+                    $builder->whereIn('sc.sc_status', [ScScStatus::PENDING]);
                 }
             ),
         );
 
-        if ($so_id > 0) {
-            /** @var SaleOrder $saleOrder */
-            $saleOrder = SaleOrder::query()
-                ->where('order_status', '=', SoOrderStatus::PENDING)
-                ->findOrFail($so_id)
+        if ($sc_id > 0) {
+            /** @var SaleContract $saleContract */
+            $saleContract = SaleContract::query()
+                ->where('sc_status', '=', ScScStatus::PENDING)
+                ->findOrFail($sc_id)
             ;
-            $saleOrder->load('Customer', 'Vehicle', 'Payments', 'Payments.SaleOrder', 'Payments.PaymentType', 'SignPayments');
+            $saleContract->load('Customer', 'Vehicle', 'Payments', 'Payments.SaleContract', 'Payments.PaymentType', 'SignPayments');
 
             // 补充 实收押金
-            if (SoRentalType::LONG_TERM == $saleOrder->rental_type->value) {
-                $saleOrder->deposit_amount_true        = $saleOrder->deposit_amount ?? '0.00';
-                $saleOrder->management_fee_amount_true = $saleOrder->management_fee_amount ?? '0.00';
-                $saleOrder->management_fee_amount      = $saleOrder->management_fee_amount ?? '0.00';
-            } elseif (SoRentalType::SHORT_TERM == $saleOrder->rental_type->value) {
-                $saleOrder->total_rent_amount_true = $saleOrder->total_rent_amount ?? '0.00';
-                $saleOrder->deposit_amount_true    = $saleOrder->deposit_amount ?? '0.00';
+            if (ScRentalType::LONG_TERM == $saleContract->rental_type->value) {
+                $saleContract->deposit_amount_true        = $saleContract->deposit_amount ?? '0.00';
+                $saleContract->management_fee_amount_true = $saleContract->management_fee_amount ?? '0.00';
+                $saleContract->management_fee_amount      = $saleContract->management_fee_amount ?? '0.00';
+            } elseif (ScRentalType::SHORT_TERM == $saleContract->rental_type->value) {
+                $saleContract->total_rent_amount_true = $saleContract->total_rent_amount ?? '0.00';
+                $saleContract->deposit_amount_true    = $saleContract->deposit_amount ?? '0.00';
             }
-            $saleOrder->actual_pay_date = now()->format('Y-m-d');
+            $saleContract->actual_pay_date = now()->format('Y-m-d');
         } else {
-            $saleOrder = [];
+            $saleContract = [];
         }
 
-        return $this->response()->withData($saleOrder)->respond();
+        return $this->response()->withData($saleContract)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function store(Request $request, SaleOrder $saleOrder)
+    public function store(Request $request, SaleContract $saleContract)
     {
-        $is_long_term  = SoRentalType::LONG_TERM === $saleOrder->rental_type->value;
-        $is_short_term = SoRentalType::SHORT_TERM === $saleOrder->rental_type->value;
+        $is_long_term  = ScRentalType::LONG_TERM === $saleContract->rental_type->value;
+        $is_short_term = ScRentalType::SHORT_TERM === $saleContract->rental_type->value;
 
         $validator = Validator::make(
             $request->all(),
@@ -95,11 +95,11 @@ class SaleOrderSignPaymentController extends Controller
                 'pa_id'                           => ['bail', 'required', Rule::exists(PaymentAccount::class)->where('pa_status', PaPaStatus::ENABLED)],
             ],
             [],
-            trans_property(SaleOrder::class) + trans_property(Payment::class),
+            trans_property(SaleContract::class) + trans_property(Payment::class),
         )
-            ->after(function (\Illuminate\Validation\Validator $validator) use ($saleOrder, &$vehicle, &$customer) {
+            ->after(function (\Illuminate\Validation\Validator $validator) use ($saleContract, &$vehicle, &$customer) {
                 if (!$validator->failed()) {
-                    if (!$saleOrder->check_order_status([SoOrderStatus::PENDING], $validator)) {
+                    if (!$saleContract->check_sc_status([ScScStatus::PENDING], $validator)) {
                         return;
                     }
                 }
@@ -111,8 +111,8 @@ class SaleOrderSignPaymentController extends Controller
 
         $input = $validator->validated();
 
-        DB::transaction(function () use ($saleOrder, &$input) {
-            foreach (RpPtId::getFeeTypes($saleOrder->rental_type->value) as $label => $pt_id) {
+        DB::transaction(function () use ($saleContract, &$input) {
+            foreach (RpPtId::getFeeTypes($saleContract->rental_type->value) as $label => $pt_id) {
                 $should_pay_amount = $input[$label];
                 $actual_pay_amount = $input[$label.'_true'] ?? null;
                 if (
@@ -120,10 +120,10 @@ class SaleOrderSignPaymentController extends Controller
                     || (null === $actual_pay_amount && bccomp($should_pay_amount, '0', 2) > 0)
                 ) {
                     Payment::query()->updateOrCreate([
-                        'so_id' => $saleOrder->so_id,
+                        'sc_id' => $saleContract->sc_id,
                         'pt_id' => $pt_id,
                     ], [
-                        'should_pay_date'   => $saleOrder->rental_start,
+                        'should_pay_date'   => $saleContract->rental_start,
                         'should_pay_amount' => $should_pay_amount,
                         'pay_status'        => RpPayStatus::PAID,
                         'actual_pay_date'   => $input['actual_pay_date'],
@@ -133,12 +133,12 @@ class SaleOrderSignPaymentController extends Controller
                 }
             }
 
-            $saleOrder->update([
-                'order_status' => SoOrderStatus::SIGNED,
-                'signed_at'    => now(),
+            $saleContract->update([
+                'sc_status' => ScScStatus::SIGNED,
+                'signed_at' => now(),
             ]);
 
-            $saleOrder->Vehicle->updateStatus(status_rental: VeStatusRental::RENTED);
+            $saleContract->Vehicle->updateStatus(status_rental: VeStatusRental::RENTED);
         });
 
         return $this->response()->withData($input)->respond();
@@ -148,7 +148,7 @@ class SaleOrderSignPaymentController extends Controller
 
     public function edit(Payment $payment) {}
 
-    public function update(Request $request, SaleOrder $saleOrder) {}
+    public function update(Request $request, SaleContract $saleContract) {}
 
     public function destroy(Payment $payment) {}
 

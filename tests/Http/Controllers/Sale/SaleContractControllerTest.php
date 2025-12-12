@@ -3,17 +3,17 @@
 namespace Tests\Http\Controllers\Sale;
 
 use App\Enum\Payment\RpPtId;
-use App\Enum\Sale\SoOrderStatus;
-use App\Enum\Sale\SoPaymentDay_Month;
-use App\Enum\Sale\SoPaymentDayType;
-use App\Enum\Sale\SoRentalType;
+use App\Enum\Sale\ScPaymentDay_Month;
+use App\Enum\Sale\ScPaymentDayType;
+use App\Enum\Sale\ScRentalType;
+use App\Enum\Sale\ScScStatus;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
-use App\Http\Controllers\Admin\Sale\SaleOrderController;
+use App\Http\Controllers\Admin\Sale\SaleContractController;
 use App\Models\Customer\Customer;
 use App\Models\Payment\Payment;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use App\Models\Vehicle\Vehicle;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -27,7 +27,7 @@ use Tests\TestCase;
  */
 #[CoversNothing]
 #[\AllowDynamicProperties]
-class SaleOrderControllerTest extends TestCase
+class SaleContractControllerTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -51,13 +51,13 @@ class SaleOrderControllerTest extends TestCase
 
     public function testIndexReturnsPaginatedOrdersList(): void
     {
-        $order = SaleOrder::factory()
+        $order = SaleContract::factory()
             ->for($this->customer)
             ->for($this->vehicle)
             ->create()
         ;
 
-        $response = $this->getJson(action([SaleOrderController::class, 'index']));
+        $response = $this->getJson(action([SaleContractController::class, 'index']));
 
         $response->assertOk()
             ->assertJsonFragment(['contract_number' => $order->contract_number])
@@ -71,17 +71,17 @@ class SaleOrderControllerTest extends TestCase
 
     public function testCreateProvidesDefaultOrderSkeleton(): void
     {
-        $response = $this->getJson(action([SaleOrderController::class, 'create']));
+        $response = $this->getJson(action([SaleContractController::class, 'create']));
 
         $response->assertOk();
 
-        $this->assertSame(SoRentalType::LONG_TERM, $response->json('data.rental_type'));
+        $this->assertSame(ScRentalType::LONG_TERM, $response->json('data.rental_type'));
         $this->assertArrayHasKey('CustomerOptions', $response->json('extra'));
     }
 
     public function testShowReturnsOrderWithPayments(): void
     {
-        $order = SaleOrder::factory()
+        $order = SaleContract::factory()
             ->for($this->customer)
             ->for($this->vehicle)->create()
         ;
@@ -92,40 +92,40 @@ class SaleOrderControllerTest extends TestCase
         ;
 
         $response = $this->getJson(
-            action([SaleOrderController::class, 'show'], [$order->getKey()])
+            action([SaleContractController::class, 'show'], [$order->getKey()])
         );
 
         $response->assertOk()
-            ->assertJsonPath('data.so_id', $order->getKey())
+            ->assertJsonPath('data.sc_id', $order->getKey())
             ->assertJsonPath('data.payments.0.rp_id', $payment->getKey())
         ;
     }
 
     public function testStoreCreatesLongTermOrderWithPayments(): void
     {
-        $payload = SaleOrder::factory()
+        $payload = SaleContract::factory()
             ->for($this->customer)
             ->for($this->vehicle)->raw()
         ;
-        if (SoRentalType::LONG_TERM === $payload['rental_type']) {
+        if (ScRentalType::LONG_TERM === $payload['rental_type']) {
             $payment             = Payment::factory()->raw();
             $payload['payments'] = [$payment];
         } else {
             $payload['payments'] = [];
         }
 
-        $response = $this->postJson(action([SaleOrderController::class, 'store']), $payload);
+        $response = $this->postJson(action([SaleContractController::class, 'store']), $payload);
 
         $response->assertOk()
             ->assertJsonFragment(['contract_number' => $payload['contract_number']])
         ;
 
-        $this->assertDatabaseHas((new SaleOrder())->getTable(), [
+        $this->assertDatabaseHas((new SaleContract())->getTable(), [
             'contract_number' => $payload['contract_number'],
             'cu_id'           => $this->customer->getKey(),
         ]);
 
-        $created = SaleOrder::query()
+        $created = SaleContract::query()
             ->where('contract_number', $payload['contract_number'])
             ->with('Payments')
             ->firstOrFail()
@@ -140,9 +140,9 @@ class SaleOrderControllerTest extends TestCase
 
     public function testUpdateReplacesPaymentsAndPersistsComputedFields(): void
     {
-        $order = SaleOrder::factory()
+        $order = SaleContract::factory()
             ->for($this->customer)
-            ->for($this->vehicle)->create(['order_status' => SoOrderStatus::PENDING])
+            ->for($this->vehicle)->create(['sc_status' => ScScStatus::PENDING])
         ;
 
         Payment::factory()
@@ -150,12 +150,12 @@ class SaleOrderControllerTest extends TestCase
             ->create()
         ;
 
-        $payload = SaleOrder::factory()
+        $payload = SaleContract::factory()
             ->for($this->customer)
             ->for($this->vehicle)->raw()
         ;
 
-        if (SoRentalType::LONG_TERM === $payload['rental_type']) {
+        if (ScRentalType::LONG_TERM === $payload['rental_type']) {
             $payment             = Payment::factory()->raw();
             $payload['payments'] = [$payment];
         } else {
@@ -163,7 +163,7 @@ class SaleOrderControllerTest extends TestCase
         }
 
         $response = $this->putJson(
-            action([SaleOrderController::class, 'update'], [$order->getKey()]),
+            action([SaleContractController::class, 'update'], [$order->getKey()]),
             $payload
         );
 
@@ -179,36 +179,36 @@ class SaleOrderControllerTest extends TestCase
 
     public function testDestroyRemovesOrder(): void
     {
-        $order = SaleOrder::factory()
+        $order = SaleContract::factory()
             ->for($this->customer)
             ->for($this->vehicle)
             ->create()
         ;
 
         $response = $this->deleteJson(
-            action([SaleOrderController::class, 'destroy'], [$order->getKey()])
+            action([SaleContractController::class, 'destroy'], [$order->getKey()])
         );
 
         $response->assertOk();
 
-        $this->assertDatabaseMissing((new SaleOrder())->getTable(), ['so_id' => $order->getKey()]);
+        $this->assertDatabaseMissing((new SaleContract())->getTable(), ['sc_id' => $order->getKey()]);
     }
 
     public function testPaymentsOptionGeneratesSchedule(): void
     {
         $params = [
-            'rental_type'           => SoRentalType::LONG_TERM,
-            'payment_day_type'      => SoPaymentDayType::MONTHLY_PREPAID,
+            'rental_type'           => ScRentalType::LONG_TERM,
+            'payment_day_type'      => ScPaymentDayType::MONTHLY_PREPAID,
             'deposit_amount'        => '300.00',
             'management_fee_amount' => '50.00',
             'rental_start'          => '2024-01-01',
             'installments'          => 2,
             'rent_amount'           => '800.00',
-            'payment_day'           => SoPaymentDay_Month::DAY_5,
+            'payment_day'           => ScPaymentDay_Month::DAY_5,
         ];
 
         $response = $this->getJson(
-            action([SaleOrderController::class, 'paymentsOption'], $params)
+            action([SaleContractController::class, 'paymentsOption'], $params)
         );
 
         $response->assertOk();

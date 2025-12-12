@@ -6,11 +6,11 @@ use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Payment\PaPaStatus;
 use App\Enum\Payment\RpPayStatus;
-use App\Enum\Sale\SoOrderStatus;
+use App\Enum\Sale\ScScStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +20,7 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('收租金')]
-class SaleOrderRentPaymentController extends Controller
+class SaleContractRentPaymentController extends Controller
 {
     public static function labelOptions(Controller $controller): void
     {
@@ -31,39 +31,39 @@ class SaleOrderRentPaymentController extends Controller
     public function index() {}
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function create(string $so_id): Response
+    public function create(string $sc_id): Response
     {
-        abort_if(!is_numeric($so_id), 404);
+        abort_if(!is_numeric($sc_id), 404);
 
         $this->response()->withExtras(
             PaymentAccount::options(),
             RpPayStatus::options(),
-            SaleOrder::options(
+            SaleContract::options(
                 where: function (Builder $builder) {
-                    $builder->whereIn('so.order_status', [SoOrderStatus::SIGNED]);
+                    $builder->whereIn('sc.sc_status', [ScScStatus::SIGNED]);
                 }
             ),
         );
 
-        if ($so_id > 0) {
-            $saleOrder = SaleOrder::query()
-                ->where('order_status', '=', SoOrderStatus::SIGNED)
-                ->findOrFail($so_id)
+        if ($sc_id > 0) {
+            $saleContract = SaleContract::query()
+                ->where('sc_status', '=', ScScStatus::SIGNED)
+                ->findOrFail($sc_id)
             ;
-            $saleOrder->load('Customer', 'Vehicle', 'UnpaidRentPayments');
+            $saleContract->load('Customer', 'Vehicle', 'UnpaidRentPayments');
 
-            $this->response()->withExtras(Payment::option($saleOrder->UnpaidRentPayments));
+            $this->response()->withExtras(Payment::option($saleContract->UnpaidRentPayments));
         } else {
-            $saleOrder = [];
+            $saleContract = [];
         }
 
-        return $this->response()->withData($saleOrder)->respond();
+        return $this->response()->withData($saleContract)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function store(Request $request, SaleOrder $saleOrder): Response
+    public function store(Request $request, SaleContract $saleContract): Response
     {
-        $selectedData = $request->input('unpaid_rent_rental_payments')[$request->input('selectedIndex')] ?? null;
+        $selectedData = $request->input('unpaid_rent_payments')[$request->input('selectedIndex')] ?? null;
 
         abort_if(!$selectedData, 404);
 
@@ -80,9 +80,9 @@ class SaleOrderRentPaymentController extends Controller
             [],
             trans_property(Payment::class)
         )
-            ->after(function (\Illuminate\Validation\Validator $validator) use ($saleOrder, &$vehicle, &$customer) {
+            ->after(function (\Illuminate\Validation\Validator $validator) use ($saleContract, &$vehicle, &$customer) {
                 if (!$validator->failed()) {
-                    if (!$saleOrder->check_order_status([SoOrderStatus::SIGNED], $validator)) {
+                    if (!$saleContract->check_sc_status([ScScStatus::SIGNED], $validator)) {
                         return;
                     }
                 }
@@ -106,7 +106,7 @@ class SaleOrderRentPaymentController extends Controller
 
     public function edit(Payment $payment) {}
 
-    public function update(Request $request, SaleOrder $saleOrder) {}
+    public function update(Request $request, SaleContract $saleContract) {}
 
     public function destroy(Payment $payment) {}
 

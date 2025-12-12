@@ -12,16 +12,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
-#[ClassName('合同模板')]
+#[ClassName('生成合同文件模板')]
 /**
- * @property int                 $dt_id        合同模板序号
- * @property DtDtType|string     $dt_type      合同模板类型
- * @property DtDtFileType|string $dt_file_type 合同模板格式类型
- * @property string              $dt_name      合同模板名称
- * @property DtDtStatus|int      $dt_status    合同模板状态
- * @property array               $dt_file      合同模板文件
- * @property string              $dt_html      合同模板HTML
- * @property null|string         $dt_remark    合同模板备注
+ * @property int                 $dt_id        文件模板序号
+ * @property DtDtType|string     $dt_type      文件模板类型
+ * @property DtDtFileType|string $dt_file_type 文件模板格式类型
+ * @property string              $dt_name      文件模板名称
+ * @property DtDtStatus|int      $dt_status    文件模板状态
+ * @property array               $dt_file      文件模板文件
+ * @property string              $dt_html      文件模板HTML
+ * @property null|string         $dt_remark    文件模板备注
  */
 class DocTpl extends Model
 {

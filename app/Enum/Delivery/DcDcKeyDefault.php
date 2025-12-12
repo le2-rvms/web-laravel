@@ -13,7 +13,7 @@ class DcDcKeyDefault
             'dc_title'    => '租金支付提醒', 'dc_tn' => 6, 'dc_provider' => DcDcProvider::WECOM_BOT,
             'dc_template' => <<<'TXT'
 租金支付提醒
-车牌号：{{ $sale_order['vehicle']['plate_no'] ?? null }}
+车牌号：{{ $saleContract['vehicle']['plate_no'] ?? null }}
 本月应支付租金：{{ $should_pay_amount }}
 付款时间：{{ $should_pay_date }}
 TXT,

@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Customer\Sale;
 
 use App\Http\Controllers\Controller;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class SaleOrderController extends Controller
+class SaleContractController extends Controller
 {
     public static function labelOptions(Controller $controller): void
     {
@@ -18,11 +18,11 @@ class SaleOrderController extends Controller
 
     public function index(Request $request): Response
     {
-        $data = SaleOrder::customerQuery($this)
+        $data = SaleContract::customerQuery($this)
             ->when(
                 $request->get('last_id'),
                 function (Builder $query) use ($request) {
-                    $query->where('so.so_id', '<', $request->get('last_id'));
+                    $query->where('sc.sc_id', '<', $request->get('last_id'));
                 }
             )
             ->get()

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Customer\Payment;
 
 use App\Enum\Payment\RpIsValid;
 use App\Enum\Payment\RpPayStatus;
-use App\Enum\Sale\SoOrderStatus;
+use App\Enum\Sale\ScScStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentType;
@@ -30,7 +30,7 @@ class PaymentController extends Controller
 
         $data = Payment::customerQuery($this)
             ->where('rp.is_valid', '=', RpIsValid::VALID)
-            ->whereIn('so.order_status', [SoOrderStatus::SIGNED, SoOrderStatus::COMPLETED, SoOrderStatus::EARLY_TERMINATION])
+            ->whereIn('sc.sc_status', [ScScStatus::SIGNED, ScScStatus::COMPLETED, ScScStatus::EARLY_TERMINATION])
             ->when(
                 $request->get('last_id'),
                 function (Builder $query) use ($request) {

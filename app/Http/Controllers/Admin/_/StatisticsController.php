@@ -91,83 +91,91 @@ class StatisticsController extends Controller
         /** @var Admin $admin */
         $admin = auth()->user();
 
-        $sql_permission_array = [
-            'sale_orders'         => 'SaleOrder::read',
-            'sale_settlements'    => 'SaleSettlement::read',
-            'payments'            => 'Payment::read',
-            'actual_payments'     => 'Payment::read',
-            'vehicle_inspections' => 'VehicleInspection::read',
-            'vehicle_repairs'     => 'VehicleRepair::read',
-        ];
-
         $sql_array = [
-            'sale_orders'         => "SELECT to_char(signed_at, 'YYYY-MM') as period,count(1) as count,sum(total_rent_amount) as amount from sale_orders where 1=1 GROUP BY 1 order by 1",
-            'sale_settlements'    => "SELECT to_char(return_datetime, 'YYYY-MM') as period,count(1) as count from sale_settlements where 1=1 GROUP BY 1 order by 1",
-            'payments'            => "SELECT to_char(should_pay_date,'YYYY-MM') AS period,COUNT(1) AS count,SUM(CASE WHEN rp.should_pay_amount> 0 THEN rp.should_pay_amount ELSE 0 END) AS sum_amount,SUM(CASE WHEN rp.should_pay_amount< 0 THEN abs(rp.should_pay_amount) ELSE 0 END) AS sum_amount_refund,2=2 FROM payments rp WHERE rp.is_valid='1' and 1=1 GROUP BY 1 order by 1",
-            'actual_payments'     => "SELECT to_char(actual_pay_date,'YYYY-MM') AS period,COUNT(1) AS count,SUM(CASE WHEN rp.actual_pay_amount> 0 THEN rp.actual_pay_amount ELSE 0 END) AS sum_amount,SUM(CASE WHEN rp.actual_pay_amount< 0 THEN abs(rp.actual_pay_amount) ELSE 0 END) AS sum_amount_refund FROM payments rp WHERE rp.is_valid='1' and 1=1 GROUP BY 1 order by 1",
-            'vehicle_inspections' => "SELECT to_char(inspection_datetime, 'YYYY-MM') as period,count(1) as count from vehicle_inspections where 1=1 GROUP BY 1 order by 1",
-            'vehicle_repairs'     => "SELECT to_char(entry_datetime, 'YYYY-MM') as period,count(1) as count,sum(repair_cost) as amount from vehicle_repairs where 1=1 GROUP BY 1 order by 1",
+            [
+                'SaleContract::read',
+                "SELECT to_char(signed_at, 'YYYY-MM') as period,count(1) as count,sum(total_rent_amount) as amount from sale_contracts where 1=1 GROUP BY 1 order by 1",
+                function ($sql_value, &$result) {
+                    $result[] = [
+                        'categories' => array_column($sql_value, 'period'),
+                        'series'     => [['name' => '租车数量', 'data' => array_column($sql_value, 'count')]],
+                    ];
+
+                    $result[] = [
+                        'categories' => array_column($sql_value, 'period'),
+                        'series'     => [['name' => '租车金额', 'data' => array_column($sql_value, 'amount')]],
+                    ];
+                },
+            ],
+
+            [
+                'SaleSettlement::read',
+                "SELECT to_char(return_datetime, 'YYYY-MM') as period,count(1) as count from sale_settlements where 1=1 GROUP BY 1 order by 1",
+                function ($sql_value, &$result) {
+                    $result[] = [
+                        'categories' => array_column($sql_value, 'period'),
+                        'series'     => [['name' => '结算次数', 'data' => array_column($sql_value, 'count')]],
+                    ];
+                },
+            ],
+            [
+                'Payment::read',
+                "SELECT to_char(should_pay_date,'YYYY-MM') AS period,COUNT(1) AS count,SUM(CASE WHEN rp.should_pay_amount> 0 THEN rp.should_pay_amount ELSE 0 END) AS sum_amount,SUM(CASE WHEN rp.should_pay_amount< 0 THEN abs(rp.should_pay_amount) ELSE 0 END) AS sum_amount_refund,2=2 FROM payments rp WHERE rp.is_valid='1' and 1=1 GROUP BY 1 order by 1",
+                function ($sql_value, &$result) {
+                    $result[] = [
+                        'categories' => array_column($sql_value, 'period'),
+                        'series'     => [['name' => '计划收付款次数', 'data' => array_column($sql_value, 'count')]],
+                    ];
+                    $result[] = [
+                        'categories' => array_column($sql_value, 'period'),
+                        'series'     => [['name' => '计划收款金额', 'data' => array_column($sql_value, 'sum_amount')], ['name' => '付款金额', 'data' => array_column($sql_value, 'sum_amount_refund')]],
+                    ];
+                },
+            ],
+            [
+                'Payment::read',
+                "SELECT to_char(actual_pay_date,'YYYY-MM') AS period,COUNT(1) AS count,SUM(CASE WHEN rp.actual_pay_amount> 0 THEN rp.actual_pay_amount ELSE 0 END) AS sum_amount,SUM(CASE WHEN rp.actual_pay_amount< 0 THEN abs(rp.actual_pay_amount) ELSE 0 END) AS sum_amount_refund FROM payments rp WHERE rp.is_valid='1' and 1=1 GROUP BY 1 order by 1",
+                function ($sql_value, &$result) {
+                    $result[] = [
+                        'categories' => array_column($sql_value, 'period'),
+                        'series'     => [['name' => '实际收付款次数', 'data' => array_column($sql_value, 'count')]],
+                    ];
+                    $result[] = [
+                        'categories' => array_column($sql_value, 'period'),
+                        'series'     => [['name' => '实际收款金额', 'data' => array_column($sql_value, 'sum_amount')], ['name' => '付款金额', 'data' => array_column($sql_value, 'sum_amount_refund')]],
+                    ];
+                },
+            ],
+            [
+                'VehicleInspection::read',
+                "SELECT to_char(inspection_datetime, 'YYYY-MM') as period,count(1) as count from vehicle_inspections where 1=1 GROUP BY 1 order by 1",
+                function ($sql_value, &$result) {
+                    $result[] = [
+                        'categories' => array_column($sql_value, 'period'),
+                        'series'     => [['name' => '验车次数', 'data' => array_column($sql_value, 'count')]],
+                    ];
+                },
+            ],
+            [
+                'VehicleRepair::read',
+                "SELECT to_char(entry_datetime, 'YYYY-MM') as period,count(1) as count,sum(repair_cost) as amount from vehicle_repairs where 1=1 GROUP BY 1 order by 1",
+                function ($sql_value, &$result) {
+                    $result[] = [
+                        'categories' => array_column($sql_value, 'period'),
+                        'series'     => [['name' => '维修数量', 'data' => array_column($sql_value, 'count')]],
+                    ];
+
+                    $result[] = [
+                        'categories' => array_column($sql_value, 'period'),
+                        'series'     => [['name' => '维修金额', 'data' => array_column($sql_value, 'amount')]],
+                    ];
+                },
+            ],
         ];
 
-        $sql_opt = [
-            'sale_orders' => function ($sql_value, &$result) {
-                $result[] = [
-                    'categories' => array_column($sql_value, 'period'),
-                    'series'     => [['name' => '租车数量', 'data' => array_column($sql_value, 'count')]],
-                ];
-
-                $result[] = [
-                    'categories' => array_column($sql_value, 'period'),
-                    'series'     => [['name' => '租车金额', 'data' => array_column($sql_value, 'amount')]],
-                ];
-            },
-            'sale_settlements' => function ($sql_value, &$result) {
-                $result[] = [
-                    'categories' => array_column($sql_value, 'period'),
-                    'series'     => [['name' => '结算次数', 'data' => array_column($sql_value, 'count')]],
-                ];
-            },
-            'payments' => function ($sql_value, &$result) {
-                $result[] = [
-                    'categories' => array_column($sql_value, 'period'),
-                    'series'     => [['name' => '计划收付款次数', 'data' => array_column($sql_value, 'count')]],
-                ];
-                $result[] = [
-                    'categories' => array_column($sql_value, 'period'),
-                    'series'     => [['name' => '计划收款金额', 'data' => array_column($sql_value, 'sum_amount')], ['name' => '付款金额', 'data' => array_column($sql_value, 'sum_amount_refund')]],
-                ];
-            },
-            'actual_payments' => function ($sql_value, &$result) {
-                $result[] = [
-                    'categories' => array_column($sql_value, 'period'),
-                    'series'     => [['name' => '实际收付款次数', 'data' => array_column($sql_value, 'count')]],
-                ];
-                $result[] = [
-                    'categories' => array_column($sql_value, 'period'),
-                    'series'     => [['name' => '实际收款金额', 'data' => array_column($sql_value, 'sum_amount')], ['name' => '付款金额', 'data' => array_column($sql_value, 'sum_amount_refund')]],
-                ];
-            },
-            'vehicle_inspections' => function ($sql_value, &$result) {
-                $result[] = [
-                    'categories' => array_column($sql_value, 'period'),
-                    'series'     => [['name' => '验车次数', 'data' => array_column($sql_value, 'count')]],
-                ];
-            },
-            'vehicle_repairs' => function ($sql_value, &$result) {
-                $result[] = [
-                    'categories' => array_column($sql_value, 'period'),
-                    'series'     => [['name' => '维修数量', 'data' => array_column($sql_value, 'count')]],
-                ];
-
-                $result[] = [
-                    'categories' => array_column($sql_value, 'period'),
-                    'series'     => [['name' => '维修金额', 'data' => array_column($sql_value, 'amount')]],
-                ];
-            },
-        ];
         $result = [];
-        foreach ($sql_array as $key => $sql) {
-            if (!$admin->can($permission = $sql_permission_array[$key])) {
+        foreach ($sql_array as [$permission,$sql,$sql_opt]) {
+            if (!$admin->can($permission)) {
                 continue;
             }
 
@@ -184,7 +192,7 @@ class StatisticsController extends Controller
             $sql = preg_replace('/1=1/', "{$column} between DATE '{$startDate}' and DATE '{$endDate}' ", $sql);
 
             $sql_value = DB::select($sql);
-            $sql_opt[$key]($sql_value, $result);
+            $sql_opt($sql_value, $result);
         }
 
         return $this->response()->withData($result)->respond();

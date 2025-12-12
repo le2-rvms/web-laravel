@@ -5,7 +5,7 @@ namespace App\Models\_;
 use App\Enum\AuthUserType;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -90,7 +90,7 @@ trait ModelTrait
         );
 
         return static::indexQuery()
-            ->whereIn('ve.ve_id', SaleOrder::CustomerHasVeId())
+            ->whereIn('ve.ve_id', SaleContract::CustomerHasVeId())
             ->forPage($page, $perPage)
         ;
     }

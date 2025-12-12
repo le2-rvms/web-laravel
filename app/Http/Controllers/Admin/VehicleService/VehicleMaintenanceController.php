@@ -7,7 +7,7 @@ use App\Attributes\PermissionType;
 use App\Enum\Payment\RpIsValid;
 use App\Enum\Payment\RpPayStatus;
 use App\Enum\Payment\RpPtId;
-use App\Enum\Vehicle\ScScStatus;
+use App\Enum\Vehicle\VcVcStatus;
 use App\Enum\Vehicle\VeStatusService;
 use App\Enum\Vehicle\VmCustodyVehicle;
 use App\Enum\Vehicle\VmPickupStatus;
@@ -19,9 +19,9 @@ use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
-use App\Models\Sale\SaleOrder;
-use App\Models\Vehicle\ServiceCenter;
+use App\Models\Sale\SaleContract;
 use App\Models\Vehicle\Vehicle;
+use App\Models\Vehicle\VehicleCenter;
 use App\Models\Vehicle\VehicleMaintenance;
 use App\Services\PaginateService;
 use App\Services\Uploader;
@@ -57,11 +57,11 @@ class VehicleMaintenanceController extends Controller
         $this->options(true);
         $this->response()->withExtras(
             Vehicle::options(),
-            ServiceCenter::options(function (Builder $query) use ($admin) {
+            VehicleCenter::options(function (Builder $query) use ($admin) {
                 if ($admin->hasRole(AdminRole::role_vehicle_service)) {
-                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
+                    $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-                    $query->whereIn('vr.sc_id', $sc_id_array);
+                    $query->whereIn('vr.vc_id', $vc_id_array);
                 }
             }),
         );
@@ -70,15 +70,15 @@ class VehicleMaintenanceController extends Controller
         $columns = VehicleMaintenance::indexColumns();
 
         if ($admin->hasRole(AdminRole::role_vehicle_service)) {
-            $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
+            $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-            $query->whereIn('vm.sc_id', $sc_id_array);
+            $query->whereIn('vm.vc_id', $vc_id_array);
         }
 
         $paginate = new PaginateService(
             [],
             [['vm.vm_id', 'desc']],
-            ['kw', 'vm_ve_id', 'vm_entry_datetime', 'vm_sc_id'],
+            ['kw', 'vm_ve_id', 'vm_entry_datetime', 'vm_vc_id'],
             []
         );
 
@@ -108,11 +108,11 @@ class VehicleMaintenanceController extends Controller
         $this->options();
         $this->response()->withExtras(
             Vehicle::options(),
-            ServiceCenter::options(function (Builder $query) use ($admin) {
+            VehicleCenter::options(function (Builder $query) use ($admin) {
                 if ($admin->hasRole(AdminRole::role_vehicle_service)) {
-                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
+                    $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-                    $query->whereIn('vr.sc_id', $sc_id_array);
+                    $query->whereIn('vr.vc_id', $vc_id_array);
                 }
             }),
             RpPayStatus::options(),
@@ -120,7 +120,7 @@ class VehicleMaintenanceController extends Controller
         );
 
         $vehicleMaintenance = new VehicleMaintenance([
-            //            'entry_datetime'        => now()->format('Y-m-d'),
+            'entry_datetime' => now()->format('Y-m-d H:i'),
             //            'departure_datetime'    => now()->format('Y-m-d'),
             'next_maintenance_date' => now()->addYear(),
             'maintenance_mileage'   => 10000,
@@ -156,11 +156,11 @@ class VehicleMaintenanceController extends Controller
         $this->options();
         $this->response()->withExtras(
             Vehicle::options(),
-            ServiceCenter::options(function (Builder $query) use ($admin) {
+            VehicleCenter::options(function (Builder $query) use ($admin) {
                 if ($admin->hasRole(AdminRole::role_vehicle_service)) {
-                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
+                    $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-                    $query->whereIn('vr.sc_id', $sc_id_array);
+                    $query->whereIn('vr.vc_id', $vc_id_array);
                 }
             }),
             RpPayStatus::options(),
@@ -169,15 +169,15 @@ class VehicleMaintenanceController extends Controller
 
         if ($vehicleMaintenance->ve_id) {
             $this->response()->withExtras(
-                SaleOrder::options(
+                SaleContract::options(
                     where: function (Builder $builder) use ($vehicleMaintenance) {
-                        $builder->where('so.ve_id', '=', $vehicleMaintenance->ve_id);
+                        $builder->where('sc.ve_id', '=', $vehicleMaintenance->ve_id);
                     }
                 ),
             );
         }
 
-        $vehicleMaintenance->load('Vehicle', 'SaleOrder', 'SaleOrder.Customer', 'Payment', 'Payment.PaymentType', 'Payment.PaymentAccount');
+        $vehicleMaintenance->load('Vehicle', 'SaleContract', 'SaleContract.Customer', 'Payment', 'Payment.PaymentType', 'Payment.PaymentAccount');
 
         return $this->response()->withData($vehicleMaintenance)->respond();
     }
@@ -189,12 +189,12 @@ class VehicleMaintenanceController extends Controller
             $request->all(),
             [
                 've_id'               => ['bail', 'required', 'integer'],
-                'so_id'               => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'integer'],
+                'sc_id'               => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'integer'],
                 'entry_datetime'      => ['bail', 'required', 'date'],
                 'entry_mileage'       => ['bail', 'nullable', 'integer', 'min:0'],
                 'maintenance_mileage' => ['bail', 'nullable', 'integer', 'min:0'],
                 'maintenance_amount'  => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'sc_id'               => ['bail', 'required', 'integer', 'min:1', Rule::exists(ServiceCenter::class)->where('status', ScScStatus::ENABLED)],
+                'vc_id'               => ['bail', 'required', 'integer', 'min:1', Rule::exists(VehicleCenter::class)->where('vc_status', VcVcStatus::ENABLED)],
                 'departure_datetime'  => ['bail', 'nullable', 'date'],
                 'settlement_status'   => ['bail', 'required', 'string', Rule::in(VmSettlementStatus::label_keys())],
                 'pickup_status'       => ['bail', 'required', 'string', Rule::in(VmPickupStatus::label_keys())],
@@ -208,7 +208,7 @@ class VehicleMaintenanceController extends Controller
                 'maintenance_info.*.part_cost'     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
                 'maintenance_info.*.part_quantity' => ['bail', 'nullable', 'integer', 'min:1'],
 
-                'add_should_pay'            => ['bail', 'sometimes', 'boolean'],
+                'add_should_pay'            => ['bail', 'nullable', 'boolean'],
                 'payment.pt_id'             => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), Rule::in(RpPtId::MAINTENANCE_FEE)],
                 'payment.should_pay_date'   => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'date'],
                 'payment.should_pay_amount' => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'numeric'],
@@ -237,13 +237,13 @@ class VehicleMaintenanceController extends Controller
                         return;
                     }
 
-                    $so_id = $request->input('so_id');
+                    $sc_id = $request->input('sc_id');
 
-                    if ($so_id) {
-                        /** @var SaleOrder $saleOrder */
-                        $SaleOrder = SaleOrder::query()->find($so_id);
-                        if (!$SaleOrder) {
-                            $validator->errors()->add('so_id', 'The sale_order does not exist.');
+                    if ($sc_id) {
+                        /** @var SaleContract $saleContract */
+                        $saleContract = SaleContract::query()->find($sc_id);
+                        if (!$saleContract) {
+                            $validator->errors()->add('sc_id', 'The sale_contract does not exist.');
 
                             return;
                         }
@@ -269,7 +269,7 @@ class VehicleMaintenanceController extends Controller
         $input         = $validator->validated();
         $input_payment = $input['payment'];
 
-        $input_payment['so_id'] = $input['so_id'];
+        $input_payment['sc_id'] = $input['sc_id'];
 
         DB::transaction(function () use (&$input, &$input_payment, &$vehicle, &$vehicleMaintenance) {
             if (null === $vehicleMaintenance) {
@@ -331,7 +331,7 @@ class VehicleMaintenanceController extends Controller
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function saleOrdersOption(Request $request): Response
+    public function saleContractsOption(Request $request): Response
     {
         $validator = Validator::make(
             $request->all(),
@@ -347,9 +347,9 @@ class VehicleMaintenanceController extends Controller
         $input = $validator->validated();
 
         $this->response()->withExtras(
-            SaleOrder::options(
+            SaleContract::options(
                 where: function (Builder $builder) use ($input) {
-                    $builder->where('so.ve_id', '=', $input['ve_id']);
+                    $builder->where('sc.ve_id', '=', $input['ve_id']);
                 }
             )
         );

@@ -5,7 +5,7 @@ use App\Http\Controllers\Customer\Payment\PaymentController;
 use App\Http\Controllers\Customer\Risk\ExpiryDriverController;
 use App\Http\Controllers\Customer\Risk\ExpiryVehicleController;
 use App\Http\Controllers\Customer\Risk\VehicleScheduleController;
-use App\Http\Controllers\Customer\Sale\SaleOrderController;
+use App\Http\Controllers\Customer\Sale\SaleContractController;
 use App\Http\Controllers\Customer\Vehicle\VehicleAccidentController;
 use App\Http\Controllers\Customer\Vehicle\VehicleMaintenanceController;
 use App\Http\Controllers\Customer\Vehicle\VehicleManualViolationController;
@@ -27,7 +27,7 @@ Route::prefix('no-auth')->group(callback: function () {
 Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryCustomer::class : 'auth:sanctum']], function () {
     Route::get('user', [AuthController::class, 'getUserInfo']);
 
-    Route::resource('sale-orders', SaleOrderController::class)->only(['index']);
+    Route::resource('sale-contracts', SaleContractController::class)->only(['index']);
     Route::resource('payments', PaymentController::class)->only(['index']);
     Route::resource('vehicle-accidents', VehicleAccidentController::class)->only(['index']);
     Route::resource('vehicle-replacement', VehicleReplacementController::class)->only(['index']);

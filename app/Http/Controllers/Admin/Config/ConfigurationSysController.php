@@ -6,6 +6,7 @@ use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Config\CfgUsageCategory;
 use App\Models\_\Configuration;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -56,7 +57,7 @@ class ConfigurationSysController extends ConfigurationController
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function createConfirm(Request $request): Response
+    public function createConfirm(Request $request): View
     {
         return parent::createConfirm($request);
     }

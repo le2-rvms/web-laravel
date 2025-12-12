@@ -5,7 +5,7 @@ namespace Tests\Http\Controllers\Admin;
 use App\Enum\Config\ImportConfig;
 use App\Http\Controllers\Admin\Config\ImportController;
 use App\Models\Customer\Customer;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use App\Models\Vehicle\Vehicle;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -32,11 +32,11 @@ class ImportControllerTest extends TestCase
             });
         }
         Vehicle::query()->whereIn('plate_no', ['川N7JF90'])->delete();
-        $SaleOrder = SaleOrder::query()->whereLike('contract_number', 'TMP%')->first();
-        if ($SaleOrder) {
-            DB::transaction(function () use ($SaleOrder) {
-                $SaleOrder->Payments()->delete();
-                $SaleOrder->delete();
+        $saleContract = SaleContract::query()->whereLike('contract_number', 'TMP%')->first();
+        if ($saleContract) {
+            DB::transaction(function () use ($saleContract) {
+                $saleContract->Payments()->delete();
+                $saleContract->delete();
             });
         }
     }

@@ -16,7 +16,7 @@ use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentType;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,7 +32,7 @@ use Illuminate\Validation\ValidationException;
 #[ColumnDesc('vm_id')]
 #[ColumnDesc('ve_id')]
 #[ColumnDesc('plate_no', required: true)]
-#[ColumnDesc('so_id')]
+#[ColumnDesc('sc_id')]
 #[ColumnDesc('entry_datetime', required: true, type: ColumnType::DATETIME)]
 #[ColumnDesc('maintenance_amount', required: true)]
 #[ColumnDesc('entry_mileage')]
@@ -49,8 +49,8 @@ use Illuminate\Validation\ValidationException;
 /**
  * @property int           $vm_id                   保养序号
  * @property int           $ve_id                   车辆序号
- * @property null|int      $so_id                   租车合同序号
- * @property int           $sc_id                   修理厂序号
+ * @property null|int      $sc_id                   租车合同序号
+ * @property int           $vc_id                   修理厂序号
  * @property Carbon        $entry_datetime          进厂日时
  * @property float         $maintenance_amount      保养金额;元
  * @property int           $entry_mileage           进厂公里数
@@ -69,11 +69,11 @@ use Illuminate\Validation\ValidationException;
  * @property null|string   $settlement_method_label 结算方式
  * @property null|string   $custody_vehicle_label   代管车辆
  * @property Vehicle       $Vehicle
- * @property SaleOrder     $SaleOrder
+ * @property SaleContract  $SaleContract
  * @property Payment       $Payment
  * @property Payment       $PaymentAll
  * @property null|int      $add_should_pay
- * @property ServiceCenter $ServiceCenter
+ * @property VehicleCenter $VehicleCenter
  */
 class VehicleMaintenance extends Model
 {
@@ -110,9 +110,9 @@ class VehicleMaintenance extends Model
         return $this->belongsTo(Vehicle::class, 've_id', 've_id');
     }
 
-    public function SaleOrder(): BelongsTo
+    public function SaleContract(): BelongsTo
     {
-        return $this->belongsTo(SaleOrder::class, 'so_id', 'so_id');
+        return $this->belongsTo(SaleContract::class, 'sc_id', 'sc_id');
     }
 
     public function Payment(): HasOne
@@ -141,32 +141,32 @@ class VehicleMaintenance extends Model
         ;
     }
 
-    public function ServiceCenter(): BelongsTo
+    public function VehicleCenter(): BelongsTo
     {
-        return $this->belongsTo(ServiceCenter::class, 'sc_id', 'sc_id');
+        return $this->belongsTo(VehicleCenter::class, 'vc_id', 'vc_id');
     }
 
     public static function indexQuery(array $search = []): Builder
     {
         $ve_id = $search['ve_id'] ?? null;
         $cu_id = $search['cu_id'] ?? null;
-        $sc_id = $search['sc_id'] ?? null;
+        $vc_id = $search['vc_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_maintenances', 'vm')
-            ->leftJoin('service_centers as sc', 'sc.sc_id', '=', 'vm.sc_id')
+            ->leftJoin('vehicle_centers as vc', 'vc.vc_id', '=', 'vm.vc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vm.ve_id')
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.vm_id')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'vm.so_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vm.sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
             ->when($ve_id, function (Builder $query) use ($ve_id) {
                 $query->where('vm.ve_id', '=', $ve_id);
             })
             ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('so.cu_id', '=', $cu_id);
+                $query->where('sc.cu_id', '=', $cu_id);
             })
-            ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $query->where('vm.sc_id', '=', $sc_id);
+            ->when($vc_id, function (Builder $query) use ($vc_id) {
+                $query->where('vm.vc_id', '=', $vc_id);
             })
             ->when(
                 null === $ve_id && null === $cu_id,
@@ -177,7 +177,7 @@ class VehicleMaintenance extends Model
                     $query->orderBy('vm.vm_id');
                 }
             )
-            ->select('vm.*', 'sc.sc_name', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', '_vm.brand_name', '_vm.model_name')
+            ->select('vm.*', 'vc.vc_name', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', '_vm.brand_name', '_vm.model_name')
             ->addSelect(
                 DB::raw(VmCustodyVehicle::toCaseSQL()),
                 DB::raw(VmPickupStatus::toCaseSQL()),
@@ -195,7 +195,7 @@ class VehicleMaintenance extends Model
         return [
             'Vehicle.plate_no'                       => fn ($item) => $item->plate_no,
             'Customer.contact_name'                  => fn ($item) => $item->contact_name,
-            'ServiceCenter.sc_name'                  => fn ($item) => $item->sc_name,
+            'VehicleCenter.vc_name'                  => fn ($item) => $item->vc_name,
             'VehicleMaintenance.entry_datetime'      => fn ($item) => $item->entry_datetime_,
             'VehicleMaintenance.maintenance_amount'  => fn ($item) => $item->maintenance_amount,
             'VehicleMaintenance.entry_mileage'       => fn ($item) => $item->entry_mileage,
@@ -214,7 +214,7 @@ class VehicleMaintenance extends Model
     {
         return [
             'plate_no'              => [VehicleMaintenance::class, 'plate_no'],
-            'sc_name'               => [ServiceCenter::class, 'sc_name'],
+            'vc_name'               => [VehicleCenter::class, 'vc_name'],
             'entry_datetime'        => [VehicleMaintenance::class, 'entry_datetime'],
             'maintenance_amount'    => [VehicleMaintenance::class, 'maintenance_amount'],
             'entry_mileage'         => [VehicleMaintenance::class, 'entry_mileage'],
@@ -233,7 +233,7 @@ class VehicleMaintenance extends Model
     {
         return function (&$item) {
             $item['ve_id']             = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['sc_id']             = ServiceCenter::nameKv($item['sc_name'] ?? null);
+            $item['vc_id']             = VehicleCenter::nameKv($item['vc_name'] ?? null);
             $item['settlement_status'] = VmSettlementStatus::searchValue($item['settlement_status'] ?? null);
             $item['pickup_status']     = VmPickupStatus::searchValue($item['pickup_status'] ?? null);
             $item['settlement_method'] = VmSettlementMethod::searchValue($item['settlement_method'] ?? null);
@@ -245,12 +245,12 @@ class VehicleMaintenance extends Model
     {
         $rules = [
             've_id'               => ['required', 'integer'],
-            'so_id'               => ['nullable', 'integer'],
+            'sc_id'               => ['nullable', 'integer'],
             'entry_datetime'      => ['required', 'date'],
             'entry_mileage'       => ['nullable', 'integer', 'min:0'],
             'maintenance_mileage' => ['nullable', 'integer', 'min:0'],
             'maintenance_amount'  => ['nullable', 'decimal:0,2', 'gte:0'],
-            'sc_id'               => ['required', 'integer'],
+            'vc_id'               => ['required', 'integer'],
             'departure_datetime'  => ['nullable', 'date'],
             'settlement_status'   => ['required', 'string', Rule::in(VmSettlementStatus::label_keys())],
             'pickup_status'       => ['required', 'string', Rule::in(VmPickupStatus::label_keys())],

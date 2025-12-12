@@ -31,9 +31,9 @@ class ViolationCountController extends Controller
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.ve_id')
             ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vu_id')
             ->leftJoin('vehicle_inspections as vi', 'vi.vi_id', '=', 'vu.start_vi_id')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'vi.so_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
-            ->select('vv.violation_datetime', 'so.so_id', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', 'vv.ve_id', 'vv.fine_amount', 'vv.penalty_points')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
+            ->select('vv.violation_datetime', 'sc.sc_id', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', 'vv.ve_id', 'vv.fine_amount', 'vv.penalty_points')
             ->where('process_status', '=', VvProcessStatus::UNPROCESSED)
             ->where('payment_status', '=', VvPaymentStatus::UNPAID)
             ->whereNotNull('vv.vu_id')
@@ -44,9 +44,9 @@ class ViolationCountController extends Controller
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.ve_id')
             ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vu_id')
             ->leftJoin('vehicle_inspections as vi', 'vi.vi_id', '=', 'vu.start_vi_id')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'vi.so_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
-            ->select('vv.violation_datetime', 'so.so_id', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', 'vv.ve_id', 'vv.fine_amount', 'vv.penalty_points')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
+            ->select('vv.violation_datetime', 'sc.sc_id', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', 'vv.ve_id', 'vv.fine_amount', 'vv.penalty_points')
             ->where('status', '=', VmvStatus::UNPROCESSED)
             ->whereNotNull('vv.vu_id')
         ;
@@ -58,12 +58,12 @@ class ViolationCountController extends Controller
         $query = DB::query()
             ->fromSub($combinedViolations, 'combined_violations')
             ->select(
-                'so_id',
+                'sc_id',
                 DB::raw('COUNT(*) as count'),
                 DB::raw('SUM(fine_amount) as sum_fine_amount'),
                 DB::raw('SUM(penalty_points) as sum_penalty_points')
             )
-            ->groupBy('so_id')
+            ->groupBy('sc_id')
             ->havingRaw('SUM(fine_amount) > 0 OR SUM(penalty_points) > 0 OR COUNT(*) > 0')
             ->orderBy('count', 'desc')
         ;

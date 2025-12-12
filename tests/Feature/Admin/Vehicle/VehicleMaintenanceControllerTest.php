@@ -29,9 +29,9 @@ class VehicleMaintenanceControllerTest extends BaseVehicleControllerTestCase
         $this->assertSame(200, $response->getStatusCode());
     }
 
-    public function testSaleOrdersOptionRequiresVeId(): void
+    public function testSaleContractsOptionRequiresVeId(): void
     {
-        $resp = $this->getJson(action([VehicleMaintenanceController::class, 'saleOrdersOption']));
+        $resp = $this->getJson(action([VehicleMaintenanceController::class, 'saleContractsOption']));
         $resp->assertStatus(422);
     }
 

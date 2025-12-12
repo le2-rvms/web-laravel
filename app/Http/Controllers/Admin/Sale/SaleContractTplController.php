@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Sale\SoPaymentDay_Month;
-use App\Enum\Sale\SoPaymentDay_Week;
-use App\Enum\Sale\SoPaymentDayType;
-use App\Enum\Sale\SoRentalType;
-use App\Enum\Sale\SoRentalType_Short;
-use App\Enum\Sale\SotSotStatus;
+use App\Enum\Sale\ScPaymentDay_Month;
+use App\Enum\Sale\ScPaymentDay_Week;
+use App\Enum\Sale\ScPaymentDayType;
+use App\Enum\Sale\ScRentalType;
+use App\Enum\Sale\ScRentalType_Short;
+use App\Enum\Sale\SctSctStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Sale\SaleOrderTpl;
+use App\Models\Sale\SaleContractTpl;
 use App\Rules\PaymentDayCheck;
 use App\Services\PaginateService;
 use App\Services\Uploader;
@@ -24,7 +24,7 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('签约模板')]
-class SaleOrderTplController extends Controller
+class SaleContractTplController extends Controller
 {
     public static function labelOptions(Controller $controller): void
     {
@@ -39,11 +39,11 @@ class SaleOrderTplController extends Controller
         $this->response()->withExtras(
         );
 
-        $query = SaleOrderTpl::indexQuery();
+        $query = SaleContractTpl::indexQuery();
 
         $paginate = new PaginateService(
             [],
-            [['sot.sot_id', 'desc']],
+            [['sct.sct_id', 'desc']],
             ['kw'],
             []
         );
@@ -52,8 +52,8 @@ class SaleOrderTplController extends Controller
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
                     $builder
-                        ->where('sot.sot_name', 'like', '%'.$value.'%')
-                        ->orWhere('sot.so_remark', 'like', '%'.$value.'%')
+                        ->where('sct.sct_name', 'like', '%'.$value.'%')
+                        ->orWhere('sct.sc_remark', 'like', '%'.$value.'%')
                     ;
                 });
             },
@@ -66,12 +66,12 @@ class SaleOrderTplController extends Controller
     public function create(Request $request): Response
     {
         $this->options();
-        $saleOrderTpl = new SaleOrderTpl([]);
+        $saleContractTpl = new SaleContractTpl([]);
 
         $this->response()->withExtras(
         );
 
-        return $this->response()->withData($saleOrderTpl)->respond();
+        return $this->response()->withData($saleContractTpl)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
@@ -81,43 +81,43 @@ class SaleOrderTplController extends Controller
     }
 
     #[PermissionAction(PermissionAction::READ)]
-    public function show(SaleOrderTpl $saleOrderTpl): Response
+    public function show(SaleContractTpl $saleContractTpl): Response
     {
         $this->options();
         $this->response()->withExtras(
         );
 
-        return $this->response()->withData($saleOrderTpl)->respond();
+        return $this->response()->withData($saleContractTpl)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function edit(SaleOrderTpl $saleOrderTpl): Response
+    public function edit(SaleContractTpl $saleContractTpl): Response
     {
         $this->options();
         $this->response()->withExtras(
         );
 
-        return $this->response()->withData($saleOrderTpl)->respond();
+        return $this->response()->withData($saleContractTpl)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function update(Request $request, ?SaleOrderTpl $saleOrderTpl): Response
+    public function update(Request $request, ?SaleContractTpl $saleContractTpl): Response
     {
         $input1 = $request->validate(
             [
-                'rental_type'      => ['bail', 'required', Rule::in(SoRentalType::label_keys())],
-                'payment_day_type' => ['bail', 'nullable', 'string', Rule::in(SoPaymentDayType::label_keys())],
+                'rental_type'      => ['bail', 'required', Rule::in(ScRentalType::label_keys())],
+                'payment_day_type' => ['bail', 'nullable', 'string', Rule::in(ScPaymentDayType::label_keys())],
             ],
             [],
-            trans_property(SaleOrderTpl::class)
+            trans_property(SaleContractTpl::class)
         );
 
-        $is_long_term = SoRentalType::LONG_TERM === $input1['rental_type'];
+        $is_long_term = ScRentalType::LONG_TERM === $input1['rental_type'];
 
         $validator = Validator::make(
             $request->all(),
             [
-                'sot_name'                        => ['bail', 'required', 'max:255'],
+                'sct_name'                        => ['bail', 'required', 'max:255'],
                 'contract_number_prefix'          => ['bail', 'nullable', 'string', 'max:50'],
                 'free_days'                       => ['bail', 'nullable', 'int:4'],
                 'installments'                    => ['bail', 'nullable', 'integer', 'min:1'],
@@ -132,12 +132,12 @@ class SaleOrderTplController extends Controller
                 'cus_2'                           => ['bail', 'nullable', 'max:255'],
                 'cus_3'                           => ['bail', 'nullable', 'max:255'],
                 'discount_plan'                   => ['bail', 'nullable', 'max:255'],
-                'so_remark'                       => ['bail', 'nullable', 'max:255'],
+                'sc_remark'                       => ['bail', 'nullable', 'max:255'],
             ]
             + Uploader::validator_rule_upload_array('additional_photos')
             + Uploader::validator_rule_upload_object('additional_file'),
             [],
-            trans_property(SaleOrderTpl::class)
+            trans_property(SaleContractTpl::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
                 if (!$validator->failed()) {
@@ -150,38 +150,38 @@ class SaleOrderTplController extends Controller
 
         $input = $input1 + $validator->validated();
 
-        DB::transaction(function () use (&$input, &$saleOrderTpl) {
-            if (null === $saleOrderTpl) {
-                /** @var SaleOrderTpl $saleOrderTpl */
-                $saleOrderTpl = SaleOrderTpl::query()->create($input);
+        DB::transaction(function () use (&$input, &$saleContractTpl) {
+            if (null === $saleContractTpl) {
+                /** @var SaleContractTpl $saleContractTpl */
+                $saleContractTpl = SaleContractTpl::query()->create($input);
             } else {
-                $saleOrderTpl->update($input);
+                $saleContractTpl->update($input);
             }
         });
 
-        $saleOrderTpl->refresh();
+        $saleContractTpl->refresh();
 
-        return $this->response()->withData($saleOrderTpl)->respond();
+        return $this->response()->withData($saleContractTpl)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function destroy(SaleOrderTpl $saleOrderTpl): Response
+    public function destroy(SaleContractTpl $saleContractTpl): Response
     {
-        $saleOrderTpl->delete();
+        $saleContractTpl->delete();
 
-        return $this->response()->withData($saleOrderTpl)->respond();
+        return $this->response()->withData($saleContractTpl)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function status(Request $request, SaleOrderTpl $saleOrderTpl): Response
+    public function status(Request $request, SaleContractTpl $saleContractTpl): Response
     {
         $validator = Validator::make(
             $request->all(),
             [
-                'sot_status' => ['bail', 'required', Rule::in(SotSotStatus::label_keys())],
+                'sct_status' => ['bail', 'required', Rule::in(SctSctStatus::label_keys())],
             ],
             [],
-            trans_property(SaleOrderTpl::class)
+            trans_property(SaleContractTpl::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
                 if (!$validator->failed()) {
@@ -194,11 +194,11 @@ class SaleOrderTplController extends Controller
 
         $input = $validator->validated();
 
-        $saleOrderTpl->update([
-            'sot_status' => $input['sot_status'],
+        $saleContractTpl->update([
+            'sct_status' => $input['sct_status'],
         ]);
 
-        return $this->response()->withData($saleOrderTpl)->respond();
+        return $this->response()->withData($saleContractTpl)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
@@ -206,7 +206,7 @@ class SaleOrderTplController extends Controller
     {
         return Uploader::upload(
             $request,
-            'sale_order_tpl',
+            'sale_contract_tpl',
             [
                 'additional_photos',
                 'additional_file',
@@ -218,11 +218,11 @@ class SaleOrderTplController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            SoRentalType::options(),
-            SoRentalType_Short::options(),
-            SoPaymentDayType::options(),
-            SoPaymentDay_Month::options(),
-            SoPaymentDay_Week::options(),
+            ScRentalType::options(),
+            ScRentalType_Short::options(),
+            ScPaymentDayType::options(),
+            ScPaymentDay_Month::options(),
+            ScPaymentDay_Week::options(),
         );
     }
 }

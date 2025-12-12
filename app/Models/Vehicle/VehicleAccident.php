@@ -14,7 +14,7 @@ use App\Enum\Vehicle\VaSettlementStatus;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use App\Models\Customer\Customer;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,7 +29,7 @@ use Illuminate\Validation\ValidationException;
 #[ColumnDesc('va_id')]
 #[ColumnDesc('ve_id')]
 #[ColumnDesc('plate_no', required: true)]
-#[ColumnDesc('so_id')]
+#[ColumnDesc('sc_id')]
 #[ColumnDesc('accident_location')]
 #[ColumnDesc('accident_dt', type: ColumnType::DATETIME, required: true)]
 #[ColumnDesc('responsible_party')]
@@ -52,8 +52,8 @@ use Illuminate\Validation\ValidationException;
 /**
  * @property int                            $va_id              出险序号
  * @property int                            $ve_id              车辆序号
- * @property null|int                       $so_id              租车合同序号
- * @property int                            $sc_id              修理厂序号
+ * @property null|int                       $sc_id              租车合同序号
+ * @property int                            $vc_id              修理厂序号
  * @property null|string                    $accident_location  事故地点
  * @property Carbon                         $accident_dt        出险日时
  * @property null|string                    $responsible_party  责任方
@@ -75,7 +75,7 @@ use Illuminate\Validation\ValidationException;
  * @property null|array                     $accident_info      车辆出险照片以及描述
  * @property Vehicle                        $Vehicle
  * @property Customer                       $Customer
- * @property ServiceCenter                  $ServiceCenter
+ * @property VehicleCenter                  $VehicleCenter
  */
 class VehicleAccident extends Model
 {
@@ -117,40 +117,40 @@ class VehicleAccident extends Model
         return $this->belongsTo(Vehicle::class, 've_id', 've_id');
     }
 
-    public function SaleOrder(): BelongsTo
+    public function SaleContract(): BelongsTo
     {
-        return $this->belongsTo(SaleOrder::class, 'so_id', 'so_id');
+        return $this->belongsTo(SaleContract::class, 'sc_id', 'sc_id');
     }
 
-    public function ServiceCenter(): BelongsTo
+    public function VehicleCenter(): BelongsTo
     {
-        return $this->belongsTo(ServiceCenter::class, 'sc_id', 'sc_id');
+        return $this->belongsTo(VehicleCenter::class, 'vc_id', 'vc_id');
     }
 
     public static function indexQuery(array $search = []): Builder
     {
         $ve_id = $search['ve_id'] ?? null;
-        $so_id = $search['so_id'] ?? null;
         $sc_id = $search['sc_id'] ?? null;
+        $vc_id = $search['vc_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_accidents', 'va')
-            ->leftJoin('service_centers as sc', 'sc.sc_id', '=', 'va.sc_id')
+            ->leftJoin('vehicle_centers as vc', 'vc.vc_id', '=', 'va.vc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'va.ve_id')
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.vm_id')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'va.so_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'va.sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
             ->when($ve_id, function (Builder $query) use ($ve_id) {
                 $query->where('va.ve_id', '=', $ve_id);
-            })
-            ->when($so_id, function (Builder $query) use ($so_id) {
-                $query->where('va.so_id', '=', $so_id);
             })
             ->when($sc_id, function (Builder $query) use ($sc_id) {
                 $query->where('va.sc_id', '=', $sc_id);
             })
+            ->when($vc_id, function (Builder $query) use ($vc_id) {
+                $query->where('va.vc_id', '=', $vc_id);
+            })
             ->when(
-                null === $ve_id && null === $so_id,
+                null === $ve_id && null === $sc_id,
                 function (Builder $query) {
                     $query->orderByDesc('va.va_id');
                 },
@@ -158,7 +158,7 @@ class VehicleAccident extends Model
                     $query->orderBy('va.va_id');
                 }
             )
-            ->select('va.*', 'sc.sc_name', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', '_vm.brand_name', '_vm.model_name')
+            ->select('va.*', 'vc.vc_name', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', '_vm.brand_name', '_vm.model_name')
             ->addSelect(
                 DB::raw(VaClaimStatus::toCaseSQL()),
                 DB::raw(VaRepairStatus::toCaseSQL()),
@@ -188,7 +188,7 @@ class VehicleAccident extends Model
             'VehicleAccident.insurance_company'  => fn ($item) => $item->insurance_company,
             'VehicleAccident.description'        => fn ($item) => $item->description,
             'VehicleAccident.factory_in_dt'      => fn ($item) => $item->factory_in_dt_,
-            'ServiceCenter.sc_name'              => fn ($item) => $item->sc_name,
+            'VehicleCenter.vc_name'              => fn ($item) => $item->vc_name,
             'VehicleAccident.repair_content'     => fn ($item) => $item->repair_content,
             'VehicleAccident.repair_status'      => fn ($item) => $item->repair_status_label,
             'VehicleAccident.factory_out_dt'     => fn ($item) => $item->factory_out_dt_,
@@ -214,7 +214,7 @@ class VehicleAccident extends Model
             'insurance_company'  => [VehicleAccident::class, 'insurance_company'],
             'va_description'     => [VehicleAccident::class, 'va_description'],
             'factory_in_dt'      => [VehicleAccident::class, 'factory_in_dt'],
-            'sc_name'            => [ServiceCenter::class, 'sc_name'],
+            'vc_name'            => [VehicleCenter::class, 'vc_name'],
             'repair_content'     => [VehicleAccident::class, 'repair_content'],
             'repair_status'      => [VehicleAccident::class, 'repair_status'],
             'factory_out_dt'     => [VehicleAccident::class, 'factory_out_dt'],
@@ -230,7 +230,7 @@ class VehicleAccident extends Model
     {
         return function (&$item) {
             $item['ve_id']             = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['sc_id']             = ServiceCenter::nameKv($item['sc_name'] ?? null);
+            $item['vc_id']             = VehicleCenter::nameKv($item['vc_name'] ?? null);
             $item['claim_status']      = VaClaimStatus::searchValue($item['claim_status'] ?? null);
             $item['repair_status']     = VaRepairStatus::searchValue($item['repair_status'] ?? null);
             $item['settlement_status'] = VaSettlementStatus::searchValue($item['settlement_status'] ?? null);
@@ -244,7 +244,7 @@ class VehicleAccident extends Model
     {
         $rules = [
             've_id'              => ['required', 'integer'],
-            'so_id'              => ['nullable', 'integer'],
+            'sc_id'              => ['nullable', 'integer'],
             'accident_location'  => ['nullable', 'string', 'max:255'],
             'accident_dt'        => ['required', 'date'],
             'responsible_party'  => ['nullable', 'string', 'max:255'],
@@ -254,7 +254,7 @@ class VehicleAccident extends Model
             'insurance_company'  => ['nullable', 'string', 'max:100'],
             'va_description'     => ['nullable', 'string'],
             'factory_in_dt'      => ['nullable', 'date'],
-            'sc_id'              => ['required', 'integer'],
+            'vc_id'              => ['required', 'integer'],
             'repair_content'     => ['nullable', 'string'],
             'repair_status'      => ['nullable', 'string', Rule::in(VaRepairStatus::label_keys())],
             'factory_out_dt'     => ['nullable', 'date'],

@@ -11,13 +11,13 @@ use App\Models\Payment\Payment;
 use App\Models\Sale\BookingOrder;
 use App\Models\Sale\BookingVehicle;
 use App\Models\Sale\DocTpl;
-use App\Models\Sale\SaleOrder;
-use App\Models\Sale\SaleOrderTpl;
+use App\Models\Sale\SaleContract;
+use App\Models\Sale\SaleContractTpl;
 use App\Models\Sale\SaleSettlement;
 use App\Models\Sale\VehicleReplacement;
-use App\Models\Vehicle\ServiceCenter;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleAccident;
+use App\Models\Vehicle\VehicleCenter;
 use App\Models\Vehicle\VehicleForceTake;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleInsurance;
@@ -49,13 +49,13 @@ return [
             (VehicleReplacement::class)     => 'vr_id',
             (VehicleSchedule::class)        => 'vs_id',
             (VehicleInsurance::class)       => 'vi_id',
-            (SaleOrder::class)              => 'so_id',
-            (SaleOrderTpl::class)           => 'sot_id',
+            (SaleContract::class)           => 'sc_id',
+            (SaleContractTpl::class)        => 'sct_id',
             (SaleSettlement::class)         => 'ss_id',
             (Payment::class)                => 'rp_id',
             (BookingVehicle::class)         => 'bv_id',
             (BookingOrder::class)           => 'bo_id',
-            (ServiceCenter::class)          => 'sc_id',
+            (VehicleCenter::class)          => 'vc_id',
         ],
 
         'schema' => 'table_log',

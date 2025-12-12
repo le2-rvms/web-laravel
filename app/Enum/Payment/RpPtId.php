@@ -3,7 +3,7 @@
 namespace App\Enum\Payment;
 
 use App\Enum\EnumLikeBase;
-use App\Enum\Sale\SoRentalType;
+use App\Enum\Sale\ScRentalType;
 
 class RpPtId extends EnumLikeBase
 {
@@ -187,11 +187,11 @@ class RpPtId extends EnumLikeBase
     public static function getFeeTypes($term): array
     {
         return match ($term) {
-            SoRentalType::LONG_TERM => [
+            ScRentalType::LONG_TERM => [
                 'deposit_amount'        => RpPtId::DEPOSIT,
                 'management_fee_amount' => RpPtId::MANAGEMENT_FEE,
             ],
-            SoRentalType::SHORT_TERM => [
+            ScRentalType::SHORT_TERM => [
                 'deposit_amount'                  => RpPtId::DEPOSIT,
                 'management_fee_amount'           => RpPtId::MANAGEMENT_FEE,
                 'total_rent_amount'               => RpPtId::SHORT_TERM_RENT,

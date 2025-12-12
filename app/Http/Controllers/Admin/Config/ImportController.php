@@ -44,7 +44,7 @@ class ImportController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'model' => ['required', 'string', Rule::in(ImportConfig::keys())],
+                'model_name' => ['required', 'string', Rule::in(ImportConfig::keys())],
             ]
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use (&$vehicle) {
@@ -60,7 +60,7 @@ class ImportController extends Controller
         $input = $validator->validated();
 
         $model_name     = $input['model_name'];
-        $model_basename = class_basename($input['model']);
+        $model_basename = class_basename($model_name);
 
         $ts       = now()->format('ymdHis');
         $filename = "template_{$model_basename}_{$ts}.xlsx";
@@ -268,7 +268,7 @@ class ImportController extends Controller
         // 1
         $column_lang       = [];
         $headers           = [];
-        $column_desc_array = [];
+        $column_devc_array = [];
 
         $lang_property = trans('property');
 
@@ -281,16 +281,16 @@ class ImportController extends Controller
 
             $headers[] = $lang;
 
-            if (isset($column_desc_array[$relation_model])) {
+            if (isset($column_devc_array[$relation_model])) {
                 continue;
             }
-            $column_desc_array[$relation_model] = static::parseColumnDesc($relation_model);
+            $column_devc_array[$relation_model] = static::parseColumnDesc($relation_model);
         }
 
         // result 2
         $fieldKeys = array_keys($fieldConfig);
 
-        return [$column_lang, $fieldKeys, $headers, $column_desc_array];
+        return [$column_lang, $fieldKeys, $headers, $column_devc_array];
     }
 
     private static function parseColumnDesc(string $model_name): ?array

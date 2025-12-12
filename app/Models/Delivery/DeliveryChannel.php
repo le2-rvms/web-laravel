@@ -9,11 +9,11 @@ use App\Enum\Delivery\DlSendStatus;
 use App\Enum\Payment\RpIsValid;
 use App\Enum\Payment\RpPayStatus;
 use App\Enum\Sale\DtDtStatus;
-use App\Enum\Sale\SoOrderStatus;
+use App\Enum\Sale\ScScStatus;
 use App\Enum\Vehicle\VvProcessStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Payment\Payment;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use App\Models\Vehicle\VehicleInsurance;
 use App\Models\Vehicle\VehicleSchedule;
 use App\Models\Vehicle\VehicleViolation;
@@ -103,17 +103,17 @@ class DeliveryChannel extends Model
             ->where('pay_status', '=', RpPayStatus::UNPAID)
             ->where('is_valid', '=', RpIsValid::VALID)
             ->whereBetween('should_pay_date', [$from, $to])
-            ->whereHas('SaleOrder', function (\Illuminate\Database\Eloquent\Builder $query) {
-                $query->where('order_status', '=', SoOrderStatus::SIGNED);
+            ->whereHas('SaleContract', function (\Illuminate\Database\Eloquent\Builder $query) {
+                $query->where('sc_status', '=', ScScStatus::SIGNED);
             })
             ->orderby('rp_id')
-            ->with('SaleOrder', 'SaleOrder.Vehicle', 'SaleOrder.SaleOrderExt')
+            ->with('SaleContract', 'SaleContract.Vehicle', 'SaleContract.SaleContractExt')
             ->chunk(100, function ($payments) {
                 /** @var Payment $payment */
                 foreach ($payments as $payment) {
-                    $soe_wecom_group_url = $payment->SaleOrder?->SaleOrderExt?->soe_wecom_group_url;
-                    if (!$soe_wecom_group_url) {
-                        Log::channel('console')->info("因未设置soe_wecom_group_url,跳过{$this->dc_key}类型通知。", [$payment->SaleOrder->so_full_label]);
+                    $sce_wecom_group_url = $payment->SaleContract?->SaleContractExt?->sce_wecom_group_url;
+                    if (!$sce_wecom_group_url) {
+                        Log::channel('console')->info("因未设置sce_wecom_group_url,跳过{$this->dc_key}类型通知。", [$payment->SaleContract->se_full_label]);
 
                         continue;
                     }
@@ -136,7 +136,7 @@ class DeliveryChannel extends Model
                         'dc_tn'          => $dc_tn,
                         'dl_key'         => $dl_key,
                         'rp_id'          => $payment->rp_id,
-                        'recipients_url' => $soe_wecom_group_url,
+                        'recipients_url' => $sce_wecom_group_url,
                         'content_title'  => $this->dc_title,
                         'content_body'   => Blade::render($this->dc_template, $payment),
                         'send_status'    => DlSendStatus::ST_PENDING,
@@ -153,24 +153,24 @@ class DeliveryChannel extends Model
         $from = Carbon::now()->addDays($this->dc_tn)->subDays(3)->format('Y-m-d');
         $to   = Carbon::now()->addDays($this->dc_tn)->format('Y-m-d');
 
-        SaleOrder::query()
-            ->where('order_status', '=', SoOrderStatus::SIGNED)
+        SaleContract::query()
+            ->where('sc_status', '=', ScScStatus::SIGNED)
             ->whereBetween('rental_end', [$from, $to])
-            ->orderby('so_id')
-            ->with(['Vehicle', 'SaleOrderExt'])
-            ->chunk(100, function ($saleOrders) {
-                /** @var SaleOrder $saleOrder */
-                foreach ($saleOrders as $saleOrder) {
-                    $soe_wecom_group_url = $saleOrder->SaleOrderExt?->soe_wecom_group_url;
-                    if (!$soe_wecom_group_url) {
-                        Log::channel('console')->info("因未设置soe_wecom_group_url,跳过{$this->dc_key}类型通知。", [$saleOrder->so_full_label]);
+            ->orderby('sc_id')
+            ->with(['Vehicle', 'SaleContractExt'])
+            ->chunk(100, function ($saleContracts) {
+                /** @var SaleContract $saleContract */
+                foreach ($saleContracts as $saleContract) {
+                    $sce_wecom_group_url = $saleContract->SaleContractExt?->sce_wecom_group_url;
+                    if (!$sce_wecom_group_url) {
+                        Log::channel('console')->info("因未设置sce_wecom_group_url,跳过{$this->dc_key}类型通知。", [$saleContract->sc_full_label]);
 
                         continue;
                     }
 
                     $dc_key = $this->dc_key;
                     $dc_tn  = $this->dc_tn;
-                    $dl_key = $saleOrder->so_id;
+                    $dl_key = $saleContract->sc_id;
 
                     $exist = DeliveryLog::query()
                         ->where('dc_key', '=', $dc_key)
@@ -186,10 +186,10 @@ class DeliveryChannel extends Model
                         'dc_key'         => $dc_key,
                         'dc_tn'          => $dc_tn,
                         'dl_key'         => $dl_key,
-                        'so_id'          => $saleOrder->so_id,
-                        'recipients_url' => $soe_wecom_group_url,
+                        'sc_id'          => $saleContract->sc_id,
+                        'recipients_url' => $sce_wecom_group_url,
                         'content_title'  => $this->dc_title,
-                        'content_body'   => Blade::render($this->dc_template, $saleOrder),
+                        'content_body'   => Blade::render($this->dc_template, $saleContract),
                         'send_status'    => DlSendStatus::ST_PENDING,
                         'send_attempt'   => '0',
                         'scheduled_for'  => now(),
@@ -306,17 +306,17 @@ class DeliveryChannel extends Model
         VehicleViolation::query()
             ->where('process_status', '=', VvProcessStatus::UNPROCESSED)
             ->whereBetween('violation_datetime', [$from, $to])
-            ->whereHas('VehicleUsage.SaleOrder', function (\Illuminate\Database\Eloquent\Builder $q) {
-                $q->where('so_id', '>', '0');
+            ->whereHas('VehicleUsage.SaleContract', function (\Illuminate\Database\Eloquent\Builder $q) {
+                $q->where('sc_id', '>', '0');
             })
             ->orderBy('vv_id')
-            ->with(['VehicleUsage.SaleOrder.SaleOrderExt'])
+            ->with(['VehicleUsage.SaleContract.SaleContractExt'])
             ->chunk(100, function ($vehicleViolations) {
                 /** @var VehicleViolation $vehicleViolation */
                 foreach ($vehicleViolations as $vehicleViolation) {
-                    $soe_wecom_group_url = $vehicleViolation?->VehicleUsage?->SaleOrder?->SaleOrderExt?->soe_wecom_group_url;
-                    if (!$soe_wecom_group_url) {
-                        Log::channel('console')->info("因未设置soe_wecom_group_url,跳过{$this->dc_key}类型通知。", [$vehicleViolation?->VehicleUsage?->SaleOrder->so_full_label]);
+                    $sce_wecom_group_url = $vehicleViolation?->VehicleUsage?->SaleContract?->SaleContractExt?->sce_wecom_group_url;
+                    if (!$sce_wecom_group_url) {
+                        Log::channel('console')->info("因未设置sce_wecom_group_url,跳过{$this->dc_key}类型通知。", [$vehicleViolation?->VehicleUsage?->SaleContract->sc_full_label]);
 
                         continue;
                     }
@@ -341,7 +341,7 @@ class DeliveryChannel extends Model
                         'dc_tn'          => $dc_tn,
                         'dl_key'         => $dl_key,
                         'vv_id'          => $vehicleViolation->vv_id,
-                        'recipients_url' => $soe_wecom_group_url,
+                        'recipients_url' => $sce_wecom_group_url,
                         'content_title'  => $this->dc_title,
                         'content_body'   => Blade::render($this->dc_template, $vehicleViolation),
                         'send_status'    => DlSendStatus::ST_PENDING,

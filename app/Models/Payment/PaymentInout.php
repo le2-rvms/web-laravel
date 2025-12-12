@@ -71,11 +71,11 @@ class PaymentInout extends Model
             ->leftJoin('payment_accounts as pa', 'pa.pa_id', '=', 'io.pa_id')
             ->leftJoin('payments as rp', 'rp.rp_id', '=', 'io.rp_id')
             ->leftJoin('payment_types as pt', 'pt.pt_id', '=', 'rp.pt_id')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'rp.so_id')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'so.ve_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'rp.sc_id')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.ve_id')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.vm_id')
             ->orderByDesc('io.io_id')
-            ->select('pa.pa_name', 'pt.pt_name', 'io.occur_amount', 'io.account_balance', 'rp.should_pay_date', 'rp.should_pay_amount', 'cu.contact_name', 'so.contract_number', 've.plate_no', 'rp.rp_remark')
+            ->select('pa.pa_name', 'pt.pt_name', 'io.occur_amount', 'io.account_balance', 'rp.should_pay_date', 'rp.should_pay_amount', 'cu.contact_name', 'sc.contract_number', 've.plate_no', 'rp.rp_remark')
             ->addSelect(
                 DB::raw(IoIoType::toCaseSQL()),
                 DB::raw(RpPayStatus::toCaseSQL()),
@@ -98,7 +98,7 @@ class PaymentInout extends Model
             'Inout.account_balance'        => fn ($item) => $item->account_balance,
             'Payment.should_pay_date'      => fn ($item) => $item->_should_pay_date,
             'Payment.should_pay_amount'    => fn ($item) => $item->_should_pay_amount,
-            'SaleOrder.contract_number'    => fn ($item) => $item->_contract_number,
+            'SaleContract.contract_number' => fn ($item) => $item->_contract_number,
             'Vehicle.plate_no'             => fn ($item) => $item->_plate_no,
             'VehicleModel.brand_full_name' => fn ($item) => $item->_brand_full_name,
             'Payment.rp_remark'            => fn ($item) => $item->rp_remark,

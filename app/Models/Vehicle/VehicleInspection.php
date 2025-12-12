@@ -14,7 +14,7 @@ use App\Enum\Vehicle\ViVehicleDamageStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentType;
-use App\Models\Sale\SaleOrder;
+use App\Models\Sale\SaleContract;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\DB;
 #[ClassName('验车')]
 /**
  * @property int                         $vi_id                       验车序号
- * @property int                         $so_id                       租车合同序号
+ * @property int                         $sc_id                       租车合同序号
  * @property int                         $ve_id                       车辆序号
  * @property string|ViInspectionType     $inspection_type             验车类型；发车或退车
  * @property null|int|ViPolicyCopy       $policy_copy                 保单复印件
@@ -47,7 +47,7 @@ use Illuminate\Support\Facades\DB;
  * @property mixed                       $operation_license_label     营运证
  * @property mixed                       $vehicle_damage_status_label 车损状态
  * @property Vehicle                     $Vehicle
- * @property SaleOrder                   $SaleOrder
+ * @property SaleContract                $SaleContract
  * @property Payment                     $Payment
  * @property Payment                     $PaymentAll
  */
@@ -84,9 +84,9 @@ class VehicleInspection extends Model
         return $this->belongsTo(Vehicle::class, 've_id', 've_id');
     }
 
-    public function SaleOrder(): BelongsTo
+    public function SaleContract(): BelongsTo
     {
-        return $this->belongsTo(SaleOrder::class, 'so_id', 'so_id');
+        return $this->belongsTo(SaleContract::class, 'sc_id', 'sc_id');
     }
 
     public function Payment(): HasOne
@@ -137,25 +137,25 @@ class VehicleInspection extends Model
     public static function indexQuery(array $search = []): Builder
     {
         $ve_id = $search['ve_id'] ?? null;
-        $so_id = $search['so_id'] ?? null;
+        $sc_id = $search['sc_id'] ?? null;
         $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_inspections', 'vi')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vi.ve_id')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'vi.so_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
             ->when($ve_id, function (Builder $query) use ($ve_id) {
                 $query->where('vi.ve_id', '=', $ve_id);
             })
-            ->when($so_id, function (Builder $query) use ($so_id) {
-                $so_id && $query->where('vi.so_id', '=', $so_id);
+            ->when($sc_id, function (Builder $query) use ($sc_id) {
+                $sc_id && $query->where('vi.sc_id', '=', $sc_id);
             })
             ->when($cu_id, function (Builder $query) use ($cu_id) {
                 $query->where('cu.cu_id', '=', $cu_id);
             })
             ->when(
-                null === $ve_id && null === $so_id && null === $cu_id,
+                null === $ve_id && null === $sc_id && null === $cu_id,
                 function (Builder $query) {
                     $query->orderByDesc('vi.vi_id');
                 },

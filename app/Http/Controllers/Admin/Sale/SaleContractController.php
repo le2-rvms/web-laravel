@@ -9,12 +9,12 @@ use App\Enum\Payment\RpPtId;
 use App\Enum\Sale\DtDtExportType;
 use App\Enum\Sale\DtDtStatus;
 use App\Enum\Sale\DtDtType;
-use App\Enum\Sale\SoOrderStatus;
-use App\Enum\Sale\SoPaymentDay_Month;
-use App\Enum\Sale\SoPaymentDay_Week;
-use App\Enum\Sale\SoPaymentDayType;
-use App\Enum\Sale\SoRentalType;
-use App\Enum\Sale\SoRentalType_Short;
+use App\Enum\Sale\ScPaymentDay_Month;
+use App\Enum\Sale\ScPaymentDay_Week;
+use App\Enum\Sale\ScPaymentDayType;
+use App\Enum\Sale\ScRentalType;
+use App\Enum\Sale\ScRentalType_Short;
+use App\Enum\Sale\ScScStatus;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
@@ -25,8 +25,8 @@ use App\Models\Customer\Customer;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentType;
 use App\Models\Sale\DocTpl;
-use App\Models\Sale\SaleOrder;
-use App\Models\Sale\SaleOrderTpl;
+use App\Models\Sale\SaleContract;
+use App\Models\Sale\SaleContractTpl;
 use App\Models\Sale\SaleSettlement;
 use App\Models\Sale\VehicleReplacement;
 use App\Models\Vehicle\Vehicle;
@@ -53,16 +53,16 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('租车合同')]
-class SaleOrderController extends Controller
+class SaleContractController extends Controller
 {
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            SoRentalType::labelOptions(),
-            SoRentalType_Short::labelOptions(),
-            SoPaymentDayType::labelOptions(),
-            SoPaymentDay_Month::labelOptions(),
-            SoPaymentDay_Week::labelOptions(),
+            ScRentalType::labelOptions(),
+            ScRentalType_Short::labelOptions(),
+            ScPaymentDayType::labelOptions(),
+            ScPaymentDay_Month::labelOptions(),
+            ScPaymentDay_Week::labelOptions(),
         );
     }
 
@@ -75,8 +75,8 @@ class SaleOrderController extends Controller
             Vehicle::options(),
         );
 
-        $query   = SaleOrder::indexQuery();
-        $columns = SaleOrder::indexColumns();
+        $query   = SaleContract::indexQuery();
+        $columns = SaleContract::indexColumns();
 
         /** @var Admin $admin */
         $admin = auth()->user();
@@ -98,8 +98,8 @@ class SaleOrderController extends Controller
 
         $paginate = new PaginateService(
             [],
-            [['so.so_id', 'desc']],
-            ['kw', 'so_order_status', 'so_ve_id', 'so_cu_id', 'so_rental_start', 'so_rental_type'],
+            [['sc.sc_id', 'desc']],
+            ['kw', 'sc_sc_status', 'sc_ve_id', 'sc_cu_id', 'sc_rental_start', 'sc_rental_type'],
             []
         );
 
@@ -109,10 +109,10 @@ class SaleOrderController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('so.contract_number', 'like', '%'.$value.'%')
+                        $builder->where('sc.contract_number', 'like', '%'.$value.'%')
                             ->orWhere('ve.plate_no', 'like', '%'.$value.'%')
                             ->orWhere('cu.contact_name', 'like', '%'.$value.'%')
-                            ->orWhere('so.so_remark', 'like', '%'.$value.'%')
+                            ->orWhere('sc.sc_remark', 'like', '%'.$value.'%')
                         ;
                     });
                 },
@@ -126,8 +126,8 @@ class SaleOrderController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
-        $saleOrder = new SaleOrder([
-            'rental_type'  => SoRentalType::LONG_TERM,
+        $saleContract = new SaleContract([
+            'rental_type'  => ScRentalType::LONG_TERM,
             'rental_start' => date('Y-m-d'),
         ]);
 
@@ -136,7 +136,7 @@ class SaleOrderController extends Controller
 
         $this->options();
         $this->response()->withExtras(
-            SaleOrderTpl::options(),
+            SaleContractTpl::options(),
             Vehicle::options(
                 where: function (Builder $builder) use ($admin) {
                     $builder
@@ -154,7 +154,7 @@ class SaleOrderController extends Controller
             Customer::options(),
         );
 
-        return $this->response()->withData($saleOrder)->respond();
+        return $this->response()->withData($saleContract)->respond();
     }
 
     /**
@@ -167,42 +167,42 @@ class SaleOrderController extends Controller
     }
 
     #[PermissionAction(PermissionAction::READ)]
-    public function show(SaleOrder $saleOrder): Response
+    public function show(SaleContract $saleContract): Response
     {
-        $saleOrder->load('Customer', 'Vehicle', 'Payments');
+        $saleContract->load('Customer', 'Vehicle', 'Payments');
 
         $this->response()->withExtras(
-            VehicleReplacement::kvList(so_id: $saleOrder->so_id),
-            VehicleInspection::kvList(so_id: $saleOrder->so_id),
-            Payment::kvList(so_id: $saleOrder->so_id),
+            VehicleReplacement::kvList(sc_id: $saleContract->sc_id),
+            VehicleInspection::kvList(sc_id: $saleContract->sc_id),
+            Payment::kvList(sc_id: $saleContract->sc_id),
             Payment::kvStat(),
-            SaleSettlement::kvList(so_id: $saleOrder->so_id),
-            VehicleUsage::kvList(so_id: $saleOrder->so_id),
-            VehicleRepair::kvList(so_id: $saleOrder->so_id),
+            SaleSettlement::kvList(sc_id: $saleContract->sc_id),
+            VehicleUsage::kvList(sc_id: $saleContract->sc_id),
+            VehicleRepair::kvList(sc_id: $saleContract->sc_id),
             VehicleRepair::kvStat(),
-            VehicleViolation::kvList(so_id: $saleOrder->so_id),
-            VehicleManualViolation::kvList(so_id: $saleOrder->so_id),
+            VehicleViolation::kvList(sc_id: $saleContract->sc_id),
+            VehicleManualViolation::kvList(sc_id: $saleContract->sc_id),
         );
 
-        return $this->response()->withData($saleOrder)->respond();
+        return $this->response()->withData($saleContract)->respond();
     }
 
-    public function edit(SaleOrder $saleOrder): Response
+    public function edit(SaleContract $saleContract): Response
     {
-        $saleOrder->load('Customer', 'Vehicle', 'Payments');
+        $saleContract->load('Customer', 'Vehicle', 'Payments');
 
         $this->options();
 
         $this->response()->withExtras(
-            SaleOrderTpl::options(),
+            SaleContractTpl::options(),
             Vehicle::options(
-                where: function (Builder $builder) use ($saleOrder) {
+                where: function (Builder $builder) use ($saleContract) {
                     $builder->where(function (Builder $query) {
                         $query->whereIn('status_rental', [VeStatusRental::LISTED])
                             ->whereIn('status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
                         ;
-                    })->when(VeStatusRental::PENDING === $saleOrder->order_status->value, function (Builder $query) use ($saleOrder) {
-                        $query->orWhere('ve.ve_id', '=', $saleOrder->ve_id); // 显示出原车辆
+                    })->when(VeStatusRental::PENDING === $saleContract->sc_status->value, function (Builder $query) use ($saleContract) {
+                        $query->orWhere('ve.ve_id', '=', $saleContract->ve_id); // 显示出原车辆
                     });
                 }
             ),
@@ -210,63 +210,63 @@ class SaleOrderController extends Controller
         );
 
         $this->response()->withExtras(
-            VehicleReplacement::kvList(so_id: $saleOrder->so_id),
-            VehicleInspection::kvList(so_id: $saleOrder->so_id),
-            Payment::kvList(so_id: $saleOrder->so_id),
+            VehicleReplacement::kvList(sc_id: $saleContract->sc_id),
+            VehicleInspection::kvList(sc_id: $saleContract->sc_id),
+            Payment::kvList(sc_id: $saleContract->sc_id),
             Payment::kvStat(),
-            SaleSettlement::kvList(so_id: $saleOrder->so_id),
-            VehicleUsage::kvList(so_id: $saleOrder->so_id),
-            VehicleRepair::kvList(so_id: $saleOrder->so_id),
+            SaleSettlement::kvList(sc_id: $saleContract->sc_id),
+            VehicleUsage::kvList(sc_id: $saleContract->sc_id),
+            VehicleRepair::kvList(sc_id: $saleContract->sc_id),
             VehicleRepair::kvStat(),
-            VehicleViolation::kvList(so_id: $saleOrder->so_id),
+            VehicleViolation::kvList(sc_id: $saleContract->sc_id),
             VehicleViolation::kvStat(),
-            VehicleManualViolation::kvList(so_id: $saleOrder->so_id),
+            VehicleManualViolation::kvList(sc_id: $saleContract->sc_id),
             VehicleManualViolation::kvStat(),
             DocTpl::options(function (Builder $query) {
-                $query->where('dt.dt_type', '=', DtDtType::SALE_ORDER);
+                $query->where('dt.dt_type', '=', DtDtType::SALE_CONTRACT);
             }),
         );
 
-        return $this->response()->withData($saleOrder)->respond();
+        return $this->response()->withData($saleContract)->respond();
     }
 
     #[PermissionAction(PermissionAction::READ)]
-    public function doc(Request $request, SaleOrder $saleOrder, DocTplService $docTplService)
+    public function doc(Request $request, SaleContract $saleContract, DocTplService $docTplService)
     {
         $input = $request->validate([
             'mode'  => ['required', Rule::in(DtDtExportType::label_keys())],
-            'dt_id' => ['required', Rule::exists(DocTpl::class)->where('dt_type', DtDtType::SALE_ORDER)->where('dt_status', DtDtStatus::ENABLED)],
+            'dt_id' => ['required', Rule::exists(DocTpl::class)->where('dt_type', DtDtType::SALE_CONTRACT)->where('dt_status', DtDtStatus::ENABLED)],
         ]);
 
-        $saleOrder->load('Customer', 'Vehicle', 'Vehicle.VehicleInsurances', 'Company', 'Payments'); // 'Company',
+        $saleContract->load('Customer', 'Vehicle', 'Vehicle.VehicleInsurances', 'Company', 'Payments'); // 'Company',
 
         $docTpl = DocTpl::query()->find($input['dt_id']);
 
-        $url = $docTplService->GenerateDoc($docTpl, $input['mode'], $saleOrder);
+        $url = $docTplService->GenerateDoc($docTpl, $input['mode'], $saleContract);
 
         return $this->response()->withData($url)->respond();
     }
 
-    public function update(Request $request, ?SaleOrder $saleOrder): Response
+    public function update(Request $request, ?SaleContract $saleContract): Response
     {
         $input1 = $request->validate(
             [
-                'rental_type' => ['bail', 'required', Rule::in(SoRentalType::label_keys())],
+                'rental_type' => ['bail', 'required', Rule::in(ScRentalType::label_keys())],
             ],
             [],
-            trans_property(SaleOrder::class)
+            trans_property(SaleContract::class)
         );
         $rental_type = $input1['rental_type'];
 
-        $is_long_term  = SoRentalType::LONG_TERM === $rental_type;
-        $is_short_term = SoRentalType::SHORT_TERM === $rental_type;
+        $is_long_term  = ScRentalType::LONG_TERM === $rental_type;
+        $is_short_term = ScRentalType::SHORT_TERM === $rental_type;
 
         $input2 = $request->validate(
             [
-                'payment_day_type' => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'string', Rule::in(SoPaymentDayType::label_keys())],
+                'payment_day_type' => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'string', Rule::in(ScPaymentDayType::label_keys())],
             ],
             [],
-            trans_property(SaleOrder::class)
+            trans_property(SaleContract::class)
         );
 
         $payment_day_type = $input2['payment_day_type'] ?? null;
@@ -276,7 +276,7 @@ class SaleOrderController extends Controller
             [
                 'cu_id'           => ['bail', 'required', 'integer'],
                 've_id'           => ['bail', 'required', 'integer'],
-                'contract_number' => ['bail', 'required', 'string', 'max:50', Rule::unique(SaleOrder::class, 'contract_number')->ignore($saleOrder)],
+                'contract_number' => ['bail', 'required', 'string', 'max:50', Rule::unique(SaleContract::class, 'contract_number')->ignore($saleContract)],
                 'free_days'       => ['bail', 'nullable', 'int:4'],
                 'rental_start'    => ['bail', 'required', 'date', 'before_or_equal:rental_end'],
                 'installments'    => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', 'min:1'],
@@ -297,7 +297,7 @@ class SaleOrderController extends Controller
                 'cus_2'                        => ['bail', 'nullable', 'max:255'],
                 'cus_3'                        => ['bail', 'nullable', 'max:255'],
                 'discount_plan'                => ['bail', 'nullable', 'max:255'],
-                'so_remark'                    => ['bail', 'nullable', 'max:255'],
+                'sc_remark'                    => ['bail', 'nullable', 'max:255'],
                 'payments'                     => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'array', 'min:1'],
                 'payments.*.pt_id'             => ['bail', 'required', 'integer', Rule::exists(PaymentType::class)],
                 'payments.*.should_pay_date'   => ['bail', 'required', 'date'],
@@ -307,9 +307,9 @@ class SaleOrderController extends Controller
             + Uploader::validator_rule_upload_array('additional_photos')
             + Uploader::validator_rule_upload_object('additional_file'),
             [],
-            trans_property(SaleOrder::class) + Arr::dot(['payments' => ['*' => trans_property(Payment::class)]])
+            trans_property(SaleContract::class) + Arr::dot(['payments' => ['*' => trans_property(Payment::class)]])
         )
-            ->after(function (\Illuminate\Validation\Validator $validator) use ($is_short_term, $saleOrder, $request) {
+            ->after(function (\Illuminate\Validation\Validator $validator) use ($is_short_term, $saleContract, $request) {
                 if (!$validator->failed()) {
                     // ve_id
                     $ve_id   = $request->input('ve_id');
@@ -326,8 +326,8 @@ class SaleOrderController extends Controller
                     }
 
                     // 当车辆变化时候，状态必须是待签约
-                    if ($saleOrder->ve_id !== $ve_id) {
-                        if (SoOrderStatus::PENDING !== $saleOrder->order_status->value) {
+                    if ($saleContract->ve_id !== $ve_id) {
+                        if (ScScStatus::PENDING !== $saleContract->sc_status->value) {
                             $validator->errors()->add('ve_id', '合同在待签约状态下才允许修改车辆。');
 
                             return;
@@ -342,8 +342,8 @@ class SaleOrderController extends Controller
                         return;
                     }
 
-                    if ($saleOrder) {
-                        if (!$saleOrder->check_order_status([SoOrderStatus::PENDING], $validator)) {
+                    if ($saleContract) {
+                        if (!$saleContract->check_sc_status([ScScStatus::PENDING], $validator)) {
                             return;
                         }
                     }
@@ -379,7 +379,7 @@ class SaleOrderController extends Controller
         $input = $input1 + $input2 + $validator->validated();
 
         // input数据修正
-        if (SoRentalType::LONG_TERM === $input['rental_type']) {
+        if (ScRentalType::LONG_TERM === $input['rental_type']) {
             // 总计租金金额
             $input['total_rent_amount'] = bcmul($input['installments'], $input['rent_amount'], 2);
 
@@ -390,41 +390,41 @@ class SaleOrderController extends Controller
             $input['rental_days'] = Carbon::parse($input['rental_start'])->diffInDays(Carbon::parse($input['rental_end']), true) + 1;
         }
 
-        DB::transaction(function () use (&$input, &$saleOrder) {
-            /** @var SaleOrder $saleOrder */
-            if (null === $saleOrder) {
-                $saleOrder = SaleOrder::query()->create($input + ['order_at' => now(), 'order_status' => SoOrderStatus::PENDING]);
+        DB::transaction(function () use (&$input, &$saleContract) {
+            /** @var SaleContract $saleContract */
+            if (null === $saleContract) {
+                $saleContract = SaleContract::query()->create($input + ['order_at' => now(), 'sc_status' => ScScStatus::PENDING]);
             } else {
                 // 有修改车辆，前提是必须是在初始阶段，要把原车辆的状态改回来。
-                if ($saleOrder->ve_id !== $input['ve_id']) {
-                    $saleOrder->Vehicle->updateStatus(status_rental: VeStatusRental::LISTED);
+                if ($saleContract->ve_id !== $input['ve_id']) {
+                    $saleContract->Vehicle->updateStatus(status_rental: VeStatusRental::LISTED);
                 }
 
-                $saleOrder->update($input);
+                $saleContract->update($input);
             }
 
-            if (SoRentalType::LONG_TERM === $saleOrder->rental_type->value) {
-                $saleOrder->Payments()->delete();
+            if (ScRentalType::LONG_TERM === $saleContract->rental_type->value) {
+                $saleContract->Payments()->delete();
 
                 foreach ($input['payments'] as $payment) {
-                    $saleOrder->Payments()->create($payment);
+                    $saleContract->Payments()->create($payment);
                 }
             }
 
-            $saleOrder->Vehicle->updateStatus(status_rental: VeStatusRental::RESERVED);
+            $saleContract->Vehicle->updateStatus(status_rental: VeStatusRental::RESERVED);
         });
 
-        $saleOrder->refresh()->load('Payments');
+        $saleContract->refresh()->load('Payments');
 
-        return $this->response()->withData($saleOrder)->respond();
+        return $this->response()->withData($saleContract)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function destroy(SaleOrder $saleOrder): Response
+    public function destroy(SaleContract $saleContract): Response
     {
-        $saleOrder->delete();
+        $saleContract->delete();
 
-        return $this->response()->withData($saleOrder)->respond();
+        return $this->response()->withData($saleContract)->respond();
     }
 
     /**
@@ -436,8 +436,8 @@ class SaleOrderController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'rental_type'           => ['bail', 'required', Rule::in([SoRentalType::LONG_TERM])],
-                'payment_day_type'      => ['bail', 'required', 'string', Rule::in(SoPaymentDayType::label_keys())],
+                'rental_type'           => ['bail', 'required', Rule::in([ScRentalType::LONG_TERM])],
+                'payment_day_type'      => ['bail', 'required', 'string', Rule::in(ScPaymentDayType::label_keys())],
                 'deposit_amount'        => ['bail', 'required', 'decimal:0,2', 'gte:0'],
                 'management_fee_amount' => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
                 'rental_start'          => ['bail', 'required', 'date'],
@@ -446,7 +446,7 @@ class SaleOrderController extends Controller
                 'payment_day'           => ['bail', 'required', 'integer', new PaymentDayCheck($request->input('payment_day_type'))],
             ],
             [],
-            trans_property(SaleOrder::class)
+            trans_property(SaleContract::class)
         );
 
         if ($validator->fails()) {
@@ -460,9 +460,9 @@ class SaleOrderController extends Controller
 
         $paymentType = $input['payment_day_type'];
 
-        list('interval' => $interval, 'interval_unit' => $interval_unit, 'prepaid' => $prepaid) = SoPaymentDayType::interval[$paymentType];
+        list('interval' => $interval, 'interval_unit' => $interval_unit, 'prepaid' => $prepaid) = ScPaymentDayType::interval[$paymentType];
 
-        $paymentDayType = SoPaymentDayType::payment_day_classes[$paymentType];
+        $paymentDayType = ScPaymentDayType::payment_day_classes[$paymentType];
 
         $startDate = Carbon::parse($input['rental_start']);
 
@@ -512,7 +512,7 @@ class SaleOrderController extends Controller
             }
 
             // 调整付款日期
-            if (SoPaymentDay_Week::class == $paymentDayType) {
+            if (ScPaymentDay_Week::class == $paymentDayType) {
                 if ($prepaid) {
                     if (1 !== $installmentNumber) {
                         // 获取指定的星期名称
@@ -608,14 +608,14 @@ class SaleOrderController extends Controller
             ]
         );
 
-        static $SaleOrderController = null;
+        static $SaleContractController = null;
 
-        if (null === $SaleOrderController) {
-            $SaleOrderController = App::make(SaleOrderController::class);
+        if (null === $SaleContractController) {
+            $SaleContractController = App::make(SaleContractController::class);
         }
 
         $response = App::call(
-            [$SaleOrderController, 'paymentsOption'],
+            [$SaleContractController, 'paymentsOption'],
             ['request' => $subRequest]
         );
 
@@ -628,11 +628,11 @@ class SaleOrderController extends Controller
      * 通过签约模板生成.
      */
     #[PermissionAction(PermissionAction::READ)]
-    public function generate(Request $request, SaleOrderTpl $saleOrderTpl): Response
+    public function generate(Request $request, SaleContractTpl $saleContractTpl): Response
     {
-        $saleOrderTpl->append('contract_number');
+        $saleContractTpl->append('contract_number');
 
-        $result = array_filter($saleOrderTpl->toArray());
+        $result = array_filter($saleContractTpl->toArray());
 
         return $this->response()->withData($result)->respond();
     }
@@ -642,7 +642,7 @@ class SaleOrderController extends Controller
     {
         return Uploader::upload(
             $request,
-            'sale_order',
+            'sale_contract',
             [
                 'additional_photos',
                 'additional_file',
@@ -654,12 +654,12 @@ class SaleOrderController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            SoRentalType::options(),
-            $with_group_count ? SoRentalType_Short::options_with_count(SaleOrder::class) : SoRentalType_Short::options(),
-            SoPaymentDayType::options(),
-            SoPaymentDay_Month::options(),
-            SoPaymentDay_Week::options(),
-            $with_group_count ? SoOrderStatus::options_with_count(SaleOrder::class) : SoOrderStatus::options(),
+            ScRentalType::options(),
+            $with_group_count ? ScRentalType_Short::options_with_count(SaleContract::class) : ScRentalType_Short::options(),
+            ScPaymentDayType::options(),
+            ScPaymentDay_Month::options(),
+            ScPaymentDay_Week::options(),
+            $with_group_count ? ScScStatus::options_with_count(SaleContract::class) : ScScStatus::options(),
         );
     }
 }

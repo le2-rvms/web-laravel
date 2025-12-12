@@ -5,7 +5,7 @@ namespace App\Enum\Sale;
 use App\Enum\Color;
 use App\Enum\EnumLikeBase;
 
-class SoOrderStatus extends EnumLikeBase
+class ScScStatus extends EnumLikeBase
 {
     public const string PENDING           = 'pending';            // 待签约
     public const string SIGNED            = 'signed';             // 已签约

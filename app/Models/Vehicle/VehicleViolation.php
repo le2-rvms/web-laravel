@@ -67,26 +67,26 @@ class VehicleViolation extends Model
     public static function indexQuery(array $search = []): Builder
     {
         $ve_id = $search['ve_id'] ?? null;
-        $so_id = $search['so_id'] ?? null;
+        $sc_id = $search['sc_id'] ?? null;
         $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_violations', 'vv')
             ->leftJoin('vehicles as ve', 've.plate_no', '=', 'vv.plate_no')
             ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vu_id')
-            ->leftJoin('sale_orders as so', 'so.so_id', '=', 'vu.so_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'so.cu_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vu.sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
             ->when($ve_id, function (Builder $query) use ($ve_id) {
                 $query->where('vv.ve_id', '=', $ve_id);
             })
-            ->when($so_id, function (Builder $query) use ($so_id) {
-                $query->where('vu.so_id', '=', $so_id);
+            ->when($sc_id, function (Builder $query) use ($sc_id) {
+                $query->where('vu.sc_id', '=', $sc_id);
             })
             ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('so.cu_id', '=', $cu_id);
+                $query->where('sc.cu_id', '=', $cu_id);
             })
             ->when(
-                null === $ve_id && null === $so_id && null === $cu_id,
+                null === $ve_id && null === $sc_id && null === $cu_id,
                 function (Builder $query) {
                     $query->orderByDesc('vv.vv_id');
                 },

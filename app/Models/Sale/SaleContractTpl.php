@@ -3,12 +3,12 @@
 namespace App\Models\Sale;
 
 use App\Attributes\ClassName;
-use App\Enum\Sale\SoPaymentDayType;
-use App\Enum\Sale\SoRentalType;
-use App\Enum\Sale\SoRentalType_Short;
-use App\Enum\Sale\SotPaymentDayType;
-use App\Enum\Sale\SotRentalType;
-use App\Enum\Sale\SotSotStatus;
+use App\Enum\Sale\ScPaymentDayType;
+use App\Enum\Sale\ScRentalType;
+use App\Enum\Sale\ScRentalType_Short;
+use App\Enum\Sale\SctPaymentDayType;
+use App\Enum\Sale\SctRentalType;
+use App\Enum\Sale\SctSctStatus;
 use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\DB;
 
 #[ClassName('租车合同模板')]
 /**
- * @property int         $sot_id                          签约模板序号
- * @property string      $sot_name                        签约模板名称
- * @property mixed       $sot_status                      签约模板状态
+ * @property int         $sct_id                          签约模板序号
+ * @property string      $sct_name                        签约模板名称
+ * @property mixed       $sct_status                      签约模板状态
  * @property mixed       $rental_type                     租车类型；长租或短租
  * @property mixed       $payment_day_type                付款类型；例如月付预付、月付后付等
  * @property string      $contract_number_prefix          合同编号前缀
@@ -38,28 +38,28 @@ use Illuminate\Support\Facades\DB;
  * @property null|string $cus_2                           自定义合同内容2
  * @property null|string $cus_3                           自定义合同内容3
  * @property null|string $discount_plan                   优惠方案
- * @property null|string $so_remark                       合同备注
+ * @property null|string $sc_remark                       合同备注
  */
-class SaleOrderTpl extends Model
+class SaleContractTpl extends Model
 {
     use ModelTrait;
 
-    protected $primaryKey = 'sot_id';
+    protected $primaryKey = 'sct_id';
 
-    protected $guarded = ['sot_id'];
+    protected $guarded = ['sct_id'];
 
     protected $casts = [
-        'sot_status'       => SotSotStatus::class,
-        'rental_type'      => SoRentalType::class,
-        'payment_day_type' => SoPaymentDayType::class,
+        'sct_status'       => SctSctStatus::class,
+        'rental_type'      => ScRentalType::class,
+        'payment_day_type' => ScPaymentDayType::class,
     ];
 
     protected $attributes = [
-        'sot_status' => SotSotStatus::ENABLED,
+        'sct_status' => SctSctStatus::ENABLED,
     ];
 
     protected $appends = [
-        'sot_status_label',
+        'sct_status_label',
         'rental_type_label',
         'rental_type_short_label',
         'payment_day_type_label',
@@ -69,14 +69,14 @@ class SaleOrderTpl extends Model
     public static function indexQuery(array $search = []): Builder
     {
         return DB::query()
-            ->from('sale_order_tpls', 'sot')
-            ->orderByDesc('sot.sot_id')
-            ->select('sot.*')
+            ->from('sale_contract_tpls', 'sct')
+            ->orderByDesc('sct.sct_id')
+            ->select('sct.*')
             ->addSelect(
-                DB::raw(SotRentalType::toCaseSQL()),
-                DB::raw(SotPaymentDayType::toCaseSQL()),
-                DB::raw(SotSotStatus::toCaseSQL()),
-                DB::raw(SotSotStatus::toColorSQL()),
+                DB::raw(SctRentalType::toCaseSQL()),
+                DB::raw(SctPaymentDayType::toCaseSQL()),
+                DB::raw(SctSctStatus::toCaseSQL()),
+                DB::raw(SctSctStatus::toColorSQL()),
             )
         ;
     }
@@ -85,10 +85,10 @@ class SaleOrderTpl extends Model
     {
         $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
         $value = DB::query()
-            ->from('sale_order_tpls', 'sot')
-            ->where('sot.sot_status', '=', SotSotStatus::ENABLED)
-            ->orderBy('sot.sot_id', 'desc')
-            ->select(DB::raw('sot_name as text,sot.sot_id as value'))
+            ->from('sale_contract_tpls', 'sct')
+            ->where('sct.sct_status', '=', SctSctStatus::ENABLED)
+            ->orderBy('sct.sct_id', 'desc')
+            ->select(DB::raw('sct_name as text,sct.sct_id as value'))
             ->get()->toArray()
         ;
 
@@ -111,7 +111,7 @@ class SaleOrderTpl extends Model
                     return null;
                 }
 
-                $class = SoPaymentDayType::payment_day_classes[$payment_day_type->value];
+                $class = ScPaymentDayType::payment_day_classes[$payment_day_type->value];
 
                 $map = $class::LABELS;
 
@@ -120,10 +120,10 @@ class SaleOrderTpl extends Model
         );
     }
 
-    protected function sotStatusLabel(): Attribute
+    protected function sctStatusLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('sot_status')?->label ?? null
+            get: fn () => $this->getAttribute('sct_status')?->label ?? null
         );
     }
 
@@ -137,7 +137,7 @@ class SaleOrderTpl extends Model
     protected function rentalTypeShortLabel(): Attribute
     {
         return Attribute::make(
-            get : fn ($value) => SoRentalType_Short::tryFrom($this->getRawOriginal('rental_type'))?->label,
+            get : fn ($value) => ScRentalType_Short::tryFrom($this->getRawOriginal('rental_type'))?->label,
         );
     }
 

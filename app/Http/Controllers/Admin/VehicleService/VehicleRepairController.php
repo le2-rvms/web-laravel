@@ -7,7 +7,7 @@ use App\Attributes\PermissionType;
 use App\Enum\Payment\RpIsValid;
 use App\Enum\Payment\RpPayStatus;
 use App\Enum\Payment\RpPtId;
-use App\Enum\Vehicle\ScScStatus;
+use App\Enum\Vehicle\VcVcStatus;
 use App\Enum\Vehicle\VeStatusService;
 use App\Enum\Vehicle\VrCustodyVehicle;
 use App\Enum\Vehicle\VrPickupStatus;
@@ -21,9 +21,9 @@ use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
-use App\Models\Sale\SaleOrder;
-use App\Models\Vehicle\ServiceCenter;
+use App\Models\Sale\SaleContract;
 use App\Models\Vehicle\Vehicle;
+use App\Models\Vehicle\VehicleCenter;
 use App\Models\Vehicle\VehicleRepair;
 use App\Services\PaginateService;
 use App\Services\Uploader;
@@ -61,11 +61,11 @@ class VehicleRepairController extends Controller
         $this->options(true);
         $this->response()->withExtras(
             Vehicle::options(),
-            ServiceCenter::options(function (Builder $query) use ($admin) {
+            VehicleCenter::options(function (Builder $query) use ($admin) {
                 if ($admin->hasRole(AdminRole::role_vehicle_service)) {
-                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
+                    $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-                    $query->whereIn('vr.sc_id', $sc_id_array);
+                    $query->whereIn('vr.vc_id', $vc_id_array);
                 }
             }),
         );
@@ -74,15 +74,15 @@ class VehicleRepairController extends Controller
         $columns = VehicleRepair::indexColumns();
 
         if ($admin->hasRole(AdminRole::role_vehicle_service)) {
-            $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
+            $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-            $query->whereIn('vr.sc_id', $sc_id_array);
+            $query->whereIn('vr.vc_id', $vc_id_array);
         }
 
         $paginate = new PaginateService(
             [],
             [['vr.vr_id', 'desc']],
-            ['kw', 'vr_ve_id', 'vr_entry_datetime', 'vr_repair_status', 'vr_sc_id'],
+            ['kw', 'vr_ve_id', 'vr_entry_datetime', 'vr_repair_status', 'vr_vc_id'],
             []
         );
 
@@ -112,11 +112,11 @@ class VehicleRepairController extends Controller
         $this->options();
         $this->response()->withExtras(
             Vehicle::options(),
-            ServiceCenter::options(function (Builder $query) use ($admin) {
+            VehicleCenter::options(function (Builder $query) use ($admin) {
                 if ($admin->hasRole(AdminRole::role_vehicle_service)) {
-                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
+                    $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-                    $query->whereIn('vr.sc_id', $sc_id_array);
+                    $query->whereIn('vr.vc_id', $vc_id_array);
                 }
             }),
             RpPayStatus::options(),
@@ -158,11 +158,11 @@ class VehicleRepairController extends Controller
         $this->response()->withExtras(
             Vehicle::options(),
             VrRepairStatus::finalValue(),
-            ServiceCenter::options(function (Builder $query) use ($admin) {
+            VehicleCenter::options(function (Builder $query) use ($admin) {
                 if ($admin->hasRole(AdminRole::role_vehicle_service)) {
-                    $sc_id_array = ServiceCenter::query()->whereJsonContains('permitted_admin_ids', $admin->id)->pluck('sc_id')->toArray();
+                    $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-                    $query->whereIn('vr.sc_id', $sc_id_array);
+                    $query->whereIn('vr.vc_id', $vc_id_array);
                 }
             }),
             RpPayStatus::options(),
@@ -171,15 +171,15 @@ class VehicleRepairController extends Controller
 
         if ($vehicleRepair->ve_id) {
             $this->response()->withExtras(
-                SaleOrder::options(
+                SaleContract::options(
                     where: function (Builder $builder) use ($vehicleRepair) {
-                        $builder->where('so.ve_id', '=', $vehicleRepair->ve_id);
+                        $builder->where('sc.ve_id', '=', $vehicleRepair->ve_id);
                     }
                 ),
             );
         }
 
-        $vehicleRepair->load('Vehicle', 'SaleOrder', 'SaleOrder.Customer', 'Payment', 'Payment.PaymentType', 'Payment.PaymentAccount');
+        $vehicleRepair->load('Vehicle', 'SaleContract', 'SaleContract.Customer', 'Payment', 'Payment.PaymentType', 'Payment.PaymentAccount');
 
         return $this->response()->withData($vehicleRepair)->respond();
     }
@@ -191,12 +191,12 @@ class VehicleRepairController extends Controller
             $request->all(),
             [
                 've_id'              => ['bail', 'required', 'integer'],
-                'so_id'              => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'integer'],
+                'sc_id'              => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'integer'],
                 'entry_datetime'     => ['bail', 'required', 'date'],
                 'vr_mileage'         => ['bail', 'nullable', 'integer', 'min:0'],
                 'repair_cost'        => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
                 'delay_days'         => ['bail', 'nullable', 'integer', 'min:0'],
-                'sc_id'              => ['bail', 'required', 'integer', 'min:1', Rule::exists(ServiceCenter::class)->where('status', ScScStatus::ENABLED)],
+                'vc_id'              => ['bail', 'required', 'integer', 'min:1', Rule::exists(VehicleCenter::class)->where('vc_status', VcVcStatus::ENABLED)],
                 'repair_content'     => ['bail', 'required', 'string'],
                 'departure_datetime' => ['bail', 'nullable', 'date'],
                 'repair_status'      => ['bail', 'required', 'string', Rule::in(VrRepairStatus::label_keys())],
@@ -206,7 +206,7 @@ class VehicleRepairController extends Controller
                 'custody_vehicle'    => ['bail', 'required', 'string', Rule::in(VrCustodyVehicle::label_keys())],
                 'repair_attribute'   => ['bail', 'required', 'string', Rule::in(VrRepairAttribute::label_keys())],
                 'vr_remark'          => ['bail', 'nullable', 'string'],
-                'add_should_pay'     => ['bail', 'sometimes', 'boolean'],
+                'add_should_pay'     => ['bail', 'nullable', 'boolean'],
 
                 'repair_info'                 => ['bail', 'nullable', 'array'],
                 'repair_info.*.description'   => ['bail', 'nullable', 'string'],
@@ -214,7 +214,7 @@ class VehicleRepairController extends Controller
                 'repair_info.*.part_cost'     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
                 'repair_info.*.part_quantity' => ['bail', 'nullable', 'integer', 'min:1'],
 
-                'payment.pt_id'             => 'bail', [Rule::requiredIf($request->boolean('add_should_pay')), Rule::in(RpPtId::REPAIR_FEE)],
+                'payment.pt_id'             => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), Rule::in(RpPtId::REPAIR_FEE)],
                 'payment.should_pay_date'   => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'date'],
                 'payment.should_pay_amount' => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'numeric'],
                 'payment.rp_remark'         => ['bail', 'nullable', 'string'],
@@ -242,13 +242,13 @@ class VehicleRepairController extends Controller
                         return;
                     }
 
-                    $so_id = $request->input('so_id');
+                    $sc_id = $request->input('sc_id');
 
-                    if ($so_id) {
-                        /** @var SaleOrder $saleOrder */
-                        $SaleOrder = SaleOrder::query()->find($so_id);
-                        if (!$SaleOrder) {
-                            $validator->errors()->add('so_id', 'The sale_order does not exist.');
+                    if ($sc_id) {
+                        /** @var SaleContract $saleContract */
+                        $saleContract = SaleContract::query()->find($sc_id);
+                        if (!$saleContract) {
+                            $validator->errors()->add('sc_id', 'The sale_contract does not exist.');
 
                             return;
                         }
@@ -274,7 +274,7 @@ class VehicleRepairController extends Controller
         $input         = $validator->validated();
         $input_payment = $input['payment'];
 
-        $input_payment['so_id'] = $input['so_id'];
+        $input_payment['sc_id'] = $input['sc_id'];
 
         DB::transaction(function () use (&$input, &$input_payment, &$vehicle, &$vehicleRepair) {
             if (null === $vehicleRepair) {
@@ -336,7 +336,7 @@ class VehicleRepairController extends Controller
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function saleOrdersOption(Request $request): Response
+    public function saleContractsOption(Request $request): Response
     {
         $validator = Validator::make(
             $request->all(),
@@ -352,9 +352,9 @@ class VehicleRepairController extends Controller
         $input = $validator->validated();
 
         $this->response()->withExtras(
-            SaleOrder::options(
+            SaleContract::options(
                 where: function (Builder $builder) use ($input) {
-                    $builder->where('so.ve_id', '=', $input['ve_id']);
+                    $builder->where('sc.ve_id', '=', $input['ve_id']);
                 }
             )
         );

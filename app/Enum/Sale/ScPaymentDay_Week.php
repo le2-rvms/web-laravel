@@ -4,7 +4,7 @@ namespace App\Enum\Sale;
 
 use App\Enum\EnumLikeBase;
 
-class SoPaymentDay_Week extends EnumLikeBase
+class ScPaymentDay_Week extends EnumLikeBase
 {
     public const int MONDAY    = 1;
     public const int TUESDAY   = 2;

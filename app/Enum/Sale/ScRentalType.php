@@ -4,7 +4,7 @@ namespace App\Enum\Sale;
 
 use App\Enum\EnumLikeBase;
 
-class SoRentalType extends EnumLikeBase
+class ScRentalType extends EnumLikeBase
 {
     public const string LONG_TERM  = 'long_term';
     public const string SHORT_TERM = 'short_term';
