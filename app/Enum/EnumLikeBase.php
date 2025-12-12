@@ -215,9 +215,4 @@ abstract class EnumLikeBase implements Castable
     {
         return [preg_replace('/^.*\\\/', '', get_called_class()).'FlipLabelDic' => array_flip(static::LABELS)];
     }
-
-    public static function configDic(): array
-    {
-        return [preg_replace('/^.*\\\/', '', get_called_class()).'configDic' => static::CONFIGS]; // todo
-    }
 }

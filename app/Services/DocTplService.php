@@ -75,7 +75,7 @@ class DocTplService
                 $model_data = $model->toArray();
 
                 foreach ($fieldsAndRelationsDot as $rule_key => $rule_label) {
-                    if (str_ends_with($rule_key, '_func')) { // todo  当不是订单的时候，会因为 sale_contract.payments_phpword_fun 调用报错
+                    if (str_ends_with($rule_key, '_func') && !str_contains($rule_key, '.')) { // 不带有点的表示是主体的
                         $model->{$rule_key}($tpl, $rule_label);
 
                         continue;

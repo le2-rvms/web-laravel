@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin\Delivery;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Delivery\DcDcKey;
 use App\Enum\Delivery\DlDcKey;
 use App\Enum\Delivery\DlSendStatus;
 use App\Http\Controllers\Controller;
@@ -50,7 +49,6 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
-    #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -59,19 +57,16 @@ class DeliveryLogController extends Controller
         ]);
 
         $this->response()->withExtras(
-            DcDcKey::configDic(),
         );
 
         return $this->response()->withData($deliveryLog)->respond();
     }
 
-    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
-    #[PermissionAction(PermissionAction::READ)]
     public function show(DeliveryLog $deliveryLog): Response
     {
         $this->options();
@@ -81,7 +76,6 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($deliveryLog)->respond();
     }
 
-    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(DeliveryLog $deliveryLog): Response
     {
         $this->options();
@@ -89,13 +83,11 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($deliveryLog)->respond();
     }
 
-    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?DeliveryLog $deliveryLog): Response
     {
         return $this->response()->withData($deliveryLog)->respond();
     }
 
-    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(DeliveryLog $deliveryLog): Response
     {
         return $this->response()->withData($deliveryLog)->respond();

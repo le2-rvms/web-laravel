@@ -27,6 +27,10 @@ class Uploader
 
         $filepath = Storage::disk('s3')->putFileAs($upload_path, $input['file'], $filename);
 
+        if (!$filepath) {
+            throw new \RuntimeException('上传失败');
+        }
+
         if ('application/pdf' === $input['file']->getClientMimeType()) {
             $ocr = OcrPdf::extract($input['field_name'], $md5Hash, $input['file']);
         } else {

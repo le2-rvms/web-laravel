@@ -63,13 +63,11 @@ class DeliveryWecomMemberController extends Controller
 
         $input = $validator->validated();
 
-        $items = collect($input['items']);
-
-        DB::transaction(function () use (&$items) {
-            foreach ($items->chunk(50) as $chunks) {
-                Admin::query()->upsert($chunks->all(), ['id'], ['wecom_name']);
+        DB::transaction(function () use (&$input) {
+            foreach ($input['items'] as $item) {
+                Admin::query()->find($item['id'])->update($item);
             }
-            Admin::query()->whereNotIn('id', $items->pluck('id')->all())->delete();
+            Admin::query()->whereNotIn('id', array_column($input['items'], 'id'))->delete();
         });
 
         return $this->response()->respond();
