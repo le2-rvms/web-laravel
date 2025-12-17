@@ -40,10 +40,12 @@ use App\Http\Controllers\Admin\Sale\BookingVehicleController;
 use App\Http\Controllers\Admin\Sale\SaleContractCancelController;
 use App\Http\Controllers\Admin\Sale\SaleContractController;
 use App\Http\Controllers\Admin\Sale\SaleContractTplController;
+use App\Http\Controllers\Admin\Sale\SaleContractVehicleChangeController;
+use App\Http\Controllers\Admin\Sale\SaleContractVehicleChangePaymentController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementApproveController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementController;
 use App\Http\Controllers\Admin\Sale\VehiclePreparationController;
-use App\Http\Controllers\Admin\Sale\VehicleReplacementController;
+use App\Http\Controllers\Admin\Sale\VehicleTmpController;
 use App\Http\Controllers\Admin\Vehicle\OneAccountController;
 use App\Http\Controllers\Admin\Vehicle\VehicleController;
 use App\Http\Controllers\Admin\Vehicle\VehicleInspectionController;
@@ -155,10 +157,13 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
     Route::post('sale-contracts/upload', [SaleContractController::class, 'upload']);
     Route::resource('sale-contracts', SaleContractController::class);
 
+    Route::apiSingleton('sale-contracts.vehicle-changes', SaleContractVehicleChangeController::class);
+    Route::resource('sale-contract-vehicle-change-payments', SaleContractVehicleChangePaymentController::class)->only(['store']);
+
     Route::apiSingleton('sale-contracts.cancel', SaleContractCancelController::class);
 
-    Route::post('vehicle-replacement/upload', [VehicleReplacementController::class, 'upload']);
-    Route::resource('vehicle-replacement', VehicleReplacementController::class);
+    Route::post('vehicle-change/upload', [VehicleTmpController::class, 'upload']);
+    Route::resource('vehicle-change', VehicleTmpController::class);
 
     Route::post('sale-settlement/upload', [SaleSettlementController::class, 'upload']);
     Route::get('sale-settlement/{sale_settlement}/doc', [SaleSettlementController::class, 'doc']);

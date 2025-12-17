@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Dev;
 
-use App\Enum\Payment\RpPtId;
+use App\Enum\Payment\PPtId;
 use App\Models\Payment\PaymentType;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -25,21 +25,21 @@ class PaymentTypeImport extends Command
         DB::transaction(function () {
             $query = PaymentType::query();
 
-            $exists_is_active = $query->pluck('is_active', 'pt_name')->toArray();
+            $exists_is_active = $query->pluck('pt_is_active', 'pt_name')->toArray();
 
             // 获取所有枚举值
-            $enumValues = array_keys(RpPtId::LABELS);
+            $enumValues = array_keys(PPtId::LABELS);
 
             // 删除不在枚举中的数据
             $query->whereNotIn('pt_id', $enumValues)->delete();
 
             $upsert = [];
-            foreach (RpPtId::LABELS as $key => $label) {
+            foreach (PPtId::LABELS as $key => $label) {
                 $upsert[] = [
-                    'pt_id'     => $key,
-                    'pt_name'   => $pt_name = $label,
-                    'required'  => in_array($key, RpPtId::defaultRequiredTypes),
-                    'is_active' => ($exists_is_active[$pt_name] ?? false) || in_array($key, array_merge(RpPtId::defaultActiveTypes, RpPtId::defaultRequiredTypes)),
+                    'pt_id'        => $key,
+                    'pt_name'      => $pt_name = $label,
+                    'pt_required'  => in_array($key, PPtId::defaultRequiredTypes),
+                    'pt_is_active' => ($exists_is_active[$pt_name] ?? false) || in_array($key, array_merge(PPtId::defaultActiveTypes, PPtId::defaultRequiredTypes)),
                 ];
             }
             if ($upsert) {

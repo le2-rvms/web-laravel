@@ -4,7 +4,7 @@ namespace App\Models\Delivery;
 
 use App\Enum\Delivery\DlDcKey;
 use App\Enum\Delivery\DlSendStatus;
-use App\Enum\Sale\DtDtStatus;
+use App\Enum\Sale\DtStatus;
 use App\Models\_\ModelTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -15,35 +15,35 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 /**
- * @property int            $dl_id  消息序号
- * @property DlDcKey|string $dc_key 消息类型key
- * @property string         $dl_key 消息key
- * @property int            $rp_id  关联对象ID
- * @property string         $sc_id  关联对象ID
+ * @property int            $dl_id     消息序号
+ * @property DlDcKey|string $dl_dc_key 消息类型key
+ * @property string         $dl_key    消息key
+ * @property int            $dl_p_id   关联对象ID // todo ??
+ * @property string         $dl_sc_id  关联对象ID
  *
  * -- 收件人与消息体
- * @property array  $recipients      收件人
- * @property string $recipients_url  收件人地址
- * @property string $content_title   消息标题
- * @property string $content_body    消息内容
- * @property array  $content_actions 消息按钮/链接等结构化动作
+ * @property array  $dl_recipients      收件人
+ * @property string $dl_recipients_url  收件人地址
+ * @property string $dl_content_title   消息标题
+ * @property string $dl_content_body    消息内容
+ * @property array  $dl_content_actions 消息按钮/链接等结构化动作
  *
  * -- 发送状态
- * @property DlSendStatus|int $send_status  发送状态,
- * @property int              $send_attempt 发送尝试次数
- *                                          retry_of            UUID         NULL REFERENCES delivery_log(id) ON DELETE SET NULL,
+ * @property DlSendStatus|int $dl_send_status  发送状态,
+ * @property int              $dl_send_attempt 发送尝试次数
+ *                                             retry_of            UUID         NULL REFERENCES delivery_log(id) ON DELETE SET NULL,
  *
  * -- 调度与时间
- * @property Carbon $scheduled_for          计划发送时间
- * @property Carbon $scheduled_sent_at      时机发送时间,
- * @property Carbon $scheduled_delivered_at 发送成功时间,
- * @property Carbon $scheduled_canceled_at  发送取消时间,
+ * @property Carbon $dl_scheduled_for          计划发送时间
+ * @property Carbon $dl_scheduled_sent_at      时机发送时间,
+ * @property Carbon $dl_scheduled_delivered_at 发送成功时间,
+ * @property Carbon $dl_scheduled_canceled_at  发送取消时间,
  *
  * -- 下游供应商反馈
- * @property string $resp_message_id    消息发送ID,
- * @property string $resp_body          原始回执/错误等
- * @property string $resp_error_code    错误码,
- * @property string $resp_error_message 错误信息,
+ * @property string $dl_resp_message_id    消息发送ID,
+ * @property string $dl_resp_body          原始回执/错误等
+ * @property string $dl_resp_error_code    错误码,
+ * @property string $dl_resp_error_message 错误信息,
  *
  *  -- relations
  * @property DeliveryChannel $DeliveryChannel
@@ -52,21 +52,25 @@ class DeliveryLog extends Model
 {
     use ModelTrait;
 
+    public const CREATED_AT = 'dl_created_at';
+    public const UPDATED_AT = 'dl_updated_at';
+    public const UPDATED_BY = 'dl_updated_by';
+
     protected $primaryKey = 'dl_id';
 
     protected $guarded = ['dl_id'];
 
     protected $casts = [
-        'dc_key'      => DlDcKey::class,
-        'send_status' => DlSendStatus::class,
-        'recipients'  => 'array',
+        'dl_dc_key'      => DlDcKey::class,
+        'dl_send_status' => DlSendStatus::class,
+        'dl_recipients'  => 'array',
     ];
 
     protected $attributes = [];
 
     protected $appends = [
-        'dc_key_label',
-        'send_status_label',
+        'dl_dc_key_label',
+        'dl_send_status_label',
     ];
 
     public static function indexQuery(array $search = []): Builder
@@ -88,7 +92,7 @@ class DeliveryLog extends Model
 
         $value = DB::query()
             ->from('doc_tpls', 'dt')
-            ->where('dt.dt_status', '=', DtDtStatus::ENABLED)
+            ->where('dt.dt_status', '=', DtStatus::ENABLED)
             ->when($where, $where)
             ->orderBy('dt.dt_id', 'desc')
             ->select(DB::raw("concat(dt_file_type,'|',dt_name,'→docx') as text,concat(dt.dt_id,'|docx') as value"))
@@ -100,7 +104,7 @@ class DeliveryLog extends Model
 
     public function DeliveryChannel(): BelongsTo
     {
-        return $this->belongsTo(DeliveryChannel::class, 'dc_key', 'dc_key');
+        return $this->belongsTo(DeliveryChannel::class, 'dl_dc_key', 'dc_key');
     }
 
     /**

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Vehicle;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Vehicle\VmVmStatus;
+use App\Enum\VehicleModel\VmStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle\VehicleModel;
 use App\Services\PaginateService;
@@ -21,7 +21,7 @@ class VehicleModelController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            VmVmStatus::labelOptions()
+            VmStatus::labelOptions()
         );
     }
 
@@ -32,7 +32,7 @@ class VehicleModelController extends Controller
         $this->response()->withExtras();
 
         $vehicleModel = new VehicleModel([
-            'vm_status' => VmVmStatus::ENABLED,
+            'vm_status' => VmStatus::ENABLED,
         ]);
 
         return $this->response()->withData($vehicleModel)->respond();
@@ -88,18 +88,19 @@ class VehicleModelController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'vm_id'      => ['nullable', Rule::exists(VehicleModel::class, 'vm_id')],
-                'brand_name' => ['required', 'string', 'max:50'],
-                'model_name' => ['required', 'string', 'max:50',
-                    Rule::unique(VehicleModel::class)->where('brand_name', $request->input('brand_name'))->ignore($vehicleModel),
+                'vm_id'         => ['nullable', Rule::exists(VehicleModel::class, 'vm_id')],
+                'vm_brand_name' => ['required', 'string', 'max:50'],
+                'vm_model_name' => ['required', 'string', 'max:50',
+                    Rule::unique(VehicleModel::class)->where('vm_brand_name', $request->input('vm_brand_name'))->ignore($vehicleModel),
                 ],
-                'vm_status' => ['required', Rule::in(VmVmStatus::label_keys())],
+                'vm_status' => ['required', Rule::in(VmStatus::label_keys())],
             ],
             [],
             trans_property(VehicleModel::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use (&$vehicle) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -132,7 +133,7 @@ class VehicleModelController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            VmVmStatus::options()
+            VmStatus::options()
         );
     }
 }

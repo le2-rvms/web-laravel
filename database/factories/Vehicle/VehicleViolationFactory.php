@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Vehicle;
 
-use App\Enum\Vehicle\VvPaymentStatus;
-use App\Enum\Vehicle\VvProcessStatus;
+use App\Enum\VehicleViolation\VvPaymentStatus;
+use App\Enum\VehicleViolation\VvProcessStatus;
 use App\Models\Vehicle\VehicleViolation;
 use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,15 +22,15 @@ class VehicleViolationFactory extends Factory
         $data = $this->randomGroupFromPools();
 
         return [
-            'decision_number'    => strtoupper($this->faker->unique()->bothify('#############')),
-            'violation_datetime' => fake_current_period_dt(),
-            'violation_content'  => $data['violation_content'],
-            'location'           => $data['location'],
-            'fine_amount'        => $data['fine_amount'],
-            'penalty_points'     => $data['penalty_points'],
-            'process_status'     => VvProcessStatus::label_key_random(),
-            'payment_status'     => VvPaymentStatus::label_key_random(),
-            'vv_remark'          => $data['vmv_remark'],
+            'vv_decision_number'    => strtoupper($this->faker->unique()->bothify('#############')),
+            'vv_violation_datetime' => fake_current_period_dt(),
+            'vv_violation_content'  => $data['violation_content'],
+            'vv_location'           => $data['location'],
+            'vv_fine_amount'        => $data['fine_amount'],
+            'vv_penalty_points'     => $data['penalty_points'],
+            'vv_process_status'     => VvProcessStatus::label_key_random(),
+            'vv_payment_status'     => VvPaymentStatus::label_key_random(),
+            'vv_remark'             => $data['vv_remark'],
         ];
     }
 }

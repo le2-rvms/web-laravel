@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin\Risk;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Vehicle\VmvStatus;
-use App\Enum\Vehicle\VvPaymentStatus;
-use App\Enum\Vehicle\VvProcessStatus;
+use App\Enum\VehicleManualViolation\VvStatus;
+use App\Enum\VehicleViolation\VvPaymentStatus;
+use App\Enum\VehicleViolation\VvProcessStatus;
 use App\Http\Controllers\Controller;
 use App\Services\PaginateService;
 use Illuminate\Database\Query\Builder;
@@ -28,26 +28,26 @@ class ViolationCountController extends Controller
     {
         // 构建 vehicle_violations 表的查询
         $violations = DB::table('vehicle_violations', 'vv')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.ve_id')
-            ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vu_id')
-            ->leftJoin('vehicle_inspections as vi', 'vi.vi_id', '=', 'vu.start_vi_id')
-            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.sc_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
-            ->select('vv.violation_datetime', 'sc.sc_id', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', 'vv.ve_id', 'vv.fine_amount', 'vv.penalty_points')
-            ->where('process_status', '=', VvProcessStatus::UNPROCESSED)
-            ->where('payment_status', '=', VvPaymentStatus::UNPAID)
-            ->whereNotNull('vv.vu_id')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.vv_ve_id')
+            ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vv_vu_id')
+            ->leftJoin('vehicle_inspections as vi', 'vi.vi_id', '=', 'vu.vu_start_vi_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.vi_sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
+            ->select('vv.vv_violation_datetime', 'sc.sc_id', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', 'vv.vv_ve_id', 'vv.vv_fine_amount', 'vv.vv_penalty_points')
+            ->where('vv.vv_process_status', '=', VvProcessStatus::UNPROCESSED)
+            ->where('vv.vv_payment_status', '=', VvPaymentStatus::UNPAID)
+            ->whereNotNull('vv.vv_vu_id')
         ;
 
         // 构建 vehicle_manual_violations 表的查询
         $manualViolations = DB::table('vehicle_manual_violations', 'vv')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.ve_id')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.vv_ve_id')
             ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vu_id')
             ->leftJoin('vehicle_inspections as vi', 'vi.vi_id', '=', 'vu.start_vi_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.sc_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
-            ->select('vv.violation_datetime', 'sc.sc_id', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', 'vv.ve_id', 'vv.fine_amount', 'vv.penalty_points')
-            ->where('status', '=', VmvStatus::UNPROCESSED)
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
+            ->select('vv.vv_violation_datetime', 'sc.sc_id', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', 'vv.vv_ve_id', 'vv.fine_amount', 'vv.penalty_points')
+            ->where('status', '=', VvStatus::UNPROCESSED)
             ->whereNotNull('vv.vu_id')
         ;
 
@@ -70,7 +70,7 @@ class ViolationCountController extends Controller
 
         $paginate = new PaginateService(
             [],
-            [['max(violation_datetime) desc']],
+            [['max(vv_violation_datetime) desc']],
             ['kw'],
             []
         );
@@ -78,7 +78,7 @@ class ViolationCountController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('vmv.violation_content', 'like', '%'.$value.'%');
+                    $builder->where('vv.violation_content', 'like', '%'.$value.'%');
                 });
             },
         ]);

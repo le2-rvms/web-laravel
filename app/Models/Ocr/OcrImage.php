@@ -10,7 +10,7 @@ use AlibabaCloud\SDK\Ocrapi\V20210707\Ocrapi;
 use AlibabaCloud\Tea\Exception\TeaError;
 use AlibabaCloud\Tea\Utils\Utils\RuntimeOptions;
 use App\Attributes\ClassName;
-use App\Enum\Customer\CuiCuiGender;
+use App\Enum\Customer\CuiGender;
 use App\Models\_\ModelTrait;
 use GuzzleHttp\Psr7\Stream;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -21,14 +21,18 @@ use Illuminate\Support\Facades\Log;
 
 #[ClassName('OCR')]
 /**
- * @property int         $oi_id    OCR识别序号
- * @property null|string $file_md5 文件md5
- * @property null|string $ocr_type 文件类型
- * @property null|mixed  $result   OCR识别结果
+ * @property int         $oi_id       OCR识别序号
+ * @property null|string $oi_file_md5 文件md5
+ * @property null|string $oi_ocr_type 文件类型
+ * @property null|mixed  $oi_result   OCR识别结果
  */
 class OcrImage extends Model
 {
     use ModelTrait;
+
+    public const CREATED_AT = 'oi_created_at';
+    public const UPDATED_AT = 'oi_updated_at';
+    public const UPDATED_BY = 'oi_updated_by';
 
     public const array types = [
         've_license_face_photo'     => 'RecognizeVehicleLicense', // 行驶证 ok
@@ -198,7 +202,7 @@ class OcrImage extends Model
                                 $return['cui_id_number']     = $face_data['idNumber'];
                                 $return['cui_name']          = $face_data['name'];
                                 $return['cui_date_of_birth'] = str_replace(['年', '月', '日'], ['-', '-', ''], $face_data['birthDate']);
-                                $return['cui_gender']        = array_flip(CuiCuiGender::LABELS)[$face_data['sex']];
+                                $return['cui_gender']        = array_flip(CuiGender::LABELS)[$face_data['sex']];
                             }
 
                             $back_data = $data['back']['data'] ?? null;

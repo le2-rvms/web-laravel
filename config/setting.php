@@ -14,7 +14,7 @@ use App\Models\Sale\DocTpl;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleContractTpl;
 use App\Models\Sale\SaleSettlement;
-use App\Models\Sale\VehicleReplacement;
+use App\Models\Sale\VehicleTmp;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleAccident;
 use App\Models\Vehicle\VehicleCenter;
@@ -44,15 +44,15 @@ return [
             (VehicleRepair::class)          => 'vr_id',
             (VehicleMaintenance::class)     => 'vm_id',
             (VehicleInspection::class)      => 'vi_id',
-            (VehicleManualViolation::class) => 'vmv_id',
+            (VehicleManualViolation::class) => 'vv_id',
             (VehicleForceTake::class)       => 'vft_id',
-            (VehicleReplacement::class)     => 'vr_id',
+            (VehicleTmp::class)             => 'vt_id',
             (VehicleSchedule::class)        => 'vs_id',
             (VehicleInsurance::class)       => 'vi_id',
             (SaleContract::class)           => 'sc_id',
             (SaleContractTpl::class)        => 'sct_id',
             (SaleSettlement::class)         => 'ss_id',
-            (Payment::class)                => 'rp_id',
+            (Payment::class)                => 'p_id',
             (BookingVehicle::class)         => 'bv_id',
             (BookingOrder::class)           => 'bo_id',
             (VehicleCenter::class)          => 'vc_id',

@@ -18,8 +18,6 @@ class OcrPdf extends Model
         'commercial_policy_file' => 'RecognizeCommercial',
     ];
 
-    protected $guarded = ['id'];
-
     public static function extract($type, $md5Hash, UploadedFile $file): ?Model
     {
         $callback = self::types[$type] ?? null;
@@ -68,36 +66,36 @@ class OcrPdf extends Model
                 '中国太平洋财产保险股份有限公司',
                 [
                     // 车牌号：匹配“号 牌 号 码”后面的字符（支持中文、字母、数字）
-                    'compulsory_plate_no' => '/号\s*牌\s*号\s*码\s*([\x{4e00}-\x{9fa5}A-Z0-9]+)/u',
+                    'vi_compulsory_plate_no' => '/号\s*牌\s*号\s*码\s*([\x{4e00}-\x{9fa5}A-Z0-9]+)/u',
 
                     // 车架号：匹配“识别代码”后面连续17位字母或数字（不区分大小写）
-                    'vin' => '/识别代码.*?([A-Z0-9]{17})/i',
+                    'vi_vin' => '/识别代码.*?([A-Z0-9]{17})/i',
 
                     // 保单号：匹配“保险单号：”后面的字母和数字
-                    'compulsory_policy_number' => '/保险单号[:：]\s*([A-Z0-9]+)/iu',
+                    'vi_compulsory_policy_number' => '/保险单号[:：]\s*([A-Z0-9]+)/iu',
 
                     // 保险公司：匹配“公司名称：”后面直到换行的内容
-                    'compulsory_insurance_company' => '/公司名称[:：]\s*([^\n]+)/u',
+                    'vi_compulsory_insurance_company' => '/公司名称[:：]\s*([^\n]+)/u',
 
                     // 保费金额：匹配“保险费合计”部分中“￥：”后面的金额（包含小数点）
-                    'compulsory_premium' => '/保险费合计.*?￥[:：]\s*([\d\.]+)元/u',
+                    'vi_compulsory_premium' => '/保险费合计.*?￥[:：]\s*([\d\.]+)元/u',
 
                     // 开始日期：匹配“保险期间自”后面的日期（形如 “2024年12月17日”）
-                    'compulsory_start_date' => '/保险期间自\s*(\d{4}年\d{1,2}月\d{1,2}日)/u',
+                    'vi_compulsory_start_date' => '/保险期间自\s*(\d{4}年\d{1,2}月\d{1,2}日)/u',
 
                     // 结束日期：匹配“至”后面的日期（形如 “2025年12月17日”）
-                    'compulsory_end_date' => '/至\s*(\d{4}年\d{1,2}月\d{1,2}日)/u',
+                    'vi_compulsory_end_date' => '/至\s*(\d{4}年\d{1,2}月\d{1,2}日)/u',
                 ],
                 [
                     // 将中文日期格式转换为用中线分隔的格式，例如 "2024年12月17日" 转为 "2024-12-17"
-                    'compulsory_start_date' => function ($date) {
+                    'vi_compulsory_start_date' => function ($date) {
                         if (!$date) {
                             return $date;
                         }
 
                         return str_replace(['年', '月', '日'], ['-', '-', ''], $date);
                     },
-                    'compulsory_end_date' => function ($date) {
+                    'vi_compulsory_end_date' => function ($date) {
                         if (!$date) {
                             return $date;
                         }
@@ -146,36 +144,36 @@ class OcrPdf extends Model
                 '中国太平洋财产保险股份有限公司',
                 [
                     // 车牌号：匹配“号牌号码：”后面的内容（直到换行）
-                    'commercial_plate_no' => '/号牌号码[:：]\s*([^\n]+)/u',
+                    'vi_commercial_plate_no' => '/号牌号码[:：]\s*([^\n]+)/u',
 
                     // 车架号：匹配“VIN码/车架号：”后面连续 17 位字母或数字（不区分大小写）
-                    'vin' => '/VIN码\/车架号[:：]\s*([A-Z0-9]{17})/iu',
+                    'vi_vin' => '/VIN码\/车架号[:：]\s*([A-Z0-9]{17})/iu',
 
                     // 保单号：匹配“保险单号：”后面的字母和数字
-                    'commercial_policy_number' => '/保险单号[:：]\s*([A-Z0-9]+)/iu',
+                    'vi_commercial_policy_number' => '/保险单号[:：]\s*([A-Z0-9]+)/iu',
 
                     // 保险公司：匹配“公司名称：”后面直到换行的内容
-                    'commercial_insurance_company' => '/公司名称[:：]\s*([^\n]+)/u',
+                    'vi_commercial_insurance_company' => '/公司名称[:：]\s*([^\n]+)/u',
 
                     // 保费金额：匹配“￥：”后面的金额（数字和小数点）
-                    'commercial_premium' => '/￥[:：]\s*([\d\.]+)\s*元/u',
+                    'vi_commercial_premium' => '/￥[:：]\s*([\d\.]+)\s*元/u',
 
                     // 开始日期：匹配“保险期间：”后面的日期，形如 “2024 年 12 月 17 日”
-                    'commercial_start_date' => '/保险期间[:：]\s*(\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日)/u',
+                    'vi_commercial_start_date' => '/保险期间[:：]\s*(\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日)/u',
 
                     // 结束日期：匹配“至”后面的日期，形如 “2025 年 12 月 17 日”
-                    'commercial_end_date' => '/至\s*(\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日)/u',
+                    'vi_commercial_end_date' => '/至\s*(\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日)/u',
                 ],
                 [
                     // 将中文日期格式转换为用中线分隔的格式，例如 "2024年12月17日" 转为 "2024-12-17"
-                    'commercial_start_date' => function ($date) {
+                    'vi_commercial_start_date' => function ($date) {
                         if (!$date) {
                             return $date;
                         }
 
                         return preg_replace('/\s+/u', '', str_replace(['年', '月', '日', ' '], ['-', '-', '', ''], $date));
                     },
-                    'commercial_end_date' => function ($date) {
+                    'vi_commercial_end_date' => function ($date) {
                         if (!$date) {
                             return $date;
                         }

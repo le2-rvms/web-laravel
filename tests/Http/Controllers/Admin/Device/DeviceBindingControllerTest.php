@@ -33,7 +33,7 @@ class DeviceBindingControllerTest extends TestCase
 
         IotDeviceBinding::query()
             ->whereHas('Vehicle', function (Builder $q) {
-                $q->whereLike('plate_no', 'TEST-%');
+                $q->whereLike('ve_plate_no', 'TEST-%');
             })
             ->delete()
         ;
@@ -41,8 +41,8 @@ class DeviceBindingControllerTest extends TestCase
         IotDevice::query()->whereLike('device_code', 'test-%')->delete();
         $this->device = IotDevice::factory()->create(['device_code' => 'test-123']);
 
-        Vehicle::query()->whereLike('plate_no', 'TEST-%')->delete();
-        $this->vehicle = Vehicle::factory()->create(['plate_no' => 'TEST-004']);
+        Vehicle::query()->whereLike('ve_plate_no', 'TEST-%')->delete();
+        $this->vehicle = Vehicle::factory()->create(['ve_plate_no' => 'TEST-004']);
 
         $this->deviceBinding = IotDeviceBinding::factory()->create([
             'd_id'         => $this->device->getKey(),

@@ -8,7 +8,7 @@ use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
-use App\Enum\Vehicle\VeVeType;
+use App\Enum\Vehicle\VeType;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
@@ -38,7 +38,7 @@ class VehicleController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            VeVeType::labelOptions(),
+            VeType::labelOptions(),
             VeStatusService::labelOptions(),
             VeStatusRental::labelOptions(),
             VeStatusDispatch::labelOptions(),
@@ -75,7 +75,7 @@ class VehicleController extends Controller
 
         if ($role_vehicle_manager) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereNull('vehicle_manager')->orWhere('vehicle_manager', '=', $admin->id);
+                $query->whereNull('ve_vehicle_manager')->orWhere('ve_vehicle_manager', '=', $admin->id);
             });
         }
 
@@ -92,7 +92,7 @@ class VehicleController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.plate_no', 'like', '%'.$value.'%')
+                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')
                             ->orWhere('ve.ve_license_owner', 'like', '%'.$value.'%')
                             ->orWhere('ve.ve_license_address', 'like', '%'.$value.'%')
                         ;
@@ -132,13 +132,13 @@ class VehicleController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'plate_no'                    => ['required', 'string', 'max:64', Rule::unique(Vehicle::class, 'plate_no')->ignore($vehicle)],
-                've_type'                     => ['nullable', Rule::in(VeVeType::label_keys())],
-                'vm_id'                       => ['nullable', 'integer', Rule::exists(VehicleModel::class)],
-                'status_service'              => ['required', Rule::in(VeStatusService::label_keys())],
-                'status_rental'               => ['required', Rule::in(VeStatusRental::label_keys())],
-                'status_dispatch'             => ['required', Rule::in(VeStatusDispatch::label_keys())],
-                'vehicle_manager'             => ['nullable', Rule::exists(Admin::class, 'id')],
+                've_plate_no'                 => ['required', 'string', 'max:64', Rule::unique(Vehicle::class, 've_plate_no')->ignore($vehicle)],
+                've_type'                     => ['nullable', Rule::in(VeType::label_keys())],
+                've_vm_id'                    => ['nullable', 'integer', Rule::exists(VehicleModel::class, 'vm_id')],
+                've_status_service'           => ['required', Rule::in(VeStatusService::label_keys())],
+                've_status_rental'            => ['required', Rule::in(VeStatusRental::label_keys())],
+                've_status_dispatch'          => ['required', Rule::in(VeStatusDispatch::label_keys())],
+                've_vehicle_manager'          => ['nullable', Rule::exists(Admin::class, 'id')],
                 've_team_id'                  => ['nullable', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
                 've_license_owner'            => ['nullable', 'string', 'max:100'],
                 've_license_address'          => ['nullable', 'string', 'max:255'],
@@ -164,7 +164,8 @@ class VehicleController extends Controller
             trans_property(Vehicle::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use (&$vehicle) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -255,7 +256,7 @@ class VehicleController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            VeVeType::options(),
+            VeType::options(),
             $with_group_count ? VeStatusService::options_with_count(Vehicle::class) : VeStatusService::options(),
             $with_group_count ? VeStatusRental::options_with_count(Vehicle::class) : VeStatusRental::options(),
             $with_group_count ? VeStatusDispatch::options_with_count(Vehicle::class) : VeStatusDispatch::options(),

@@ -4,7 +4,7 @@ namespace App\Models\Admin;
 
 use App\Attributes\ClassName;
 use App\Enum\Admin\AdmUserType;
-use App\Enum\Admin\AtAtStatus;
+use App\Enum\Admin\AtStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Customer\Customer;
 use App\Models\Vehicle\Vehicle;
@@ -17,17 +17,21 @@ use Illuminate\Support\Facades\DB;
 
 #[ClassName('车队')]
 /**
- * @property int               $at_id        序号
- * @property int               $at_parent_id 上层序号
- * @property string            $at_name      车队名称
- * @property AtAtStatus|string $at_status    车队状态
- * @property int               $at_sort      排序
- * @property null|string       $at_remark    备注
- * @property null|array        $at_extra     扩展信息
+ * @property int             $at_id        序号
+ * @property int             $at_parent_id 上层序号
+ * @property string          $at_name      车队名称
+ * @property AtStatus|string $at_status    车队状态
+ * @property int             $at_sort      排序
+ * @property null|string     $at_remark    备注
+ * @property null|array      $at_extra     扩展信息
  */
 class AdminTeam extends Model
 {
     use ModelTrait;
+
+    //    const CREATED_AT = 'cu_created_at';
+    //    const UPDATED_AT = 'cu_updated_at';
+    public const UPDATED_BY = 'updated_by';
 
     protected $attributes = [];
 
@@ -58,8 +62,8 @@ class AdminTeam extends Model
                 'customer_count' => Customer::query()->selectRaw('count(*)')->whereColumn('cu_team_id', 'at.at_id'),
             ])
             ->addSelect(
-                DB::raw(AtAtStatus::toCaseSQL()),
-                DB::raw(AtAtStatus::toColorSQL()),
+                DB::raw(AtStatus::toCaseSQL()),
+                DB::raw(AtStatus::toColorSQL()),
             )
         ;
     }

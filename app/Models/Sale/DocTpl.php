@@ -3,9 +3,9 @@
 namespace App\Models\Sale;
 
 use App\Attributes\ClassName;
-use App\Enum\Sale\DtDtFileType;
-use App\Enum\Sale\DtDtStatus;
-use App\Enum\Sale\DtDtType;
+use App\Enum\Sale\DtFileType;
+use App\Enum\Sale\DtStatus;
+use App\Enum\Sale\DtType;
 use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -14,27 +14,31 @@ use Illuminate\Support\Facades\DB;
 
 #[ClassName('生成合同文件模板')]
 /**
- * @property int                 $dt_id        文件模板序号
- * @property DtDtType|string     $dt_type      文件模板类型
- * @property DtDtFileType|string $dt_file_type 文件模板格式类型
- * @property string              $dt_name      文件模板名称
- * @property DtDtStatus|int      $dt_status    文件模板状态
- * @property array               $dt_file      文件模板文件
- * @property string              $dt_html      文件模板HTML
- * @property null|string         $dt_remark    文件模板备注
+ * @property int               $dt_id        文件模板序号
+ * @property DtType|string     $dt_type      文件模板类型
+ * @property DtFileType|string $dt_file_type 文件模板格式类型
+ * @property string            $dt_name      文件模板名称
+ * @property DtStatus|int      $dt_status    文件模板状态
+ * @property array             $dt_file      文件模板文件
+ * @property string            $dt_html      文件模板HTML
+ * @property null|string       $dt_remark    文件模板备注
  */
 class DocTpl extends Model
 {
     use ModelTrait;
+
+    public const CREATED_AT = 'dt_created_at';
+    public const UPDATED_AT = 'dt_updated_at';
+    public const UPDATED_BY = 'dt_updated_by';
 
     protected $primaryKey = 'dt_id';
 
     protected $guarded = ['dt_id'];
 
     protected $casts = [
-        'dt_type'      => DtDtType::class,
-        'dt_file_type' => DtDtFileType::class,
-        'dt_status'    => DtDtStatus::class,
+        'dt_type'      => DtType::class,
+        'dt_file_type' => DtFileType::class,
+        'dt_status'    => DtStatus::class,
     ];
 
     protected $attributes = [];
@@ -53,10 +57,10 @@ class DocTpl extends Model
             ->orderByDesc('dt.dt_id')
             ->select('dt.*')
             ->addSelect(
-                DB::raw(DtDtType::toCaseSQL()),
-                DB::raw(DtDtFileType::toCaseSQL()),
-                DB::raw(DtDtStatus::toCaseSQL()),
-                DB::raw(DtDtStatus::toColorSQL()),
+                DB::raw(DtType::toCaseSQL()),
+                DB::raw(DtFileType::toCaseSQL()),
+                DB::raw(DtStatus::toCaseSQL()),
+                DB::raw(DtStatus::toColorSQL()),
             )
         ;
     }
@@ -67,7 +71,7 @@ class DocTpl extends Model
 
         $value1 = DB::query()
             ->from('doc_tpls', 'dt')
-            ->where('dt.dt_status', '=', DtDtStatus::ENABLED)
+            ->where('dt.dt_status', '=', DtStatus::ENABLED)
             ->when($where, $where)
             ->orderBy('dt.dt_id', 'desc')
             ->select(DB::raw("concat(dt_file_type,'|',dt_name,'→docx') as text,concat(dt.dt_id,'|docx') as value"))
@@ -76,7 +80,7 @@ class DocTpl extends Model
 
         $value2 = DB::query()
             ->from('doc_tpls', 'dt')
-            ->where('dt.dt_status', '=', DtDtStatus::ENABLED)
+            ->where('dt.dt_status', '=', DtStatus::ENABLED)
             ->when($where, $where)
             ->orderBy('dt.dt_id', 'desc')
             ->select(DB::raw("concat(dt_file_type,'|',dt_name,'→pdf') as text,concat(dt.dt_id,'|pdf') as value"))

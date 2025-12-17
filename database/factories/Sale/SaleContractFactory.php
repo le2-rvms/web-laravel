@@ -2,10 +2,10 @@
 
 namespace Database\Factories\Sale;
 
-use App\Enum\Sale\ScPaymentDay_Month;
-use App\Enum\Sale\ScPaymentDayType;
-use App\Enum\Sale\ScRentalType;
-use App\Enum\Sale\ScScStatus;
+use App\Enum\SaleContract\ScPaymentDay_Month;
+use App\Enum\SaleContract\ScPaymentPeriod;
+use App\Enum\SaleContract\ScRentalType;
+use App\Enum\SaleContract\ScStatus;
 use App\Models\Sale\SaleContract;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -19,7 +19,7 @@ class SaleContractFactory extends Factory
     {
         $rental_type = ScRentalType::label_key_random();
 
-        $rental_start = fake_current_period_d();
+        $sc_start_date = fake_current_period_d();
 
         $free_days = $this->faker->numberBetween(1, 4);
 
@@ -30,18 +30,18 @@ class SaleContractFactory extends Factory
         $deposit_amount = $this->faker->randomFloat(2, 100, 10000);
 
         if (ScRentalType::LONG_TERM === $rental_type) {
-            $payment_day_type      = ScPaymentDayType::label_key_random();
-            $payment_day_type_rule = ScPaymentDayType::interval[$payment_day_type]; // ['interval_unit']
+            $sc_payment_period      = ScPaymentPeriod::label_key_random();
+            $sc_payment_period_rule = ScPaymentPeriod::interval[$sc_payment_period]; // ['interval_unit']
 
             /** @var ScPaymentDay_Month $payment_day_class */
-            $payment_day_class = ScPaymentDayType::payment_day_classes[$payment_day_type];
+            $payment_day_class = ScPaymentPeriod::payment_day_classes[$sc_payment_period];
             $payment_day       = $payment_day_class::label_key_random();
 
             $installments = $this->faker->numberBetween(10, 60);
 
-            $rental_end = Carbon::create($rental_start)->modify(sprintf('+ %d %s', $installments * $payment_day_type_rule['interval'], $payment_day_type_rule['interval_unit']));
+            $sc_end_date = Carbon::create($sc_start_date)->modify(sprintf('+ %d %s', $installments * $sc_payment_period_rule['interval'], $sc_payment_period_rule['interval_unit']));
 
-            $rental_days = Carbon::parse($rental_start)->diffInDays($rental_end, true) + 1;
+            $rental_days = Carbon::parse($sc_start_date)->diffInDays($sc_end_date, true) + 1;
 
             $total_rent_amount = $installments * $rent_amount;
 
@@ -49,7 +49,7 @@ class SaleContractFactory extends Factory
         } else {
             $rental_days = $this->faker->numberBetween(1, 30);
 
-            $rental_end = Carbon::create($rental_start)->modify(sprintf('+ %d days', $rental_days));
+            $sc_end_date = Carbon::create($sc_start_date)->modify(sprintf('+ %d days', $rental_days));
 
             $total_rent_amount = ($rental_days - $free_days) * $rent_amount;
 
@@ -59,32 +59,34 @@ class SaleContractFactory extends Factory
 
             $total_amount = $deposit_amount + $management_fee_amount + $total_rent_amount + $insurance_base_fee_amount + $insurance_additional_fee_amount + $other_fee_amount;
         }
-        $sc_status = ScScStatus::label_key_random();
+        $sc_status = ScStatus::label_key_random();
 
         return [
-            'rental_type'                     => $rental_type,
-            'payment_day_type'                => $payment_day_type ?? null,
-            'contract_number'                 => strtoupper($this->faker->unique()->bothify('CN##########')),
-            'free_days'                       => $free_days,
-            'rental_start'                    => $rental_start,
-            'installments'                    => $installments ?? null,
-            'rental_days'                     => $rental_days,
-            'rental_end'                      => $rental_end,
-            'deposit_amount'                  => $deposit_amount,
-            'management_fee_amount'           => $management_fee_amount,
-            'rent_amount'                     => $rent_amount,
-            'payment_day'                     => $payment_day ?? null,
-            'total_rent_amount'               => $total_rent_amount,
-            'insurance_base_fee_amount'       => $insurance_base_fee_amount ?? null,
-            'insurance_additional_fee_amount' => $insurance_additional_fee_amount ?? null,
-            'other_fee_amount'                => $other_fee_amount ?? null,
-            'total_amount'                    => $total_amount,
-            'sc_status'                       => $sc_status,
-            'order_at'                        => fake_current_period_dt(),
-            'signed_at'                       => ScScStatus::SIGNED === $sc_status ? fake_current_period_dt() : null,
-            'canceled_at'                     => ScScStatus::CANCELLED === $sc_status ? fake_current_period_dt() : null,
-            'completed_at'                    => ScScStatus::COMPLETED === $sc_status ? fake_current_period_dt() : null,
-            'early_termination_at'            => ScScStatus::EARLY_TERMINATION === $sc_status ? fake_current_period_dt() : null,
+            'sc_rental_type'                     => $rental_type,
+            'sc_payment_period'                  => $sc_payment_period ?? null,
+            'sc_no'                              => strtoupper($this->faker->unique()->bothify('CN##########')),
+            'sc_free_days'                       => $free_days,
+            'sc_start_date'                      => $sc_start_date,
+            'sc_installments'                    => $installments ?? null,
+            'sc_rental_days'                     => $rental_days,
+            'sc_end_date'                        => $sc_end_date,
+            'sc_deposit_amount'                  => $deposit_amount,
+            'sc_management_fee_amount'           => $management_fee_amount,
+            'sc_rent_amount'                     => $rent_amount,
+            'sc_payment_day'                     => $payment_day ?? null,
+            'sc_total_rent_amount'               => $total_rent_amount,
+            'sc_insurance_base_fee_amount'       => $insurance_base_fee_amount ?? null,
+            'sc_insurance_additional_fee_amount' => $insurance_additional_fee_amount ?? null,
+            'sc_other_fee_amount'                => $other_fee_amount ?? null,
+            'sc_total_amount'                    => $total_amount,
+            'sc_version'                         => 1,
+            'sc_is_current_version'              => true,
+            'sc_status'                          => $sc_status,
+            'sc_order_at'                        => fake_current_period_dt(),
+            'sc_signed_at'                       => ScStatus::SIGNED === $sc_status ? fake_current_period_dt() : null,
+            'sc_canceled_at'                     => ScStatus::CANCELLED === $sc_status ? fake_current_period_dt() : null,
+            'sc_completed_at'                    => ScStatus::COMPLETED === $sc_status ? fake_current_period_dt() : null,
+            'sc_early_termination_at'            => ScStatus::EARLY_TERMINATION === $sc_status ? fake_current_period_dt() : null,
         ];
     }
 }

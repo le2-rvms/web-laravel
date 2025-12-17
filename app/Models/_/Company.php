@@ -33,6 +33,11 @@ class Company extends Model
 {
     use ModelTrait;
 
+    public const CREATED_AT = 'cp_created_at';
+
+    public const UPDATED_AT = 'cp_updated_at';
+    public const UPDATED_BY = 'cp_updated_by';
+
     protected $primaryKey = 'cp_id';
 
     protected $guarded = ['cp_id'];

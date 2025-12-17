@@ -28,7 +28,9 @@ class AdminRole extends Role
     public const string role_vehicle_mgr = '车管';
 
     public const string role_vehicle_service = '修理厂';
-    protected $table                         = 'admin_roles';
+
+    public const UPDATED_BY = 'updated_by';
+    protected $table        = 'admin_roles';
 
     protected $attributes = [
         'is_custom' => ArIsCustom::NO,

@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Payment\RpIsValid;
-use App\Enum\Payment\RpPayStatus;
-use App\Enum\Payment\RpPtId;
-use App\Enum\Payment\RsDeleteOption;
-use App\Enum\Sale\ScScStatus;
+use App\Enum\Payment\PIsValid;
+use App\Enum\Payment\PPayStatus;
+use App\Enum\Payment\PPtId;
+use App\Enum\Payment\SsDeleteOption;
 use App\Enum\Sale\SsReturnStatus;
+use App\Enum\SaleContract\ScStatus;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\Payment;
@@ -37,10 +37,11 @@ class SaleSettlementApproveController extends Controller
             trans_property(Payment::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($saleSettlement) {
-                if (!$validator->failed()) {
-                    if (SsReturnStatus::CONFIRMED === $saleSettlement->return_status) {
-                        $validator->errors()->add('return_status', '不能重复审核');
-                    }
+                if ($validator->failed()) {
+                    return;
+                }
+                if (SsReturnStatus::CONFIRMED === $saleSettlement->ss_return_status) {
+                    $validator->errors()->add('ss_return_status', '不能重复审核');
                 }
             })
         ;
@@ -53,47 +54,47 @@ class SaleSettlementApproveController extends Controller
         $saleContract = $saleSettlement->SaleContract;
 
         $unPayCount = Payment::query()
-            ->where('sc_id', '=', $saleContract->sc_id)
-            ->where('is_valid', '=', RpIsValid::VALID)
-            ->where('pay_status', '=', RpPayStatus::UNPAID)
-            ->where('pt_id', '!=', RpPtId::VEHICLE_RETURN_SETTLEMENT_FEE)
+            ->where('p_sc_id', '=', $saleContract->sc_id)
+            ->where('p_is_valid', '=', PIsValid::VALID)
+            ->where('p_pay_status', '=', PPayStatus::UNPAID)
+            ->where('p_pt_id', '!=', PPtId::VEHICLE_RETURN_SETTLEMENT_FEE)
             ->count()
         ;
 
         DB::transaction(function () use ($saleContract, $unPayCount, $saleSettlement) {
             $saleContract->update([
-                'sc_status'                                               => $unPayCount > 0 ? ScScStatus::EARLY_TERMINATION : ScScStatus::COMPLETED,
-                $unPayCount > 0 ? 'early_termination_at' : 'completed_at' => now(),
+                'sc_status'                                                     => $unPayCount > 0 ? ScStatus::EARLY_TERMINATION : ScStatus::COMPLETED,
+                $unPayCount > 0 ? 'sc_early_termination_at' : 'sc_completed_at' => now(),
             ]);
 
-            $saleContract->Vehicle->updateStatus(status_rental: VeStatusRental::PENDING);
+            $saleContract->Vehicle->updateStatus(ve_status_rental: VeStatusRental::PENDING);
 
             switch ($saleSettlement->delete_option) {
-                case RsDeleteOption::DELETE:
+                case SsDeleteOption::DELETE:
                     Payment::query()
-                        ->where('sc_id', '=', $saleContract->sc_id)
-                        ->where('pay_status', '=', RpPayStatus::UNPAID)
-                        ->where('pt_id', '!=', RpPtId::VEHICLE_RETURN_SETTLEMENT_FEE)
+                        ->where('p_sc_id', '=', $saleContract->sc_id)
+                        ->where('p_pay_status', '=', PPayStatus::UNPAID)
+                        ->where('p_pt_id', '!=', PPtId::VEHICLE_RETURN_SETTLEMENT_FEE)
                         ->update([
-                            'is_valid' => RpIsValid::INVALID,
+                            'p_is_valid' => PIsValid::INVALID,
                         ])
                     ;
 
                     break;
 
-                case RsDeleteOption::DO_NOT_DELETE:
+                case SsDeleteOption::DO_NOT_DELETE:
                 default:
                     break;
             }
 
-            if ($saleSettlement->settlement_amount > 0 || $saleSettlement->deposit_return_amount > 0) {
+            if ($saleSettlement->ss_settlement_amount > 0 || $saleSettlement->ss_deposit_return_amount > 0) {
                 Payment::query()->updateOrCreate([
-                    'sc_id' => $saleContract->sc_id,
-                    'pt_id' => $saleSettlement->deposit_return_amount > 0 ? RpPtId::REFUND_DEPOSIT : RpPtId::VEHICLE_RETURN_SETTLEMENT_FEE,
+                    'p_sc_id' => $saleContract->sc_id,
+                    'p_pt_id' => $saleSettlement->ss_deposit_return_amount > 0 ? PPtId::REFUND_DEPOSIT : PPtId::VEHICLE_RETURN_SETTLEMENT_FEE,
                 ], [
-                    'should_pay_date'   => $saleSettlement->deposit_return_date,
-                    'should_pay_amount' => bccomp($saleSettlement->deposit_return_amount, '0', 2) > 0 ? '-'.$saleSettlement->deposit_return_amount : $saleSettlement->settlement_amount,
-                    'ss_remark'         => (function () use ($saleSettlement): string {
+                    'p_should_pay_date'   => $saleSettlement->ss_deposit_return_date,
+                    'p_should_pay_amount' => bccomp($saleSettlement->ss_deposit_return_amount, '0', 2) > 0 ? '-'.$saleSettlement->ss_deposit_return_amount : $saleSettlement->ss_settlement_amount,
+                    'p_remark'            => (function () use ($saleSettlement): string {
                         $remark_array = array_combine(
                             array_intersect_key(trans_property(SaleSettlement::class), array_flip(array_keys(SaleSettlement::calcOpts))),
                             array_intersect_key($saleSettlement->toArray(), array_flip(array_keys(SaleSettlement::calcOpts)))
@@ -109,9 +110,9 @@ class SaleSettlementApproveController extends Controller
             //                ])->delete();
 
             $saleSettlement->update([
-                'return_status' => SsReturnStatus::CONFIRMED,
-                'approved_by'   => Auth::id(),
-                'approved_at'   => now(),
+                'ss_return_status' => SsReturnStatus::CONFIRMED,
+                'ss_approved_by'   => Auth::id(),
+                'ss_approved_at'   => now(),
             ]);
         });
 

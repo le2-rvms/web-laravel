@@ -5,8 +5,8 @@ namespace App\Models\Customer;
 use App\Attributes\ClassName;
 use App\Attributes\ColumnDesc;
 use App\Attributes\ColumnType;
-use App\Enum\Customer\CuCuType;
-use App\Enum\Customer\CuiCuiGender;
+use App\Enum\Customer\CuiGender;
+use App\Enum\Customer\CuType;
 use App\Exceptions\ClientException;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
@@ -26,39 +26,39 @@ use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\HasApiTokens;
 
 #[ClassName('客户', '信息')]
-#[ColumnDesc('cu_type', required: true, enum_class: CuCuType::class)]
-#[ColumnDesc('contact_name', required: true, )]
-#[ColumnDesc('contact_phone', required: true, unique: true, )]
-#[ColumnDesc('contact_email', unique: true)]
-#[ColumnDesc('contact_wechat', )]
-#[ColumnDesc('contact_live_city', )]
-#[ColumnDesc('contact_live_address', )]
+#[ColumnDesc('cu_type', required: true, enum_class: CuType::class)]
+#[ColumnDesc('cu_contact_name', required: true, )]
+#[ColumnDesc('cu_contact_phone', required: true, unique: true, )]
+#[ColumnDesc('cu_contact_email', unique: true)]
+#[ColumnDesc('cu_contact_wechat', )]
+#[ColumnDesc('cu_contact_live_city', )]
+#[ColumnDesc('cu_contact_live_address', )]
 #[ColumnDesc('cu_cert_no')]
 #[ColumnDesc('cu_cert_valid_to', type: ColumnType::DATE)]
 #[ColumnDesc('cu_remark', )]
 /**
- * @property int                       $cu_id                客户序号
- * @property CuCuType|string           $cu_type              客户类型
- * @property string                    $contact_name         联系人姓名
- * @property string                    $contact_phone        联系电话
- * @property null|string               $contact_email        联系人邮箱
- * @property null|string               $contact_wechat       联系人微信号
- * @property null|string               $contact_live_city    现住城市
- * @property null|string               $contact_live_address 现住地址
- * @property null|int                  $sales_manager        负责销售
- * @property null|int                  $driver_manager       负责驾管
- * @property null|int                  $cu_team_id           所属车队
- * @property null|string               $cu_cert_no           人证号
- * @property null|array<string>        $cu_cert_photo        人证照片
- * @property null|Carbon               $cu_cert_valid_to     人证到期日期
- * @property null|array<array<string>> $cu_additional_photos 顾客附加照片
- * @property null|string               $cu_remark            顾客备注
- *                                                           -
+ * @property int                       $cu_id                   客户序号
+ * @property CuType|string             $cu_type                 客户类型
+ * @property string                    $cu_contact_name         联系人姓名
+ * @property string                    $cu_contact_phone        联系电话
+ * @property null|string               $cu_contact_email        联系人邮箱
+ * @property null|string               $cu_contact_wechat       联系人微信号
+ * @property null|string               $cu_contact_live_city    现住城市
+ * @property null|string               $cu_contact_live_address 现住地址
+ * @property null|int                  $cu_sales_manager        负责销售
+ * @property null|int                  $cu_driver_manager       负责驾管
+ * @property null|int                  $cu_team_id              所属车队
+ * @property null|string               $cu_cert_no              人证号
+ * @property null|array<string>        $cu_cert_photo           人证照片
+ * @property null|Carbon               $cu_cert_valid_to        人证到期日期
+ * @property null|array<array<string>> $cu_additional_photos    顾客附加照片
+ * @property null|string               $cu_remark               顾客备注
+ *                                                              -
  * @property null|CustomerIndividual   $CustomerIndividual
  * @property null|CustomerCompany      $CustomerCompany
  * @property null|Admin                $SalesManager
  * @property null|Admin                $DriverManager
- *                                                           -
+ *                                                              -
  */
 class Customer extends Authenticatable
 {
@@ -68,12 +68,16 @@ class Customer extends Authenticatable
 
     use ImportTrait;
 
+    public const CREATED_AT = 'cu_created_at';
+    public const UPDATED_AT = 'cu_updated_at';
+    public const UPDATED_BY = 'cu_updated_by';
+
     protected $primaryKey = 'cu_id';
 
     protected $guarded = ['cu_id'];
 
     protected $casts = [
-        'cu_type'    => CuCuType::class,
+        'cu_type'    => CuType::class,
         'cu_team_id' => 'integer',
     ];
 
@@ -86,7 +90,7 @@ class Customer extends Authenticatable
     {
         $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
         $value = static::query()->toBase()
-            ->select(DB::raw("CONCAT(contact_name,' | ',contact_phone) as text,cu_id as value"))
+            ->select(DB::raw("CONCAT(cu_contact_name,' | ',cu_contact_phone) as text,cu_id as value"))
             ->get()
         ;
 
@@ -100,8 +104,8 @@ class Customer extends Authenticatable
         if (null === $kv) {
             $kv = DB::query()
                 ->from('customers')
-                ->select('cu_id', 'contact_phone')
-                ->pluck('cu_id', 'contact_phone')
+                ->select('cu_id', 'cu_contact_phone')
+                ->pluck('cu_id', 'cu_contact_phone')
                 ->toArray()
             ;
         }
@@ -115,12 +119,12 @@ class Customer extends Authenticatable
 
     public function CustomerIndividual(): HasOne
     {
-        return $this->hasOne(CustomerIndividual::class, 'cu_id', 'cu_id')->withDefault();
+        return $this->hasOne(CustomerIndividual::class, 'cui_cu_id', 'cu_id')->withDefault();
     }
 
     public function CustomerCompany(): HasOne
     {
-        return $this->hasOne(CustomerCompany::class, 'cu_id', 'cu_id')->withDefault();
+        return $this->hasOne(CustomerCompany::class, 'cuc_cu_id', 'cu_id')->withDefault();
     }
 
     public static function indexQuery(array $search = []): Builder
@@ -128,13 +132,13 @@ class Customer extends Authenticatable
         return DB::query()
             ->from('customers', 'cu')
             ->leftJoin('customer_companies as cuc', function (JoinClause $join) {
-                $join->on('cuc.cu_id', '=', 'cu.cu_id')
-                    ->where('cu.cu_type', '=', CuCuType::COMPANY)
+                $join->on('cuc.cuc_cu_id', '=', 'cu.cu_id')
+                    ->where('cu.cu_type', '=', CuType::COMPANY)
                 ;
             })
             ->leftJoin('customer_individuals as cui', function (JoinClause $join) {
-                $join->on('cui.cu_id', '=', 'cu.cu_id')
-                    ->where('cu.cu_type', '=', CuCuType::INDIVIDUAL)
+                $join->on('cui.cui_cu_id', '=', 'cu.cu_id')
+                    ->where('cu.cu_type', '=', CuType::INDIVIDUAL)
                 ;
             })
             ->leftjoin('admins as admin_sm', 'cu.sales_manager', '=', 'admin_sm.id')
@@ -142,8 +146,8 @@ class Customer extends Authenticatable
             ->leftJoin('admin_teams as at', 'cu.cu_team_id', '=', 'at.at_id')
             ->select('cuc.*', 'cui.*', 'cu.*') // cu.* 在最后，这样可以让空值在前
             ->addSelect(
-                DB::raw(CuCuType::toCaseSQL()),
-                DB::raw(CuiCuiGender::toCaseSQL()),
+                DB::raw(CuType::toCaseSQL()),
+                DB::raw(CuiGender::toCaseSQL()),
                 'admin_sm.name as sales_manager_name',
                 'admin_dm.name as driver_manager_name',
                 'at.at_name as cu_team_name',
@@ -156,7 +160,7 @@ class Customer extends Authenticatable
         return [
             'Customer.cu_id'                                    => fn ($item) => $item->cu_id,
             'Customer.cu_type'                                  => fn ($item) => $item->cu_type_label,
-            'Customer.contact_name'                             => fn ($item) => $item->contact_name,
+            'Customer.cu_contact_name'                          => fn ($item) => $item->cu_contact_name,
             'Customer.contact_phone'                            => fn ($item) => $item->contact_phone,
             'Customer.contact_email'                            => fn ($item) => $item->contact_email,
             'Customer.contact_wechat'                           => fn ($item) => $item->contact_wechat,
@@ -209,7 +213,7 @@ class Customer extends Authenticatable
     {
         return [
             'cu_type'                        => [Customer::class, 'cu_type'],
-            'contact_name'                   => [Customer::class, 'contact_name'],
+            'cu_contact_name'                => [Customer::class, 'cu_contact_name'],
             'contact_phone'                  => [Customer::class, 'contact_phone'],
             'contact_email'                  => [Customer::class, 'contact_email'],
             'contact_wechat'                 => [Customer::class, 'contact_wechat'],
@@ -238,8 +242,8 @@ class Customer extends Authenticatable
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['cu_type']                   = CuCuType::searchValue($item['cu_type']);
-            $item['cui_gender']                = CuiCuiGender::searchValue($item['cui_gender'] ?? null);
+            $item['cu_type']                   = CuType::searchValue($item['cu_type']);
+            $item['cu_cui_gender']             = CuiGender::searchValue($item['cu_cui_gender'] ?? null);
             static::$fields['contact_phone'][] = $item['contact_phone'] ?? null;
             static::$fields['contact_email'][] = $item['contact_email'] ?? null;
         };
@@ -249,8 +253,8 @@ class Customer extends Authenticatable
     {
         $rules = [
             // customer
-            'cu_type'              => ['required', 'string', Rule::in(CuCuType::label_keys())],
-            'contact_name'         => ['required', 'string', 'max:255'],
+            'cu_type'              => ['required', 'string', Rule::in(CuType::label_keys())],
+            'cu_contact_name'      => ['required', 'string', 'max:255'],
             'contact_phone'        => ['required', 'regex:/^\d{11}$/'],
             'contact_email'        => ['nullable', 'email'],
             'contact_wechat'       => ['nullable', 'string', 'max:255'],
@@ -262,7 +266,7 @@ class Customer extends Authenticatable
             'cu_remark'            => ['nullable', 'string', 'max:255'],
             // customer_individuals
             'cui_name'                       => ['nullable', 'string', 'max:255'],
-            'cui_gender'                     => ['nullable', Rule::in(CuiCuiGender::label_keys())],
+            'cui_gender'                     => ['nullable', Rule::in(CuiGender::label_keys())],
             'cui_date_of_birth'              => ['nullable', 'date', 'before:today'],
             'cui_id_number'                  => ['nullable', 'regex:/^\d{17}[\dXx]$/'],
             'cui_id_address'                 => ['nullable', 'string', 'max:500'],
@@ -305,7 +309,7 @@ class Customer extends Authenticatable
             $customer = Customer::query()->create($input);
 
             switch ($customer->cu_type) {
-                case CuCuType::INDIVIDUAL:
+                case CuType::INDIVIDUAL:
                     $customer->CustomerIndividual()->updateOrCreate(
                         [
                             'cu_id' => $customer->cu_id,
@@ -315,7 +319,7 @@ class Customer extends Authenticatable
 
                     break;
 
-                case CuCuType::COMPANY:
+                case CuType::COMPANY:
                     $customer->CustomerCompany()->updateOrCreate(
                         [
                             'cu_id' => $customer->cu_id,
@@ -342,7 +346,7 @@ class Customer extends Authenticatable
     {
         return Attribute::make(
             get: fn () => join(' | ', [
-                $this->getOriginal('contact_name'),
+                $this->getOriginal('cu_contact_name'),
                 $this->getOriginal('contact_phone'),
             ])
         );

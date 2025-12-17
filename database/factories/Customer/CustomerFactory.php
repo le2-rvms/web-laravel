@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Customer;
 
-use App\Enum\Customer\CuCuType;
+use App\Enum\Customer\CuType;
 use App\Models\Customer\Customer;
 use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -16,17 +16,17 @@ class CustomerFactory extends Factory
     public function definition(): array
     {
         return [
-            'cu_type'              => CuCuType::label_key_random(),
-            'contact_name'         => $this->faker->unique()->name(),
-            'contact_phone'        => $this->faker->unique()->phoneNumber(),
-            'contact_email'        => $this->faker->unique()->safeEmail(),
-            'contact_wechat'       => $this->faker->optional(0.8)->userName(),
-            'contact_live_city'    => $this->faker->optional(0.8)->city(),
-            'contact_live_address' => $this->faker->optional(0.8)->address(),
-            'cu_remark'            => null,
+            'cu_type'                 => CuType::label_key_random(),
+            'cu_contact_name'         => $this->faker->unique()->name(),
+            'cu_contact_phone'        => $this->faker->unique()->phoneNumber(),
+            'cu_contact_email'        => $this->faker->unique()->safeEmail(),
+            'cu_contact_wechat'       => $this->faker->optional(0.8)->userName(),
+            'cu_contact_live_city'    => $this->faker->optional(0.8)->city(),
+            'cu_contact_live_address' => $this->faker->optional(0.8)->address(),
+            'cu_remark'               => null,
 
-            'sales_manager'  => $this->faker->boolean(70) ? $this->randomAdminID(1) : null,
-            'driver_manager' => $this->faker->boolean(70) ? $this->randomAdminID(1) : null,
+            'cu_sales_manager'  => $this->faker->boolean(70) ? $this->randomAdminID(1) : null,
+            'cu_driver_manager' => $this->faker->boolean(70) ? $this->randomAdminID(1) : null,
         ];
     }
 
@@ -36,7 +36,7 @@ class CustomerFactory extends Factory
     public function individual(): static
     {
         return $this->state(fn () => [
-            'cu_type' => CuCuType::INDIVIDUAL,
+            'cu_type' => CuType::INDIVIDUAL,
         ]);
     }
 
@@ -46,7 +46,7 @@ class CustomerFactory extends Factory
     public function company(): static
     {
         return $this->state(fn () => [
-            'cu_type' => CuCuType::COMPANY,
+            'cu_type' => CuType::COMPANY,
         ]);
     }
 }

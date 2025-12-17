@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\App\One;
 
-use App\Enum\One\OaOaType;
+use App\Enum\One\OaType;
 use App\Models\One\OneAccount;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\FileCookieJar;
@@ -37,23 +37,23 @@ class OneRefreshCookie extends Command
     {
         $accounts = OneAccount::query()
             ->where(function (Builder $query) {
-                $query->whereNull('cookie_refresh_at')
-                    ->orWhere('cookie_refresh_at', '>=', now()->subMinutes(90))
+                $query->whereNull('oa_cookie_refresh_at')
+                    ->orWhere('oa_cookie_refresh_at', '>=', now()->subMinutes(90))
                 ;
             })
-            ->whereRaw('LENGTH(cookie_string) > ?', [30])
-            ->orderBy('cookie_refresh_at', 'DESC')
+            ->whereRaw('LENGTH(oa_cookie_string) > ?', [30])
+            ->orderBy('oa_cookie_refresh_at', 'DESC')
             ->get()
         ;
 
         foreach ($accounts as $account) {
             switch ($account->oa_type) {
-                case OaOaType::PERSON:
+                case OaType::PERSON:
                     $this->processPerson($account);
 
                     break;
 
-                case OaOaType::COMPANY:
+                case OaType::COMPANY:
                     $this->processCompany($account);
 
                     break;
@@ -92,7 +92,7 @@ class OneRefreshCookie extends Command
         if (str_contains($html, $searchString = '欢迎')) {
             Log::channel('console')->info('Response Body contain : '.$searchString);
 
-            $oneAccount->cookie_refresh_at = now();
+            $oneAccount->oa_cookie_refresh_at = now();
             $oneAccount->save();
         } else {
             $disk     = Storage::disk('local');
@@ -101,7 +101,7 @@ class OneRefreshCookie extends Command
 
             if (str_contains($html, $searchString = '个人用户登录')) {
                 Log::channel('console')->info('Response Body contain : '.$searchString);
-                $oneAccount->cookie_string = null;
+                $oneAccount->oa_cookie_string = null;
                 $oneAccount->save();
             }
         }
@@ -157,7 +157,7 @@ class OneRefreshCookie extends Command
         if (str_contains($html, $searchString = '欢迎')) {
             Log::channel('console')->info('Response Body contain : '.$searchString);
 
-            $oneAccount->cookie_refresh_at = now();
+            $oneAccount->oa_cookie_refresh_at = now();
             $oneAccount->save();
         } else {
             $disk     = Storage::disk('local');
@@ -166,7 +166,7 @@ class OneRefreshCookie extends Command
 
             if (str_contains($html, $searchString = '单位用户登录')) {
                 Log::channel('console')->info('Response Body contain : '.$searchString);
-                $oneAccount->cookie_string = null;
+                $oneAccount->oa_cookie_string = null;
                 $oneAccount->save();
             }
         }

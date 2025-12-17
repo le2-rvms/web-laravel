@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Admin;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AtAtStatus;
+use App\Enum\Admin\AtStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\AdminTeam;
 use App\Services\PaginateService;
@@ -53,7 +53,7 @@ class AdminTeamController extends Controller
         );
 
         $adminTeam = new AdminTeam([
-            'at_status' => AtAtStatus::ENABLED,
+            'at_status' => AtStatus::ENABLED,
         ]);
 
         return $this->response()->withData($adminTeam)->respond();
@@ -77,7 +77,7 @@ class AdminTeamController extends Controller
             [
                 'at_parent_id' => ['bail', 'nullable', 'int', Rule::unique(AdminTeam::class, 'at_id')],
                 'at_name'      => ['bail', 'required', 'string', 'max:255', Rule::unique(AdminTeam::class, 'at_name')],
-                'at_status'    => ['bail', 'required', Rule::in(AtAtStatus::label_keys())],
+                'at_status'    => ['bail', 'required', Rule::in(AtStatus::label_keys())],
                 'at_sort'      => ['bail', 'nullable', 'int'],
                 'at_remark'    => ['bail', 'nullable', 'string', 'max:255'],
             ],
@@ -109,7 +109,7 @@ class AdminTeamController extends Controller
             [
                 'at_parent_id' => ['bail', 'nullable', 'int', Rule::unique(AdminTeam::class, 'at_id')],
                 'at_name'      => ['bail', 'required', 'string', 'max:255', Rule::unique(AdminTeam::class, 'at_name')->ignore($adminTeam)],
-                'at_status'    => ['bail', 'required', Rule::in(AtAtStatus::label_keys())],
+                'at_status'    => ['bail', 'required', Rule::in(AtStatus::label_keys())],
                 'at_sort'      => ['bail', 'nullable', 'int'],
                 'at_remark'    => ['bail', 'nullable', 'string', 'max:255'],
             ],
@@ -153,14 +153,14 @@ class AdminTeamController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            AtAtStatus::labelOptions()
+            AtStatus::labelOptions()
         );
     }
 
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            AtAtStatus::options()
+            AtStatus::options()
         );
     }
 }

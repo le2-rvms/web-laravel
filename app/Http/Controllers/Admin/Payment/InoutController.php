@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Payment;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Payment\IoIoType;
+use App\Enum\Payment\IoType;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Payment\PaymentInout;
@@ -36,7 +36,7 @@ class InoutController extends Controller
         $paginate = new PaginateService(
             [],
             [],
-            ['kw', 'io_io_type', 'io_pa_id', 'io_occur_datetime'],
+            ['kw', 'io_type', 'io_pa_id', 'io_occur_datetime'],
             []
         );
 
@@ -46,10 +46,10 @@ class InoutController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('cu.contact_name', 'like', '%'.$value.'%')
-                            ->orWhere('ve.plate_no', 'like', '%'.$value.'%')
-                            ->orWhere('rp.rp_remark', 'like', '%'.$value.'%')
-                            ->orWhere('sc.contract_number', 'like', '%'.$value.'%')
+                        $builder->where('cu.cu_contact_name', 'like', '%'.$value.'%')
+                            ->orWhere('ve.ve_plate_no', 'like', '%'.$value.'%')
+                            ->orWhere('p.p_remark', 'like', '%'.$value.'%')
+                            ->orWhere('sc.sc_no', 'like', '%'.$value.'%')
                         ;
                     });
                 },
@@ -63,7 +63,7 @@ class InoutController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            $with_group_count ? IoIoType::options_with_count(PaymentInout::class) : IoIoType::options(),
+            $with_group_count ? IoType::options_with_count(PaymentInout::class) : IoType::options(),
         );
     }
 }

@@ -24,7 +24,7 @@ class OneViolationsImport extends Command
     {
         $this->info('开始导入违章信息...');
 
-        $turn = $this->option('turn') ?: OneRequest::query()->max('turn');
+        $turn = $this->option('turn') ?: OneRequest::query()->max('or_turn');
 
         if (!$turn) {
             $this->info('vehicle_122_requests 表中没有 turn 数据。');
@@ -35,9 +35,9 @@ class OneViolationsImport extends Command
         $this->info("最大 turn 日期为: {$turn}");
 
         /** @var Collection<OneRequest> $requests */
-        $requests = OneRequest::query()->where('status_code', '=', '200')
-            ->where('turn', $turn)
-            ->where('key', 'like', 'violation,%')
+        $requests = OneRequest::query()->where('or_status_code', '=', '200')
+            ->where('or_turn', $turn)
+            ->where('or_key', 'like', 'violation,%')
             ->get()
         ;
 
@@ -62,23 +62,23 @@ class OneViolationsImport extends Command
                 foreach ($violations as $violation) {
                     // 准备 upsert 数据
                     $violationsToUpsert[] = [
-                        'decision_number'    => $violation['xh'] ?? $violation['jdsbh'],
-                        'plate_no'           => $violation['hphm'],
-                        'vu_id'              => null, // 根据需要填充
-                        'violation_datetime' => Carbon::parse($violation['wfsj']),
-                        'violation_content'  => $violation['wfms'] ?? '',
-                        'location'           => $violation['wfdz'],
-                        'fine_amount'        => floatval($violation['fkje']),
-                        'penalty_points'     => intval($violation['wfjfs']),
-                        'process_status'     => $violation['clbj'] ?? -1,
-                        'payment_status'     => $violation['jkbj'],
-                        'vv_response'        => json_encode($violation),
-                        'vv_code'            => $violation['wfxw'],
+                        'vv_decision_number'    => $violation['xh'] ?? $violation['jdsbh'],
+                        'vv_plate_no'           => $violation['hphm'],
+                        'vv_vu_id'              => null, // 根据需要填充
+                        'vv_violation_datetime' => Carbon::parse($violation['wfsj']),
+                        'vv_violation_content'  => $violation['wfms'] ?? '',
+                        'vv_location'           => $violation['wfdz'],
+                        'vv_fine_amount'        => floatval($violation['fkje']),
+                        'vv_penalty_points'     => intval($violation['wfjfs']),
+                        'vv_process_status'     => $violation['clbj'] ?? -1,
+                        'vv_payment_status'     => $violation['jkbj'],
+                        'vv_response'           => json_encode($violation),
+                        'vv_code'               => $violation['wfxw'],
                     ];
                 }
 
                 if (!empty($violationsToUpsert)) {
-                    $plate_no_array = array_unique(array_column($violationsToUpsert, 'plate_no'));
+                    $plate_no_array = array_unique(array_column($violationsToUpsert, 'vv_plate_no'));
                     if (count($plate_no_array) > 1) {
                         throw new \Exception('plate_no err.');
                     }
@@ -86,17 +86,17 @@ class OneViolationsImport extends Command
                     // 使用 upsert 插入或更新违章记录
                     $violationsToUpsertAffectRows = VehicleViolation::query()->upsert(
                         $violationsToUpsert,
-                        ['decision_number'], // 唯一键
+                        ['vv_decision_number'], // 唯一键
                         [ // 需要更新的字段
-                            'plate_no',
-                            'vu_id',
-                            'violation_datetime',
-                            'violation_content',
-                            'location',
-                            'fine_amount',
-                            'penalty_points',
-                            'process_status',
-                            'payment_status',
+                            'vv_plate_no',
+                            'vv_vu_id',
+                            'vv_violation_datetime',
+                            'vv_violation_content',
+                            'vv_location',
+                            'vv_fine_amount',
+                            'vv_penalty_points',
+                            'vv_process_status',
+                            'vv_payment_status',
                             'vv_response',
                             'vv_code',
                         ]

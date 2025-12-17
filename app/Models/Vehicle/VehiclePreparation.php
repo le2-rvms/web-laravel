@@ -16,61 +16,65 @@ use Illuminate\Support\Facades\DB;
 
 #[ClassName('车辆整备')]
 /**
- * @property int         $vp_id             整备序号
- * @property int         $ve_id             车辆序号，指向车辆表
- * @property int         $annual_check_is   年审是否完备;1表示是，0表示否
- * @property null|Carbon $annual_check_dt
- * @property int         $insured_check_is  保险是否完备；1表示有，0表示无
- * @property null|Carbon $insured_check_dt
- * @property int         $vehicle_check_is  车况是否完备；1表示是，0表示否
- * @property null|Carbon $vehicle_check_dt
- * @property int         $document_check_is 证件是否完备；1表示是，0表示否
- * @property null|Carbon $document_check_dt
+ * @property int         $vp_id                整备序号
+ * @property int         $vp_ve_id             车辆序号，指向车辆表
+ * @property int         $vp_annual_check_is   年审是否完备;1表示是，0表示否
+ * @property null|Carbon $vp_annual_check_dt
+ * @property int         $vp_insured_check_is  保险是否完备；1表示有，0表示无
+ * @property null|Carbon $vp_insured_check_dt
+ * @property int         $vp_vehicle_check_is  车况是否完备；1表示是，0表示否
+ * @property null|Carbon $vp_vehicle_check_dt
+ * @property int         $vp_document_check_is 证件是否完备；1表示是，0表示否
+ * @property null|Carbon $vp_document_check_dt
  * @property Vehicle     $Vehicle
  */
 class VehiclePreparation extends Model
 {
     use ModelTrait;
 
+    public const CREATED_AT = 'vp_created_at';
+    public const UPDATED_AT = 'vp_updated_at';
+    public const UPDATED_BY = 'vp_updated_by';
+
     protected $primaryKey = 'vp_id';
 
     protected $guarded = ['vp_id'];
 
     protected $casts = [
-        'annual_check_dt'   => 'datetime:Y-m-d H:i:s',
-        'document_check_dt' => 'datetime:Y-m-d H:i:s',
-        'insured_check_dt'  => 'datetime:Y-m-d H:i:s',
-        'vehicle_check_dt'  => 'datetime:Y-m-d H:i:s',
-        'annual_check_is'   => YesNo::class,
-        'insured_check_is'  => YesNo::class,
-        'vehicle_check_is'  => YesNo::class,
-        'document_check_is' => YesNo::class,
+        'vp_annual_check_dt'   => 'datetime:Y-m-d H:i:s',
+        'vp_document_check_dt' => 'datetime:Y-m-d H:i:s',
+        'vp_insured_check_dt'  => 'datetime:Y-m-d H:i:s',
+        'vp_vehicle_check_dt'  => 'datetime:Y-m-d H:i:s',
+        'vp_annual_check_is'   => YesNo::class,
+        'vp_insured_check_is'  => YesNo::class,
+        'vp_vehicle_check_is'  => YesNo::class,
+        'vp_document_check_is' => YesNo::class,
     ];
 
     public function Vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 've_id', 've_id');
+        return $this->belongsTo(Vehicle::class, 'vp_ve_id', 've_id');
     }
 
     public static function indexQuery(array $search = []): Builder
     {
         return DB::query()
             ->from('vehicle_preparations', 'vp')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vp.ve_id')
-            ->leftJoin('vehicle_models as vm', 've.vm_id', '=', 'vm.vm_id')
-            ->select('vp.*', 've.*', 'vm.brand_name', 'vm.model_name')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vp.vp_ve_id')
+            ->leftJoin('vehicle_models as vm', 've.ve_vm_id', '=', 'vm.vm_id')
+            ->select('vp.*', 've.*', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
-                DB::raw(YesNo::toCaseSQL(true, 'vp.annual_check_is')),
-                DB::raw(YesNo::toCaseSQL(true, 'vp.insured_check_is')),
-                DB::raw(YesNo::toCaseSQL(true, 'vp.vehicle_check_is')),
-                DB::raw(YesNo::toCaseSQL(true, 'vp.document_check_is')),
+                DB::raw(YesNo::toCaseSQL(true, 'vp.vp_annual_check_is')),
+                DB::raw(YesNo::toCaseSQL(true, 'vp.vp_insured_check_is')),
+                DB::raw(YesNo::toCaseSQL(true, 'vp.vp_vehicle_check_is')),
+                DB::raw(YesNo::toCaseSQL(true, 'vp.vp_document_check_is')),
                 DB::raw(VeStatusService::toCaseSQL()),
                 DB::raw(VeStatusRental::toCaseSQL()),
                 DB::raw(VeStatusDispatch::toCaseSQL()),
-                DB::raw("to_char(annual_check_dt, 'YYYY-MM-DD HH24:MI') as annual_check_dt_"),
-                DB::raw("to_char(document_check_dt, 'YYYY-MM-DD HH24:MI') as document_check_dt_"),
-                DB::raw("to_char(insured_check_dt, 'YYYY-MM-DD HH24:MI') as insured_check_dt_"),
-                DB::raw("to_char(vehicle_check_dt, 'YYYY-MM-DD HH24:MI') as vehicle_check_dt_"),
+                DB::raw("to_char(vp_annual_check_dt, 'YYYY-MM-DD HH24:MI') as vp_annual_check_dt_"),
+                DB::raw("to_char(vp_document_check_dt, 'YYYY-MM-DD HH24:MI') as vp_document_check_dt_"),
+                DB::raw("to_char(vp_insured_check_dt, 'YYYY-MM-DD HH24:MI') as vp_insured_check_dt_"),
+                DB::raw("to_char(vp_vehicle_check_dt, 'YYYY-MM-DD HH24:MI') as vp_vehicle_check_dt_"),
             )
         ;
     }

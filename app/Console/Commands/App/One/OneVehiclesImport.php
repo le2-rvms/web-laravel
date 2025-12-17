@@ -32,9 +32,9 @@ class OneVehiclesImport extends Command
 
         $this->info("最大 turn 日期为: {$turn}");
 
-        $requests = OneRequest::query()->where('status_code', '=', '200')
-            ->where('turn', $turn)
-            ->where('key', 'like', 'vehs,%')
+        $requests = OneRequest::query()->where('or_status_code', '=', '200')
+            ->where('or_turn', $turn)
+            ->where('or_key', 'like', 'vehs,%')
             ->get()
         ;
 
@@ -47,7 +47,7 @@ class OneVehiclesImport extends Command
         DB::transaction(function () use ($requests) {
             /** @var OneRequest $request */
             foreach ($requests as $request) {
-                $response = $request->response;
+                $response = $request->or_response;
 
                 //                // 检查响应是否为数组（已自动转换）
                 //                if (!is_array($response)) {
@@ -65,8 +65,8 @@ class OneVehiclesImport extends Command
                 foreach ($vehiclesJson as $vehicleJson) {
                     // 准备 upsert 数据
                     $vehiclesToUpsert[] = [
-                        'plate_no' => $vehicleJson['hphm'],
-                        've_type'  => $vehicleJson['hpzl'],
+                        've_plate_no' => $vehicleJson['hphm'],
+                        've_type'     => $vehicleJson['hpzl'],
                     ];
                 }
 
@@ -74,9 +74,9 @@ class OneVehiclesImport extends Command
                     // 使用 upsert 插入或更新车辆记录
                     $vehiclesToUpsertAffectRows = Vehicle::query()->upsert(
                         $vehiclesToUpsert,
-                        ['plate_no'], // 唯一键
+                        ['ve_plate_no'], // 唯一键
                         [ // 需要更新的字段
-                            'plate_no',
+                            've_plate_no',
                             've_type',
                         ]
                     );

@@ -130,6 +130,7 @@ class ModelDocPropertiesCheck extends Command
                 // 应用忽略列表
                 if (!empty($ignore)) {
                     $colSet = $colSet->reject(fn ($c) => in_array($c, $ignore, true))->values();
+                    //                    $colSet = $colSet->reject(fn ($c) => !preg_match($ignore,$c))->values();
                 }
 
                 $extraInDoc   = $docSet->diff($colSet)->values()->all();    // 注释里多写的

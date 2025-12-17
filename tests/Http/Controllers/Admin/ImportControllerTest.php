@@ -23,7 +23,7 @@ class ImportControllerTest extends TestCase
         parent::setUp();
 
         /** @var Customer $customer */
-        $customer = Customer::query()->where('contact_name', '=', '苏妹妹')->first();
+        $customer = Customer::query()->where('cu_contact_name', '=', '苏妹妹')->first();
         if ($customer) {
             DB::transaction(function () use ($customer) {
                 $customer->CustomerIndividual()->delete();
@@ -31,8 +31,8 @@ class ImportControllerTest extends TestCase
                 $customer->delete();
             });
         }
-        Vehicle::query()->whereIn('plate_no', ['川N7JF90'])->delete();
-        $saleContract = SaleContract::query()->whereLike('contract_number', 'TMP%')->first();
+        Vehicle::query()->whereIn('ve_plate_no', ['川N7JF90'])->delete();
+        $saleContract = SaleContract::query()->whereLike('sc_no', 'TMP%')->first();
         if ($saleContract) {
             DB::transaction(function () use ($saleContract) {
                 $saleContract->Payments()->delete();
@@ -79,7 +79,7 @@ class ImportControllerTest extends TestCase
             );
             $response11->assertStatus(200);
 
-            // $this->assertDatabaseHas('customers', ['contact_name' => '苏妹妹']);
+            // $this->assertDatabaseHas('customers', ['cu_contact_name' => '苏妹妹']);
         }
     }
 

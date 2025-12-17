@@ -4,17 +4,17 @@ namespace App\Http\Controllers\Admin\VehicleService;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Payment\RpIsValid;
-use App\Enum\Payment\RpPayStatus;
-use App\Enum\Payment\RpPtId;
-use App\Enum\Vehicle\VcVcStatus;
+use App\Enum\Payment\PIsValid;
+use App\Enum\Payment\PPayStatus;
+use App\Enum\Payment\PPtId;
+use App\Enum\Vehicle\VcStatus;
 use App\Enum\Vehicle\VeStatusService;
-use App\Enum\Vehicle\VrCustodyVehicle;
-use App\Enum\Vehicle\VrPickupStatus;
-use App\Enum\Vehicle\VrRepairAttribute;
-use App\Enum\Vehicle\VrRepairStatus;
-use App\Enum\Vehicle\VrSettlementMethod;
-use App\Enum\Vehicle\VrSettlementStatus;
+use App\Enum\VehicleRepair\VrCustodyVehicle;
+use App\Enum\VehicleRepair\VrPickupStatus;
+use App\Enum\VehicleRepair\VrRepairAttribute;
+use App\Enum\VehicleRepair\VrRepairStatus;
+use App\Enum\VehicleRepair\VrSettlementMethod;
+use App\Enum\VehicleRepair\VrSettlementStatus;
 use App\Exceptions\ClientException;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
@@ -65,7 +65,7 @@ class VehicleRepairController extends Controller
                 if ($admin->hasRole(AdminRole::role_vehicle_service)) {
                     $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-                    $query->whereIn('vr.vc_id', $vc_id_array);
+                    $query->whereIn('vc.vc_id', $vc_id_array);
                 }
             }),
         );
@@ -76,7 +76,7 @@ class VehicleRepairController extends Controller
         if ($admin->hasRole(AdminRole::role_vehicle_service)) {
             $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-            $query->whereIn('vr.vc_id', $vc_id_array);
+            $query->whereIn('vc.vc_id', $vc_id_array);
         }
 
         $paginate = new PaginateService(
@@ -92,7 +92,7 @@ class VehicleRepairController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.plate_no', 'like', '%'.$value.'%')->orWhere('vr.vr_remark', 'like', '%'.$value.'%');
+                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('vr.vr_remark', 'like', '%'.$value.'%');
                     });
                 },
             ],
@@ -116,16 +116,16 @@ class VehicleRepairController extends Controller
                 if ($admin->hasRole(AdminRole::role_vehicle_service)) {
                     $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-                    $query->whereIn('vr.vc_id', $vc_id_array);
+                    $query->whereIn('vc.vc_id', $vc_id_array);
                 }
             }),
-            RpPayStatus::options(),
+            PPayStatus::options(),
             PaymentAccount::options(),
         );
 
         $vehicleRepair = new VehicleRepair([
-            'entry_datetime' => now(),
-            'repair_info'    => [],
+            'vr_entry_datetime' => now(),
+            'vr_repair_info'    => [],
         ]);
 
         $vehicleRepair->load('Payment');
@@ -162,18 +162,18 @@ class VehicleRepairController extends Controller
                 if ($admin->hasRole(AdminRole::role_vehicle_service)) {
                     $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
-                    $query->whereIn('vr.vc_id', $vc_id_array);
+                    $query->whereIn('vc.vc_id', $vc_id_array);
                 }
             }),
-            RpPayStatus::options(),
+            PPayStatus::options(),
             PaymentAccount::options(),
         );
 
-        if ($vehicleRepair->ve_id) {
+        if ($vehicleRepair->vr_ve_id) {
             $this->response()->withExtras(
                 SaleContract::options(
                     where: function (Builder $builder) use ($vehicleRepair) {
-                        $builder->where('sc.ve_id', '=', $vehicleRepair->ve_id);
+                        $builder->where('sc.sc_ve_id', '=', $vehicleRepair->vr_ve_id);
                     }
                 ),
             );
@@ -190,77 +190,78 @@ class VehicleRepairController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                've_id'              => ['bail', 'required', 'integer'],
-                'sc_id'              => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'integer'],
-                'entry_datetime'     => ['bail', 'required', 'date'],
-                'vr_mileage'         => ['bail', 'nullable', 'integer', 'min:0'],
-                'repair_cost'        => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'delay_days'         => ['bail', 'nullable', 'integer', 'min:0'],
-                'vc_id'              => ['bail', 'required', 'integer', 'min:1', Rule::exists(VehicleCenter::class)->where('vc_status', VcVcStatus::ENABLED)],
-                'repair_content'     => ['bail', 'required', 'string'],
-                'departure_datetime' => ['bail', 'nullable', 'date'],
-                'repair_status'      => ['bail', 'required', 'string', Rule::in(VrRepairStatus::label_keys())],
-                'settlement_status'  => ['bail', 'required', 'string', Rule::in(VrSettlementStatus::label_keys())],
-                'pickup_status'      => ['bail', 'required', 'string', Rule::in(VrPickupStatus::label_keys())],
-                'settlement_method'  => ['bail', 'required', 'string', Rule::in(VrSettlementMethod::label_keys())],
-                'custody_vehicle'    => ['bail', 'required', 'string', Rule::in(VrCustodyVehicle::label_keys())],
-                'repair_attribute'   => ['bail', 'required', 'string', Rule::in(VrRepairAttribute::label_keys())],
-                'vr_remark'          => ['bail', 'nullable', 'string'],
-                'add_should_pay'     => ['bail', 'nullable', 'boolean'],
+                'vr_ve_id'              => ['bail', 'required', 'integer'],
+                'vr_sc_id'              => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'integer'],
+                'vr_entry_datetime'     => ['bail', 'required', 'date'],
+                'vr_mileage'            => ['bail', 'nullable', 'integer', 'min:0'],
+                'vr_repair_cost'        => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'vr_delay_days'         => ['bail', 'nullable', 'integer', 'min:0'],
+                'vr_vc_id'              => ['bail', 'required', 'integer', 'min:1', Rule::exists(VehicleCenter::class, 'vc_id')->where('vc_status', VcStatus::ENABLED)],
+                'vr_repair_content'     => ['bail', 'required', 'string'],
+                'vr_departure_datetime' => ['bail', 'nullable', 'date'],
+                'vr_repair_status'      => ['bail', 'required', 'string', Rule::in(VrRepairStatus::label_keys())],
+                'vr_settlement_status'  => ['bail', 'required', 'string', Rule::in(VrSettlementStatus::label_keys())],
+                'vr_pickup_status'      => ['bail', 'required', 'string', Rule::in(VrPickupStatus::label_keys())],
+                'vr_settlement_method'  => ['bail', 'required', 'string', Rule::in(VrSettlementMethod::label_keys())],
+                'vr_custody_vehicle'    => ['bail', 'required', 'string', Rule::in(VrCustodyVehicle::label_keys())],
+                'vr_repair_attribute'   => ['bail', 'required', 'string', Rule::in(VrRepairAttribute::label_keys())],
+                'vr_remark'             => ['bail', 'nullable', 'string'],
+                'add_should_pay'        => ['bail', 'nullable', 'boolean'],
 
-                'repair_info'                 => ['bail', 'nullable', 'array'],
-                'repair_info.*.description'   => ['bail', 'nullable', 'string'],
-                'repair_info.*.part_name'     => ['bail', 'nullable', 'string', 'max:255'],
-                'repair_info.*.part_cost'     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'repair_info.*.part_quantity' => ['bail', 'nullable', 'integer', 'min:1'],
+                'vr_repair_info'                 => ['bail', 'nullable', 'array'],
+                'vr_repair_info.*.description'   => ['bail', 'nullable', 'string'],
+                'vr_repair_info.*.part_name'     => ['bail', 'nullable', 'string', 'max:255'],
+                'vr_repair_info.*.part_cost'     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'vr_repair_info.*.part_quantity' => ['bail', 'nullable', 'integer', 'min:1'],
 
-                'payment.pt_id'             => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), Rule::in(RpPtId::REPAIR_FEE)],
-                'payment.should_pay_date'   => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'date'],
-                'payment.should_pay_amount' => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'numeric'],
-                'payment.rp_remark'         => ['bail', 'nullable', 'string'],
+                'payment.p_pt_id'             => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), Rule::in(PPtId::REPAIR_FEE)],
+                'payment.p_should_pay_date'   => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'date'],
+                'payment.p_should_pay_amount' => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'numeric'],
+                'payment.p_remark'            => ['bail', 'nullable', 'string'],
             ]
-            + Uploader::validator_rule_upload_array('additional_photos')
-            + Uploader::validator_rule_upload_array('repair_info.*.info_photos'),
+            + Uploader::validator_rule_upload_array('vr_additional_photos')
+            + Uploader::validator_rule_upload_array('vr_repair_info.*.info_photos'),
             [],
             trans_property(VehicleRepair::class) + Arr::dot(['payment' => trans_property(Payment::class)])
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($vehicleRepair, $request, &$vehicle) {
-                if (!$validator->failed()) {
-                    // ve_id
-                    $ve_id = $request->input('ve_id');
+                if ($validator->failed()) {
+                    return;
+                }
+                // ve_id
+                $ve_id = $request->input('vr_ve_id');
 
-                    /** @var Vehicle $vehicle */
-                    $vehicle = Vehicle::query()->find($ve_id);
-                    if (!$vehicle) {
-                        $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                /** @var Vehicle $vehicle */
+                $vehicle = Vehicle::query()->find($ve_id);
+                if (!$vehicle) {
+                    $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+
+                    return;
+                }
+
+                $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
+                if (!$pass) {
+                    return;
+                }
+
+                $sc_id = $request->input('vr_sc_id');
+
+                if ($sc_id) {
+                    /** @var SaleContract $saleContract */
+                    $saleContract = SaleContract::query()->find($sc_id);
+                    if (!$saleContract) {
+                        $validator->errors()->add('vr_sc_id', 'The sale_contract does not exist.');
 
                         return;
                     }
+                }
 
-                    $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
-                    if (!$pass) {
-                        return;
-                    }
-
-                    $sc_id = $request->input('sc_id');
-
-                    if ($sc_id) {
-                        /** @var SaleContract $saleContract */
-                        $saleContract = SaleContract::query()->find($sc_id);
-                        if (!$saleContract) {
-                            $validator->errors()->add('sc_id', 'The sale_contract does not exist.');
-
-                            return;
-                        }
-                    }
-
-                    // 不能关闭财务记录的判断：修改状态 + 收付款数据存在 + 收付款数据为已支付 + 当前是要关闭。
-                    if (null !== $vehicleRepair) { // 当是修改逻辑
-                        $Payment = $vehicleRepair->Payment;
-                        if ($Payment->exists && RpPayStatus::PAID === $Payment->pay_status->value) {
-                            if (!$request->boolean('add_should_pay')) {
-                                $validator->errors()->add('Payment', '关联的支付已经支付，不能关闭财务记录。');
-                            }
+                // 不能关闭财务记录的判断：修改状态 + 收付款数据存在 + 收付款数据为已支付 + 当前是要关闭。
+                if (null !== $vehicleRepair) { // 当是修改逻辑
+                    $Payment = $vehicleRepair->Payment;
+                    if ($Payment->exists && PPayStatus::PAID === $Payment->p_pay_status->value) {
+                        if (!$request->boolean('add_should_pay')) {
+                            $validator->errors()->add('Payment', '关联的支付已经支付，不能关闭财务记录。');
                         }
                     }
                 }
@@ -274,7 +275,7 @@ class VehicleRepairController extends Controller
         $input         = $validator->validated();
         $input_payment = $input['payment'];
 
-        $input_payment['sc_id'] = $input['sc_id'];
+        $input_payment['p_sc_id'] = $input['vr_sc_id'];
 
         DB::transaction(function () use (&$input, &$input_payment, &$vehicle, &$vehicleRepair) {
             if (null === $vehicleRepair) {
@@ -289,21 +290,21 @@ class VehicleRepairController extends Controller
                 if ($vehicleRepair->add_should_pay) {
                     $Payment = $vehicleRepair->Payment;
                     if ($Payment && $Payment->exists) {
-                        if (RpPayStatus::PAID === $Payment->pay_status->value) {
+                        if (PPayStatus::PAID === $Payment->p_pay_status->value) {
                             $Payment->fill($input_payment);
                             if ($Payment->isDirty()) {
                                 throw new ClientException('财务信息已支付，不能做修改。'); // 不能修改财务记录的判断：修改状态 + 收款数据存在 + 收款记录为已支付 + 收款记录要做更新($model->isDirty()) =>
                             }
                         } else {
-                            $Payment->update($input_payment + ['is_valid' => RpIsValid::VALID]);
+                            $Payment->update($input_payment + ['p_is_valid' => PIsValid::VALID]);
                         }
                     } else {
                         $vehicleRepair->Payment()->create($input_payment);
                     }
                 } else {
-                    $vehicleRepair->Payment()->where('pay_status', '=', RpPayStatus::UNPAID)->update(
+                    $vehicleRepair->Payment()->where('p_pay_status', '=', PPayStatus::UNPAID)->update(
                         [
-                            'is_valid' => RpIsValid::INVALID,
+                            'p_is_valid' => PIsValid::INVALID,
                         ]
                     );
                 }
@@ -321,7 +322,8 @@ class VehicleRepairController extends Controller
             []
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -354,7 +356,7 @@ class VehicleRepairController extends Controller
         $this->response()->withExtras(
             SaleContract::options(
                 where: function (Builder $builder) use ($input) {
-                    $builder->where('sc.ve_id', '=', $input['ve_id']);
+                    $builder->where('sc.sc_ve_id', '=', $input['ve_id']);
                 }
             )
         );
@@ -365,7 +367,7 @@ class VehicleRepairController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
-        return Uploader::upload($request, 'vehicle_repair', ['additional_photos', 'info_photos'], $this);
+        return Uploader::upload($request, 'vehicle_repair', ['vr_additional_photos', 'info_photos'], $this);
     }
 
     protected function options(?bool $with_group_count = false): void

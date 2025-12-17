@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Admin\Vehicle;
 
-use App\Enum\Vehicle\ViInspectionType;
+use App\Enum\VehicleInspection\ViInspectionType;
 use App\Http\Controllers\Admin\Vehicle\VehicleInspectionController;
 use App\Models\Vehicle\VehicleInspection;
 use Illuminate\Http\Request;
@@ -37,7 +37,7 @@ class VehicleInspectionControllerTest extends BaseVehicleControllerTestCase
         $resp->assertStatus(422);
 
         // 正确的 inspection_type 参数
-        $resp = $this->getJson(action([VehicleInspectionController::class, 'saleContractsOption']).'?inspection_type='.ViInspectionType::SC_DISPATCH);
+        $resp = $this->getJson(action([VehicleInspectionController::class, 'saleContractsOption']).'?vi_inspection_type='.ViInspectionType::SC_DISPATCH);
         $resp->assertStatus(200);
         $this->assertCommonJsonStructure($resp->json());
     }

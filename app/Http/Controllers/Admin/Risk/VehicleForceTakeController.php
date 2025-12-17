@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin\Risk;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Vehicle\VeStatusService;
-use App\Enum\Vehicle\VftForceTakeStatus;
+use App\Enum\Vehicle\VftStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Customer\Customer;
 use App\Models\Vehicle\Vehicle;
@@ -41,14 +41,14 @@ class VehicleForceTakeController extends Controller
         $paginate = new PaginateService(
             [],
             [],
-            ['kw', 'vft_force_take_status', 'vft_ve_id'],
+            ['kw', 'vft_status', 'vft_ve_id'],
             []
         );
 
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('ve.plate_no', 'like', '%'.$value.'%');
+                    $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%');
                 });
             },
         ]);
@@ -66,7 +66,7 @@ class VehicleForceTakeController extends Controller
         );
 
         $vehicleForceTake = new VehicleForceTake([
-            'force_take_time' => now(),
+            'vft_time' => now(),
         ]);
 
         return $this->response()->withData($vehicleForceTake)->respond();
@@ -106,33 +106,34 @@ class VehicleForceTakeController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                've_id'             => ['required', 'integer'],
-                'cu_id'             => ['required', 'integer'],
-                'force_take_time'   => ['required', 'date'],
-                'force_take_status' => ['required', 'string', Rule::in(VftForceTakeStatus::label_keys())],
-                'reason'            => ['nullable', 'string'],
+                'vft_ve_id'  => ['required', 'integer'],
+                'vft_cu_id'  => ['required', 'integer'],
+                'vft_time'   => ['required', 'date'],
+                'vft_status' => ['required', 'string', Rule::in(VftStatus::label_keys())],
+                'vft_reason' => ['nullable', 'string'],
             ]
-            + Uploader::validator_rule_upload_array('additional_photos'),
+            + Uploader::validator_rule_upload_array('vft_additional_photos'),
             [],
             trans_property(VehicleForceTake::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$vehicle) {
-                if (!$validator->failed()) {
-                    // ve_id
-                    $ve_id = $request->input('ve_id');
+                if ($validator->failed()) {
+                    return;
+                }
+                // ve_id
+                $ve_id = $request->input('vft_ve_id');
 
-                    /** @var Vehicle $vehicle */
-                    $vehicle = Vehicle::query()->find($ve_id);
-                    if (!$vehicle) {
-                        $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                /** @var Vehicle $vehicle */
+                $vehicle = Vehicle::query()->find($ve_id);
+                if (!$vehicle) {
+                    $validator->errors()->add('vft_ve_id', 'The vehicle does not exist.');
 
-                        return;
-                    }
+                    return;
+                }
 
-                    $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
-                    if (!$pass) {
-                        return;
-                    }
+                $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
+                if (!$pass) {
+                    return;
                 }
             })
         ;
@@ -162,7 +163,8 @@ class VehicleForceTakeController extends Controller
             []
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -179,13 +181,13 @@ class VehicleForceTakeController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
-        return Uploader::upload($request, 'vehicle_force_take', ['additional_photos'], $this);
+        return Uploader::upload($request, 'vehicle_force_take', ['vft_additional_photos'], $this);
     }
 
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            $with_group_count ? VftForceTakeStatus::options_with_count(VehicleForceTake::class) : VftForceTakeStatus::options(),
+            $with_group_count ? VftStatus::options_with_count(VehicleForceTake::class) : VftStatus::options(),
         );
     }
 }

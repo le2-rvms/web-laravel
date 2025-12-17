@@ -24,7 +24,7 @@ class AuthUserType
 
         return match (true) {
             $auth_user instanceof Admin    => sprintf($format, AuthUserType::ADMIN, $auth_user->id, $auth_user->name),
-            $auth_user instanceof Customer => sprintf($format, AuthUserType::CUSTOMER, $auth_user->cu_id, $auth_user->contact_name),
+            $auth_user instanceof Customer => sprintf($format, AuthUserType::CUSTOMER, $auth_user->cu_id, $auth_user->cu_contact_name),
         };
     }
 }

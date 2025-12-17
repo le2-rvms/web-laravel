@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Admin\Payment;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Admin\AdmTeamLimit;
-use App\Enum\Payment\PaPaStatus;
-use App\Enum\Payment\RpIsValid;
-use App\Enum\Payment\RpPayStatus;
-use App\Enum\Payment\RpPtId;
-use App\Enum\Sale\DtDtExportType;
-use App\Enum\Sale\DtDtStatus;
-use App\Enum\Sale\DtDtType;
-use App\Enum\Sale\ScScStatus;
+use App\Enum\Payment\PaStatus;
+use App\Enum\Payment\PIsValid;
+use App\Enum\Payment\PPayStatus;
+use App\Enum\Payment\PPtId;
+use App\Enum\Sale\DtExportType;
+use App\Enum\Sale\DtStatus;
+use App\Enum\Sale\DtType;
+use App\Enum\SaleContract\ScStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Payment\Payment;
@@ -36,8 +36,8 @@ class PaymentController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            RpPayStatus::labelOptions(),
-            RpIsValid::labelOptions(),
+            PPayStatus::labelOptions(),
+            PIsValid::labelOptions(),
         );
     }
 
@@ -63,7 +63,7 @@ class PaymentController extends Controller
         $paginate = new PaginateService(
             [],
             [],
-            ['kw', 'rp_pt_id', 'rp_pay_status', 'rp_is_valid', 'rp_should_pay_date', 'rp_actual_pay_date'],
+            ['kw', 'p_pt_id', 'p_pay_status', 'p_is_valid', 'p_should_pay_date', 'p_actual_pay_date'],
             []
         );
 
@@ -73,11 +73,11 @@ class PaymentController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->whereLike('sc.contract_number', '%'.$value.'%')
-                            ->orWhereLike('rp.rp_remark', '%'.$value.'%')
-                            ->orWhereLike('ve.plate_no', '%'.$value.'%')
-                            ->orWhereLike('cu.contact_name', '%'.$value.'%')
-                            ->orWhereLike('cu.contact_phone', '%'.$value.'%')
+                        $builder->whereLike('sc.sc_no', '%'.$value.'%')
+                            ->orWhereLike('p.p_remark', '%'.$value.'%')
+                            ->orWhereLike('ve.ve_plate_no', '%'.$value.'%')
+                            ->orWhereLike('cu.cu_contact_name', '%'.$value.'%')
+                            ->orWhereLike('cu.cu_contact_phone', '%'.$value.'%')
                         ;
                     });
                 },
@@ -95,7 +95,7 @@ class PaymentController extends Controller
         $this->response()->withExtras(
             SaleContract::options(
                 where: function (Builder $builder) {
-                    $builder->whereIn('sc.sc_status', [ScScStatus::PENDING, ScScStatus::SIGNED]);
+                    $builder->whereIn('sc.sc_status', [ScStatus::PENDING, ScStatus::SIGNED]);
                 }
             ),
         );
@@ -122,7 +122,7 @@ class PaymentController extends Controller
     {
         $idsArray = explode(',', $id); // 将 $id 按照逗号分割成数组
 
-        $payments = Payment::query()->whereIn('rp_id', $idsArray)->with(['SaleContract', 'PaymentType', 'SaleContract.Customer'])->get();
+        $payments = Payment::query()->whereIn('p_id', $idsArray)->with(['SaleContract', 'PaymentType', 'SaleContract.Customer'])->get();
 
         return $this->response()->withData($payments)->respond();
     }
@@ -134,7 +134,7 @@ class PaymentController extends Controller
         $this->response()->withExtras(
             PaymentAccount::options(),
             DocTpl::options(function (Builder $query) {
-                $query->where('dt.dt_type', '=', DtDtType::PAYMENT);
+                $query->where('dt.dt_type', '=', DtType::PAYMENT);
             })
         );
 
@@ -149,9 +149,8 @@ class PaymentController extends Controller
     public function doc(Request $request, Payment $payment, DocTplService $docTplService)
     {
         $input = $request->validate([
-            'mode'  => ['required', Rule::in(DtDtExportType::label_keys())],
-            'dt_id' => ['required',
-                Rule::exists(DocTpl::class)->where('dt_type', DtDtType::PAYMENT)->where('dt_status', DtDtStatus::ENABLED)],
+            'dt_export_type' => ['required', Rule::in(DtExportType::label_keys())],
+            'dt_id'          => ['required', Rule::exists(DocTpl::class, 'dt_id')->where('dt_type', DtType::PAYMENT)->where('dt_status', DtStatus::ENABLED)],
         ]);
 
         $payment->load(['SaleContract', 'PaymentType', 'SaleContract.Customer']); // toto 名字有变化
@@ -174,10 +173,11 @@ class PaymentController extends Controller
             trans_property(Payment::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($payment) {
-                if (!$validator->failed()) {
-                    if (RpPayStatus::PAID !== $payment->pay_status->value) {
-                        $validator->errors()->add('pay_status', '未支付，无需退还');
-                    }
+                if ($validator->failed()) {
+                    return;
+                }
+                if (PPayStatus::PAID !== $payment->p_pay_status->value) {
+                    $validator->errors()->add('p_pay_status', '未支付，无需退还');
                 }
             })
         ;
@@ -189,10 +189,10 @@ class PaymentController extends Controller
 
         DB::transaction(function () use (&$input, $payment) {
             $payment->update([
-                'pay_status'        => RpPayStatus::UNPAID,
-                'actual_pay_date'   => null,
-                'actual_pay_amount' => null,
-                'pa_id'             => null,
+                'p_pay_status'        => PPayStatus::UNPAID,
+                'p_actual_pay_date'   => null,
+                'p_actual_pay_amount' => null,
+                'p_pa_id'             => null,
             ]);
         });
 
@@ -205,46 +205,47 @@ class PaymentController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'sc_id'             => ['bail', 'required', 'integer', Rule::exists(SaleContract::class)],
-                'pt_id'             => ['bail', 'required', Rule::in(RpPtId::label_keys())],
-                'should_pay_date'   => ['bail', 'required', 'date'],
-                'should_pay_amount' => ['bail', 'required', 'numeric'],
-                'pay_status'        => ['bail', 'required', Rule::in(RpPayStatus::label_keys())],
-                'actual_pay_date'   => [
+                'p_sc_id'             => ['bail', 'required', 'integer', Rule::exists(SaleContract::class, 'sc_id')],
+                'p_pt_id'             => ['bail', 'required', Rule::in(PPtId::label_keys())],
+                'p_should_pay_date'   => ['bail', 'required', 'date'],
+                'p_should_pay_amount' => ['bail', 'required', 'numeric'],
+                'p_pay_status'        => ['bail', 'required', Rule::in(PPayStatus::label_keys())],
+                'p_actual_pay_date'   => [
                     'bail',
-                    Rule::requiredIf(RpPayStatus::PAID === $request->input('pay_status')),
-                    Rule::excludeIf(RpPayStatus::UNPAID === $request->input('pay_status')),
+                    Rule::requiredIf(PPayStatus::PAID === $request->input('p_pay_status')),
+                    Rule::excludeIf(PPayStatus::UNPAID === $request->input('p_pay_status')),
                     'date'],
-                'actual_pay_amount' => [
+                'p_actual_pay_amount' => [
                     'bail',
-                    Rule::requiredIf(RpPayStatus::PAID === $request->input('pay_status')),
-                    Rule::excludeIf(RpPayStatus::UNPAID === $request->input('pay_status')),
+                    Rule::requiredIf(PPayStatus::PAID === $request->input('p_pay_status')),
+                    Rule::excludeIf(PPayStatus::UNPAID === $request->input('p_pay_status')),
                     'numeric',
                 ],
-                'pa_id' => [
+                'p_pa_id' => [
                     'bail',
-                    Rule::requiredIf(RpPayStatus::PAID === $request->input('pay_status')),
-                    Rule::excludeIf(RpPayStatus::UNPAID === $request->input('pay_status')),
-                    Rule::exists(PaymentAccount::class)->where('pa_status', PaPaStatus::ENABLED),
+                    Rule::requiredIf(PPayStatus::PAID === $request->input('p_pay_status')),
+                    Rule::excludeIf(PPayStatus::UNPAID === $request->input('p_pay_status')),
+                    Rule::exists(PaymentAccount::class, 'pa_id')->where('pa_status', PaStatus::ENABLED),
                 ],
-                'rp_remark' => ['bail', 'nullable', 'string'],
+                'p_remark' => ['bail', 'nullable', 'string'],
             ],
             [],
             trans_property(Payment::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($payment, $request, &$vehicle, &$customer) {
-                if (!$validator->failed()) {
-                    if (RpPayStatus::UNPAID === $request->input('pay_status')) {
-                        if ($request->input('actual_pay_date') || $request->input('actual_pay_amount') || $request->input('pa_id')) {
-                            $validator->errors()->add('pay_status', '支付状态为「未支付」时，实际收付金额、日期、收支账户不允许填入。');
-                        }
+                if ($validator->failed()) {
+                    return;
+                }
+                if (PPayStatus::UNPAID === $request->input('p_pay_status')) {
+                    if ($request->input('p_actual_pay_date') || $request->input('p_actual_pay_amount') || $request->input('pa_id')) {
+                        $validator->errors()->add('p_pay_status', '支付状态为「未支付」时，实际收付金额、日期、收支账户不允许填入。');
                     }
+                }
 
-                    if ($payment && $payment->exists) {
-                        if (RpPayStatus::PAID == $payment->pay_status->value) {
-                            if (RpPayStatus::UNPAID === $request->input('pay_status')) {
-                                $validator->errors()->add('pay_status', '「已支付」状态不能改为「未支付」状态，应该使用「退回」');
-                            }
+                if ($payment && $payment->exists) {
+                    if (PPayStatus::PAID == $payment->p_pay_status->value) {
+                        if (PPayStatus::UNPAID === $request->input('p_pay_status')) {
+                            $validator->errors()->add('p_pay_status', '「已支付」状态不能改为「未支付」状态，应该使用「退回」');
                         }
                     }
                 }
@@ -273,8 +274,8 @@ class PaymentController extends Controller
     {
         $this->response()->withExtras(
             PaymentType::options_with_count(),
-            $with_group_count ? RpPayStatus::options_with_count(Payment::class) : RpPayStatus::options(),
-            $with_group_count ? RpIsValid::options_with_count(Payment::class) : RpIsValid::options(),
+            $with_group_count ? PPayStatus::options_with_count(Payment::class) : PPayStatus::options(),
+            $with_group_count ? PIsValid::options_with_count(Payment::class) : PIsValid::options(),
         );
     }
 }

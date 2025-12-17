@@ -39,7 +39,7 @@ class AdminController extends Controller
         $query = Admin::query()
             ->where('user_type', '!=', AdmUserType::TEMP)
             ->addSelect([
-                'vehicle_manager_count' => Vehicle::query()->selectRaw('count(*)')->whereColumn('vehicles.vehicle_manager', 'admins.id'),
+                'vehicle_manager_count' => Vehicle::query()->selectRaw('count(*)')->whereColumn('vehicles.ve_vehicle_manager', 'admins.id'),
             ])
             ->with('roles')
         ;

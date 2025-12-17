@@ -9,17 +9,21 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * @property int          $or_id
- * @property string       $turn
- * @property string       $url
- * @property string       $key
- * @property string       $headers
- * @property string       $form_data
- * @property string       $status_code
- * @property array|string $response
+ * @property string       $or_turn
+ * @property string       $or_url
+ * @property string       $or_key
+ * @property string       $or_headers
+ * @property string       $or_form_data
+ * @property string       $or_status_code
+ * @property array|string $or_response
  */
 class OneRequest extends Model
 {
     use ModelTrait;
+
+    public const CREATED_AT = 'or_created_at';
+    public const UPDATED_AT = 'or_updated_at';
+    public const UPDATED_BY = 'or_updated_by';
 
     protected $primaryKey = 'or_id';
 
@@ -38,7 +42,7 @@ class OneRequest extends Model
     protected function casts()
     {
         return [
-            'response' => 'array',
+            'or_response' => 'array',
         ];
     }
 }

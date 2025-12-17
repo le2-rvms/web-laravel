@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Admin\Sale;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Admin\AdmTeamLimit;
-use App\Enum\Payment\RpPtId;
-use App\Enum\Payment\RsDeleteOption;
-use App\Enum\Sale\DtDtExportType;
-use App\Enum\Sale\DtDtStatus;
-use App\Enum\Sale\DtDtType;
-use App\Enum\Sale\ScScStatus;
+use App\Enum\Payment\PPtId;
+use App\Enum\Payment\SsDeleteOption;
+use App\Enum\Sale\DtExportType;
+use App\Enum\Sale\DtStatus;
+use App\Enum\Sale\DtType;
 use App\Enum\Sale\SsReturnStatus;
+use App\Enum\SaleContract\ScStatus;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
@@ -20,7 +20,7 @@ use App\Models\Payment\Payment;
 use App\Models\Sale\DocTpl;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleSettlement;
-use App\Models\Sale\VehicleReplacement;
+use App\Models\Sale\VehicleTmp;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleManualViolation;
 use App\Models\Vehicle\VehicleRepair;
@@ -44,7 +44,7 @@ class SaleSettlementController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            RsDeleteOption::labelOptions(),
+            SsDeleteOption::labelOptions(),
         );
     }
 
@@ -68,7 +68,7 @@ class SaleSettlementController extends Controller
         $paginate = new PaginateService(
             [],
             [['ss.ss_id', 'desc']],
-            ['kw', 'rs_return_datetime', 'rs_return_status'],
+            ['kw', 'ss_return_datetime', 'ss_return_status'],
             []
         );
 
@@ -78,9 +78,9 @@ class SaleSettlementController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.plate_no', 'like', '%'.$value.'%')
-                            ->orWhere('cu.contact_name', 'like', '%'.$value.'%')
-                            ->orWhere('cu.contact_phone', 'like', '%'.$value.'%')
+                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')
+                            ->orWhere('cu.cu_contact_name', 'like', '%'.$value.'%')
+                            ->orWhere('cu.cu_contact_phone', 'like', '%'.$value.'%')
                             ->orWhere('ss.ss_remark', 'like', '%'.$value.'%')
                         ;
                     });
@@ -109,10 +109,12 @@ class SaleSettlementController extends Controller
             trans_property(SaleSettlement::class)
         )
             ->after(function ($validator) use ($request, &$saleContract) {
-                if (!$validator->failed()) {
-                    /** @var SaleContract $saleContract */
-                    $saleContract = SaleContract::query()->findOrFail($request->input('sc_id'));
+                if ($validator->failed()) {
+                    return;
                 }
+
+                /** @var SaleContract $saleContract */
+                $saleContract = SaleContract::query()->findOrFail($request->input('sc_id'));
             })
         ;
 
@@ -125,29 +127,29 @@ class SaleSettlementController extends Controller
         $saleSettlement = $saleContract->SaleSettlement;
         if (!$saleSettlement) { // 是新增
             /** @var Payment $payment */
-            $payment = $saleContract->Payments()->where('pt_id', '=', RpPtId::DEPOSIT)->first();
+            $payment = $saleContract->Payments()->where('p_pt_id', '=', PPtId::DEPOSIT)->first();
 
             $saleSettlement = new SaleSettlement([
-                'sc_id'                      => $saleContract->sc_id,
-                'deposit_amount'             => $payment->should_pay_amount ?? 0, // 押金应收金额
-                'received_deposit'           => $payment->actual_pay_amount ?? 0, // 押金实收金额
-                'early_return_penalty'       => '0',
-                'overdue_inspection_penalty' => '0',
-                'overdue_rent'               => '0',
-                'overdue_penalty'            => '0',
-                'accident_depreciation_fee'  => '0',
-                'insurance_surcharge'        => '0',
-                'violation_withholding_fee'  => '0',
-                'violation_penalty'          => '0',
-                'repair_fee'                 => '0',
-                'insurance_deductible'       => '0',
-                'forced_collection_fee'      => '0',
-                'other_deductions'           => '0',
-                'refund_amount'              => '0',
-                'settlement_amount'          => '0',
-                'return_datetime'            => now(),
-                'delete_option'              => RsDeleteOption::DELETE,
-                'processed_by'               => Auth::id(),
+                'ss_sc_id'                      => $saleContract->sc_id,
+                'ss_deposit_amount'             => $payment->p_should_pay_amount ?? 0, // 押金应收金额
+                'ss_received_deposit'           => $payment->p_actual_pay_amount ?? 0, // 押金实收金额
+                'ss_early_return_penalty'       => '0',
+                'ss_overdue_inspection_penalty' => '0',
+                'ss_overdue_rent'               => '0',
+                'ss_overdue_penalty'            => '0',
+                'ss_accident_depreciation_fee'  => '0',
+                'ss_insurance_surcharge'        => '0',
+                'ss_violation_withholding_fee'  => '0',
+                'ss_violation_penalty'          => '0',
+                'ss_repair_fee'                 => '0',
+                'ss_insurance_deductible'       => '0',
+                'ss_forced_collection_fee'      => '0',
+                'ss_other_deductions'           => '0',
+                'ss_refund_amount'              => '0',
+                'ss_settlement_amount'          => '0',
+                'ss_return_datetime'            => now(),
+                'ss_delete_option'              => SsDeleteOption::DELETE,
+                'ss_processed_by'               => Auth::id(),
             ]);
 
             $this->response()->withExtras(
@@ -156,7 +158,7 @@ class SaleSettlementController extends Controller
         } else { // 是修改
             $this->response()->withExtras(
                 DocTpl::options(function (Builder $query) {
-                    $query->where('dt.dt_type', '=', DtDtType::SALE_SETTLEMENT);
+                    $query->where('dt.dt_type', '=', DtType::SALE_SETTLEMENT);
                 }),
                 Admin::optionsWithRoles(),
             );
@@ -166,7 +168,7 @@ class SaleSettlementController extends Controller
 
         $this->response()->withExtras(
             ['saleContract' => $saleContract],
-            VehicleReplacement::kvList(sc_id: $saleContract->sc_id),
+            VehicleTmp::kvList(sc_id: $saleContract->sc_id),
             VehicleInspection::kvList(sc_id: $saleContract->sc_id),
             Payment::kvList(sc_id: $saleContract->sc_id),
             Payment::kvStat(),
@@ -187,8 +189,8 @@ class SaleSettlementController extends Controller
     public function doc(Request $request, SaleSettlement $saleSettlement, DocTplService $docTplService)
     {
         $input = $request->validate([
-            'mode'  => ['required', Rule::in(DtDtExportType::label_keys())],
-            'dt_id' => ['required', Rule::exists(DocTpl::class)->where('dt_type', DtDtType::SALE_SETTLEMENT)->where('dt_status', DtDtStatus::ENABLED)],
+            'mode'  => ['required', Rule::in(DtExportType::label_keys())],
+            'dt_id' => ['required', Rule::exists(DocTpl::class, 'dt_id')->where('dt_type', DtType::SALE_SETTLEMENT)->where('dt_status', DtStatus::ENABLED)],
         ]);
 
         $docTpl = DocTpl::query()->find($input['dt_id']);
@@ -248,7 +250,7 @@ class SaleSettlementController extends Controller
                 'deposit_return_amount'      => ['nullable', 'numeric'],
                 'deposit_return_date'        => ['nullable', 'date'],
                 'return_datetime'            => ['required', 'date'],
-                'delete_option'              => ['required', Rule::in(RsDeleteOption::label_keys())],
+                'delete_option'              => ['required', Rule::in(SsDeleteOption::label_keys())],
                 'ss_remark'                  => ['nullable', 'string'],
                 'processed_by'               => ['bail', 'nullable', 'integer', Rule::exists(Admin::class, 'id')],
             ]
@@ -256,49 +258,50 @@ class SaleSettlementController extends Controller
             [],
             trans_property(SaleSettlement::class)
         )->after(function ($validator) use ($request, &$saleSettlement, &$saleContract) {
-            if (!$validator->failed()) {
-                // 计算结算费
-                $result = '0';
-                foreach (SaleSettlement::calcOpts as $key => $opt) {
-                    $value  = $request->input($key);
-                    $result = bcadd($result, $opt.$value, 2);
-                }
+            if ($validator->failed()) {
+                return;
+            }
+            // 计算结算费
+            $result = '0';
+            foreach (SaleSettlement::calcOpts as $key => $opt) {
+                $value  = $request->input($key);
+                $result = bcadd($result, $opt.$value, 2);
+            }
 
-                if (bccomp($result, '0', 2) > 0) {
-                    if (0 !== bccomp($request->input(['settlement_amount']), $result, 2)) {
-                        $validator->errors()->add('settlement_amount', '结算费计算错误');
+            if (bccomp($result, '0', 2) > 0) {
+                if (0 !== bccomp($request->input(['settlement_amount']), $result, 2)) {
+                    $validator->errors()->add('settlement_amount', '结算费计算错误');
 
-                        return;
-                    }
-                }
-
-                if (bccomp($result, '0', 2) < 0) {
-                    if (0 !== bccomp($request->input(['deposit_return_amount']), bcmul($result, '-1', 2), 2)) {
-                        $validator->errors()->add('deposit_return_amount', '应退押金金额计算错误');
-
-                        return;
-                    }
-                }
-
-                if ($saleSettlement) { // 修改的时候
-                    if (SsReturnStatus::CONFIRMED === $saleSettlement->return_status) {
-                        $validator->errors()->add('return_status', '已审核，不能被修改');
-                    }
-                }
-
-                $saleContract = SaleContract::query()->findOrFail($request->input('sc_id'));
-
-                if (!$saleContract->check_sc_status([ScScStatus::SIGNED], $validator)) {
                     return;
                 }
+            }
 
-                // vehicle
-                $vehicle = $saleContract->Vehicle;
+            if (bccomp($result, '0', 2) < 0) {
+                if (0 !== bccomp($request->input(['deposit_return_amount']), bcmul($result, '-1', 2), 2)) {
+                    $validator->errors()->add('deposit_return_amount', '应退押金金额计算错误');
 
-                $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [], $validator);
-                if (!$pass) {
                     return;
                 }
+            }
+
+            if ($saleSettlement) { // 修改的时候
+                if (SsReturnStatus::CONFIRMED === $saleSettlement->ss_return_status) {
+                    $validator->errors()->add('ss_return_status', '已审核，不能被修改');
+                }
+            }
+
+            $saleContract = SaleContract::query()->findOrFail($request->input('sc_id'));
+
+            if (!$saleContract->check_status([ScStatus::SIGNED], $validator)) {
+                return;
+            }
+
+            // vehicle
+            $vehicle = $saleContract->Vehicle;
+
+            $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [], $validator);
+            if (!$pass) {
+                return;
             }
         });
 
@@ -311,7 +314,7 @@ class SaleSettlementController extends Controller
         DB::transaction(function () use (&$input, &$saleSettlement) {
             $_saleSettlement = SaleSettlement::query()->updateOrCreate(
                 array_intersect_key($input, array_flip(['sc_id'])),
-                $input + ['return_status' => SsReturnStatus::UNCONFIRMED],
+                $input + ['ss_return_status' => SsReturnStatus::UNCONFIRMED],
             );
 
             $saleSettlement = $_saleSettlement;
@@ -331,7 +334,7 @@ class SaleSettlementController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            RsDeleteOption::options(),
+            SsDeleteOption::options(),
             $with_group_count ? SsReturnStatus::options_with_count(SaleSettlement::class) : SsReturnStatus::options(),
         );
     }

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin\Vehicle;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Admin\AdmTeamLimit;
-use App\Enum\Vehicle\VvPaymentStatus;
-use App\Enum\Vehicle\VvProcessStatus;
+use App\Enum\VehicleViolation\VvPaymentStatus;
+use App\Enum\VehicleViolation\VvProcessStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Vehicle\Vehicle;
@@ -52,7 +52,7 @@ class VehicleViolationController extends Controller
 
         $paginate = new PaginateService(
             [],
-            [['vv.violation_datetime', 'desc']],
+            [['vv.vv_violation_datetime', 'desc']],
             ['kw', 'vv_plate_no', 'vv_violation_datetime', 'vv_process_status', 'vv_payment_status'],
             []
         );

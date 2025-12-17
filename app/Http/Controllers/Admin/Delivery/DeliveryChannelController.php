@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Admin\Delivery;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Delivery\DcDcKey;
-use App\Enum\Delivery\DcDcKeyDefault;
-use App\Enum\Delivery\DcDcProvider;
-use App\Enum\Delivery\DcDcStatus;
+use App\Enum\Delivery\DcKey;
+use App\Enum\Delivery\DcKeyDefault;
+use App\Enum\Delivery\DcProvider;
+use App\Enum\Delivery\DcStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Delivery\DeliveryChannel;
 use App\Services\PaginateService;
@@ -25,9 +25,9 @@ class DeliveryChannelController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            DcDcKey::labelOptions(),
-            DcDcProvider::labelOptions(),
-            DcDcStatus::labelOptions(),
+            DcKey::labelOptions(),
+            DcProvider::labelOptions(),
+            DcStatus::labelOptions(),
         );
     }
 
@@ -62,11 +62,11 @@ class DeliveryChannelController extends Controller
         $this->options();
 
         $deliveryChannel = new DeliveryChannel([
-            'dc_status' => DcDcStatus::ENABLED,
+            'dc_status' => DcStatus::ENABLED,
         ]);
 
         $this->response()->withExtras(
-            DcDcKeyDefault::kv(),
+            DcKeyDefault::kv(),
         );
 
         return $this->response()->withData($deliveryChannel)->respond();
@@ -102,18 +102,19 @@ class DeliveryChannelController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'dc_key'      => ['bail', 'required', Rule::in(DcDcKey::label_keys())],
+                'dc_key'      => ['bail', 'required', Rule::in(DcKey::label_keys())],
                 'dc_title'    => ['bail', 'required', 'max:255'],
                 'dc_template' => ['bail', 'required', 'max:2550'],
                 'dc_tn'       => ['bail', 'required', 'integer'],
-                'dc_provider' => ['bail', 'required', Rule::in(DcDcProvider::label_keys())],
-                'dc_status'   => ['bail', 'required', Rule::in(DcDcStatus::label_keys())],
+                'dc_provider' => ['bail', 'required', Rule::in(DcProvider::label_keys())],
+                'dc_status'   => ['bail', 'required', Rule::in(DcStatus::label_keys())],
             ],
             [],
             trans_property(DeliveryChannel::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -151,13 +152,14 @@ class DeliveryChannelController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'dc_status' => ['bail', 'required', Rule::in(DcDcStatus::label_keys())],
+                'dc_status' => ['bail', 'required', Rule::in(DcStatus::label_keys())],
             ],
             [],
             trans_property(DeliveryChannel::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -175,9 +177,9 @@ class DeliveryChannelController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            DcDcKey::options(),
-            DcDcProvider::options(),
-            DcDcStatus::options(),
+            DcKey::options(),
+            DcProvider::options(),
+            DcStatus::options(),
         );
     }
 }

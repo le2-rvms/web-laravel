@@ -3,14 +3,14 @@
 namespace App\Models\Vehicle;
 
 use App\Attributes\ClassName;
-use App\Enum\Payment\RpIsValid;
-use App\Enum\Payment\RpPayStatus;
-use App\Enum\Payment\RpPtId;
-use App\Enum\Vehicle\ViDrivingLicense;
-use App\Enum\Vehicle\ViInspectionType;
-use App\Enum\Vehicle\ViOperationLicense;
-use App\Enum\Vehicle\ViPolicyCopy;
-use App\Enum\Vehicle\ViVehicleDamageStatus;
+use App\Enum\Payment\PIsValid;
+use App\Enum\Payment\PPayStatus;
+use App\Enum\Payment\PPtId;
+use App\Enum\VehicleInspection\ViDrivingLicense;
+use App\Enum\VehicleInspection\ViInspectionType;
+use App\Enum\VehicleInspection\ViOperationLicense;
+use App\Enum\VehicleInspection\ViPolicyCopy;
+use App\Enum\VehicleInspection\ViVehicleDamageStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentType;
@@ -25,27 +25,27 @@ use Illuminate\Support\Facades\DB;
 
 #[ClassName('验车')]
 /**
- * @property int                         $vi_id                       验车序号
- * @property int                         $sc_id                       租车合同序号
- * @property int                         $ve_id                       车辆序号
- * @property string|ViInspectionType     $inspection_type             验车类型；发车或退车
- * @property null|int|ViPolicyCopy       $policy_copy                 保单复印件
- * @property null|int|ViDrivingLicense   $driving_license             行驶证
- * @property null|int|ViOperationLicense $operation_license           营运证（硬卡）
- * @property int|ViVehicleDamageStatus   $vehicle_damage_status       车损状态；TRUE 表示有车损，FALSE 表示无车损
- * @property Carbon                      $inspection_datetime         验车完成日时
- * @property int                         $vi_mileage                  公里数
- * @property mixed                       $processed_by                验车人
- * @property null|float                  $damage_deduction            车损扣款
- * @property null|string                 $vi_remark                   验车备注
- * @property null|bool                   $add_should_pay              是否为客户应收款
- * @property null|mixed                  $additional_photos           附加照片；存储照片路径
- * @property null|mixed                  $inspection_info             验车信息；包括验车照片路径和验车文字描述
- * @property mixed                       $inspection_type_label       验车类型
- * @property mixed                       $policy_copy_label           保单复印件
- * @property mixed                       $driving_license_label       行驶证
- * @property mixed                       $operation_license_label     营运证
- * @property mixed                       $vehicle_damage_status_label 车损状态
+ * @property int                         $vi_id                          验车序号
+ * @property int                         $vi_sc_id                       租车合同序号
+ * @property int                         $vi_ve_id                       车辆序号
+ * @property string|ViInspectionType     $vi_inspection_type             验车类型；发车或退车
+ * @property null|int|ViPolicyCopy       $vi_policy_copy                 保单复印件
+ * @property null|int|ViDrivingLicense   $vi_driving_license             行驶证
+ * @property null|int|ViOperationLicense $vi_operation_license           营运证（硬卡）
+ * @property int|ViVehicleDamageStatus   $vi_vehicle_damage_status       车损状态；TRUE 表示有车损，FALSE 表示无车损
+ * @property Carbon                      $vi_inspection_datetime         验车完成日时
+ * @property int                         $vi_mileage                     公里数
+ * @property mixed                       $vi_processed_by                验车人
+ * @property null|float                  $vi_damage_deduction            车损扣款
+ * @property null|string                 $vi_remark                      验车备注
+ * @property null|bool                   $vi_add_should_pay              是否为客户应收款
+ * @property null|mixed                  $vi_additional_photos           附加照片；存储照片路径
+ * @property null|mixed                  $vi_inspection_info             验车信息；包括验车照片路径和验车文字描述
+ * @property mixed                       $vi_inspection_type_label       验车类型
+ * @property mixed                       $vi_policy_copy_label           保单复印件
+ * @property mixed                       $vi_driving_license_label       行驶证
+ * @property mixed                       $vi_operation_license_label     营运证
+ * @property mixed                       $vi_vehicle_damage_status_label 车损状态
  * @property Vehicle                     $Vehicle
  * @property SaleContract                $SaleContract
  * @property Payment                     $Payment
@@ -55,6 +55,10 @@ class VehicleInspection extends Model
 {
     use ModelTrait;
 
+    public const CREATED_AT = 'vi_created_at';
+    public const UPDATED_AT = 'vi_updated_at';
+    public const UPDATED_BY = 'vi_updated_by';
+
     protected $primaryKey = 'vi_id';
 
     protected $guarded = ['vi_id'];
@@ -62,45 +66,45 @@ class VehicleInspection extends Model
     protected $attributes = [];
 
     protected $appends = [
-        'inspection_type_label',
-        'policy_copy_label',
-        'driving_license_label',
-        'operation_license_label',
-        'vehicle_damage_status_label',
+        'vi_inspection_type_label',
+        'vi_policy_copy_label',
+        'vi_driving_license_label',
+        'vi_operation_license_label',
+        'vi_vehicle_damage_status_label',
     ];
 
     protected $casts = [
-        'inspection_datetime'   => 'datetime:Y-m-d H:i',
-        'inspection_type'       => ViInspectionType::class,
-        'policy_copy'           => ViPolicyCopy::class,
-        'driving_license'       => ViDrivingLicense::class,
-        'operation_license'     => ViOperationLicense::class,
-        'vehicle_damage_status' => ViVehicleDamageStatus::class,
-        'add_should_pay'        => 'boolean',
+        'vi_inspection_datetime'   => 'datetime:Y-m-d H:i',
+        'vi_inspection_type'       => ViInspectionType::class,
+        'vi_policy_copy'           => ViPolicyCopy::class,
+        'vi_driving_license'       => ViDrivingLicense::class,
+        'vi_operation_license'     => ViOperationLicense::class,
+        'vi_vehicle_damage_status' => ViVehicleDamageStatus::class,
+        'vi_add_should_pay'        => 'boolean',
     ];
 
     public function Vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 've_id', 've_id');
+        return $this->belongsTo(Vehicle::class, 'vi_ve_id', 've_id');
     }
 
     public function SaleContract(): BelongsTo
     {
-        return $this->belongsTo(SaleContract::class, 'sc_id', 'sc_id');
+        return $this->belongsTo(SaleContract::class, 'vi_sc_id', 'sc_id');
     }
 
     public function Payment(): HasOne
     {
-        $pt_id = RpPtId::VEHICLE_DAMAGE;
+        $p_pt_id = PPtId::VEHICLE_DAMAGE;
 
-        return $this->hasOne(Payment::class, 'vi_id', 'vi_id')
-            ->where('pt_id', '=', $pt_id)->where('is_valid', '=', RpIsValid::VALID)
+        return $this->hasOne(Payment::class, 'p_vi_id', 'vi_id')
+            ->where('p_pt_id', '=', $p_pt_id)->where('p_is_valid', '=', PIsValid::VALID)
             ->withDefault(
                 [
-                    'pt_id'           => $pt_id,
-                    'payment_type'    => PaymentType::query()->where('pt_id', '=', $pt_id)->first(),
-                    'should_pay_date' => now()->format('Y-m-d'),
-                    'pay_status'      => RpPayStatus::UNPAID,
+                    'p_pt_id'           => $p_pt_id,
+                    'p_payment_type'    => PaymentType::query()->where('pt_id', '=', $p_pt_id)->first(),
+                    'p_should_pay_date' => now()->format('Y-m-d'),
+                    'p_pay_status'      => PPayStatus::UNPAID,
                 ]
             )->with('PaymentType')
         ;
@@ -108,10 +112,10 @@ class VehicleInspection extends Model
 
     public function PaymentAll(): HasOne
     {
-        $pt_id = RpPtId::VEHICLE_DAMAGE;
+        $p_pt_id = PPtId::VEHICLE_DAMAGE;
 
-        return $this->hasOne(Payment::class, 'vi_id', 'vi_id')
-            ->where('pt_id', '=', $pt_id)
+        return $this->hasOne(Payment::class, 'p_vi_id', 'vi_id')
+            ->where('p_pt_id', '=', $p_pt_id)
             ->with('PaymentType')
         ;
     }
@@ -120,7 +124,7 @@ class VehicleInspection extends Model
     {
         return [
             'VehicleInspection.inspection_type'       => fn ($item) => $item->inspection_type_label,
-            'Customer.contact_name'                   => fn ($item) => $item->contact_name,
+            'Customer.cu_contact_name'                => fn ($item) => $item->cu_contact_name,
             'Vehicle.plate_no'                        => fn ($item) => $item->plate_no,
             'VehicleInspection.policy_copy'           => fn ($item) => $item->policy_copy_label,
             'VehicleInspection.driving_license'       => fn ($item) => $item->driving_license_label,
@@ -136,26 +140,26 @@ class VehicleInspection extends Model
 
     public static function indexQuery(array $search = []): Builder
     {
-        $ve_id = $search['ve_id'] ?? null;
-        $sc_id = $search['sc_id'] ?? null;
-        $cu_id = $search['cu_id'] ?? null;
+        $vi_ve_id = $search['vi_ve_id'] ?? null;
+        $vi_sc_id = $search['vi_sc_id'] ?? null;
+        $vi_cu_id = $search['vi_cu_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_inspections', 'vi')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vi.ve_id')
-            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.sc_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
-            ->when($ve_id, function (Builder $query) use ($ve_id) {
-                $query->where('vi.ve_id', '=', $ve_id);
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vi.vi_ve_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.vi_sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
+            ->when($vi_ve_id, function (Builder $query) use ($vi_ve_id) {
+                $query->where('vi.vi_ve_id', '=', $vi_ve_id);
             })
-            ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $sc_id && $query->where('vi.sc_id', '=', $sc_id);
+            ->when($vi_sc_id, function (Builder $query) use ($vi_sc_id) {
+                $vi_sc_id && $query->where('vi.vi_sc_id', '=', $vi_sc_id);
             })
-            ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('cu.cu_id', '=', $cu_id);
+            ->when($vi_cu_id, function (Builder $query) use ($vi_cu_id) {
+                $query->where('cu.cu_id', '=', $vi_cu_id);
             })
             ->when(
-                null === $ve_id && null === $sc_id && null === $cu_id,
+                null === $vi_ve_id && null === $vi_sc_id && null === $vi_cu_id,
                 function (Builder $query) {
                     $query->orderByDesc('vi.vi_id');
                 },
@@ -163,7 +167,7 @@ class VehicleInspection extends Model
                     $query->orderBy('vi.vi_id');
                 }
             )
-            ->select('vi.*', 've.plate_no', 'cu.contact_name', 'cu.contact_phone')
+            ->select('vi.*', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone')
             ->addSelect(
                 DB::raw(ViInspectionType::toCaseSQL()),
                 DB::raw(ViPolicyCopy::toCaseSQL()),
@@ -171,7 +175,7 @@ class VehicleInspection extends Model
                 DB::raw(ViOperationLicense::toCaseSQL()),
                 DB::raw(ViVehicleDamageStatus::toCaseSQL()),
                 DB::raw(ViVehicleDamageStatus::toColorSQL()),
-                DB::raw("to_char(inspection_datetime, 'YYYY-MM-DD HH24:MI') as inspection_datetime_"),
+                DB::raw("to_char(vi_inspection_datetime, 'YYYY-MM-DD HH24:MI') as vi_inspection_datetime_"),
             )
         ;
     }
@@ -181,48 +185,48 @@ class VehicleInspection extends Model
         return [];
     }
 
-    protected function additionalPhotos(): Attribute
+    protected function viAdditionalPhotos(): Attribute
     {
         return $this->uploadFileArray();
     }
 
-    protected function inspectionInfo(): Attribute
+    protected function viInspectionInfo(): Attribute
     {
         return $this->arrayInfo();
     }
 
-    protected function inspectionTypeLabel(): Attribute
+    protected function viInspectionTypeLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('inspection_type')?->label
+            get: fn () => $this->getAttribute('vi_inspection_type')?->label
         );
     }
 
-    protected function policyCopyLabel(): Attribute
+    protected function viPolicyCopyLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('policy_copy')?->label
+            get: fn () => $this->getAttribute('vi_policy_copy')?->label
         );
     }
 
-    protected function drivingLicenseLabel(): Attribute
+    protected function viDrivingLicenseLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('driving_license')?->label
+            get: fn () => $this->getAttribute('vi_driving_license')?->label
         );
     }
 
-    protected function operationLicenseLabel(): Attribute
+    protected function viOperationLicenseLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('operation_license')?->label
+            get: fn () => $this->getAttribute('vi_operation_license')?->label
         );
     }
 
-    protected function vehicleDamageStatusLabel(): Attribute
+    protected function viVehicleDamageStatusLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('vehicle_damage_status')?->label
+            get: fn () => $this->getAttribute('vi_vehicle_damage_status')?->label
         );
     }
 }

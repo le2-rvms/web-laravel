@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Vehicle;
 
-use App\Enum\Vehicle\VcVcStatus;
+use App\Enum\Vehicle\VcStatus;
 use App\Models\Vehicle\VehicleCenter;
 use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -25,7 +25,7 @@ class VehicleCenterFactory extends Factory
             'vc_address'       => $data['vc_address'],
             'vc_contact_name'  => $data['vc_contact_name'],
             'vc_contact_phone' => $data['vc_contact_mobile'],
-            'vc_status'        => VcVcStatus::label_key_random(),
+            'vc_status'        => VcStatus::label_key_random(),
             'vc_note'          => $data['vc_note'],
             'vc_permitted'     => $this->faker->boolean(50) ? [$this->randomVehicleServiceAdminID(1)] : null,
         ];

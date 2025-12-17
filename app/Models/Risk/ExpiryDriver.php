@@ -2,8 +2,8 @@
 
 namespace App\Models\Risk;
 
-use App\Enum\Customer\CuCuType;
-use App\Enum\Customer\CuiCuiGender;
+use App\Enum\Customer\CuiGender;
+use App\Enum\Customer\CuType;
 use App\Models\_\ModelTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -26,8 +26,8 @@ class ExpiryDriver extends Model
         return DB::query()
             ->from('customer_individuals', 'cui')
             ->leftJoin('customers as cu', function (JoinClause $join) {
-                $join->on('cui.cu_id', '=', 'cu.cu_id')
-                    ->where('cu.cu_type', '=', CuCuType::INDIVIDUAL)
+                $join->on('cui.cui_cu_id', '=', 'cu.cu_id')
+                    ->where('cu.cu_type', '=', CuType::INDIVIDUAL)
                 ;
             })
 //            ->where('cu.cu_type', CuCustomerType::INDIVIDUAL)
@@ -41,8 +41,8 @@ class ExpiryDriver extends Model
             })
             ->select('cu.*', 'cui.*')
             ->addSelect(
-                DB::raw(CuCuType::toCaseSQL()),
-                DB::raw(CuiCuiGender::toCaseSQL()),
+                DB::raw(CuType::toCaseSQL()),
+                DB::raw(CuiGender::toCaseSQL()),
             )
         ;
     }

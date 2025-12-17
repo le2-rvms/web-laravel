@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Sale\ScPaymentDay_Month;
-use App\Enum\Sale\ScPaymentDay_Week;
-use App\Enum\Sale\ScPaymentDayType;
-use App\Enum\Sale\ScRentalType;
-use App\Enum\Sale\ScRentalType_Short;
-use App\Enum\Sale\SctSctStatus;
+use App\Enum\SaleContract\ScPaymentDay_Month;
+use App\Enum\SaleContract\ScPaymentDay_Week;
+use App\Enum\SaleContract\ScPaymentPeriod;
+use App\Enum\SaleContract\ScRentalType;
+use App\Enum\SaleContract\ScRentalType_Short;
+use App\Enum\SaleContract\SctStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Sale\SaleContractTpl;
 use App\Rules\PaymentDayCheck;
@@ -105,42 +105,43 @@ class SaleContractTplController extends Controller
     {
         $input1 = $request->validate(
             [
-                'rental_type'      => ['bail', 'required', Rule::in(ScRentalType::label_keys())],
-                'payment_day_type' => ['bail', 'nullable', 'string', Rule::in(ScPaymentDayType::label_keys())],
+                'sc_rental_type'    => ['bail', 'required', Rule::in(ScRentalType::label_keys())],
+                'sc_payment_period' => ['bail', 'nullable', 'string', Rule::in(ScPaymentPeriod::label_keys())],
             ],
             [],
             trans_property(SaleContractTpl::class)
         );
 
-        $is_long_term = ScRentalType::LONG_TERM === $input1['rental_type'];
+        $is_long_term = ScRentalType::LONG_TERM === $input1['sc_rental_type'];
 
         $validator = Validator::make(
             $request->all(),
             [
-                'sct_name'                        => ['bail', 'required', 'max:255'],
-                'contract_number_prefix'          => ['bail', 'nullable', 'string', 'max:50'],
-                'free_days'                       => ['bail', 'nullable', 'int:4'],
-                'installments'                    => ['bail', 'nullable', 'integer', 'min:1'],
-                'deposit_amount'                  => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'rent_amount'                     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'insurance_base_fee_amount'       => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
-                'insurance_additional_fee_amount' => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
-                'other_fee_amount'                => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
-                'payment_day'                     => ['bail', 'nullable', 'integer', new PaymentDayCheck($input1['payment_day_type'])],
-                'cus_1'                           => ['bail', 'nullable', 'max:255'],
-                'cus_2'                           => ['bail', 'nullable', 'max:255'],
-                'cus_3'                           => ['bail', 'nullable', 'max:255'],
-                'discount_plan'                   => ['bail', 'nullable', 'max:255'],
-                'sc_remark'                       => ['bail', 'nullable', 'max:255'],
+                'sct_name'                           => ['bail', 'required', 'max:255'],
+                'sc_no_prefix'                       => ['bail', 'nullable', 'string', 'max:50'],
+                'sc_free_days'                       => ['bail', 'nullable', 'int:4'],
+                'sc_installments'                    => ['bail', 'nullable', 'integer', 'min:1'],
+                'sc_deposit_amount'                  => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sc_management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sc_rent_amount'                     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sc_insurance_base_fee_amount'       => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
+                'sc_insurance_additional_fee_amount' => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
+                'sc_other_fee_amount'                => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
+                'sc_payment_day'                     => ['bail', 'nullable', 'integer', new PaymentDayCheck($input1['sc_payment_period'])],
+                'sc_cus_1'                           => ['bail', 'nullable', 'max:255'],
+                'sc_cus_2'                           => ['bail', 'nullable', 'max:255'],
+                'sc_cus_3'                           => ['bail', 'nullable', 'max:255'],
+                'sc_discount_plan'                   => ['bail', 'nullable', 'max:255'],
+                'sc_remark'                          => ['bail', 'nullable', 'max:255'],
             ]
-            + Uploader::validator_rule_upload_array('additional_photos')
-            + Uploader::validator_rule_upload_object('additional_file'),
+            + Uploader::validator_rule_upload_array('sc_additional_photos')
+            + Uploader::validator_rule_upload_object('sc_additional_file'),
             [],
             trans_property(SaleContractTpl::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -178,13 +179,14 @@ class SaleContractTplController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'sct_status' => ['bail', 'required', Rule::in(SctSctStatus::label_keys())],
+                'sct_status' => ['bail', 'required', Rule::in(SctStatus::label_keys())],
             ],
             [],
             trans_property(SaleContractTpl::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -208,8 +210,8 @@ class SaleContractTplController extends Controller
             $request,
             'sale_contract_tpl',
             [
-                'additional_photos',
-                'additional_file',
+                'sc_additional_photos',
+                'sc_additional_file',
             ],
             $this
         );
@@ -220,7 +222,7 @@ class SaleContractTplController extends Controller
         $this->response()->withExtras(
             ScRentalType::options(),
             ScRentalType_Short::options(),
-            ScPaymentDayType::options(),
+            ScPaymentPeriod::options(),
             ScPaymentDay_Month::options(),
             ScPaymentDay_Week::options(),
         );

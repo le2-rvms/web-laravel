@@ -15,11 +15,11 @@ use Illuminate\Support\Facades\DB;
 #[ClassName('设定值')]
 /**
  * @property int                  $cfg_id
- * @property string               $cfg_key        设定名
- * @property string               $cfg_value      设定值
- * @property string               $cfg_remark     设定备注
- * @property CfgUsageCategory|int $usage_category 使用区分
- * @property int                  $masked         是否打码
+ * @property string               $cfg_key            设定名
+ * @property string               $cfg_value          设定值
+ * @property string               $cfg_remark         设定备注
+ * @property CfgUsageCategory|int $cfg_usage_category 使用区分
+ * @property int                  $cfg_masked         是否打码
  */
 class Configuration extends Model
 {
@@ -31,21 +31,25 @@ class Configuration extends Model
 
     public const configurations_cache_ttl = 600;
 
+    public const CREATED_AT = 'cfg_created_at';
+
+    public const UPDATED_AT = 'cfg_updated_at';
+
     protected $primaryKey = 'cfg_id';
 
     protected $guarded = ['cfg_id'];
 
     protected $appends = [
-        'usage_category_label',
-        'masked_label',
+        'cfg_usage_category_label',
+        'cfg_masked_label',
         'cfg_value_show',
     ];
 
     protected $attributes = [];
 
     protected $casts = [
-        'usage_category' => CfgUsageCategory::class,
-        'masked'         => CfgMasked::class,
+        'cfg_usage_category' => CfgUsageCategory::class,
+        'cfg_masked'         => CfgMasked::class,
     ];
 
     public static function configs(): array
@@ -117,10 +121,10 @@ class Configuration extends Model
         return [];
     }
 
-    protected function maskedLabel(): Attribute
+    protected function cfgMaskedLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttributeValue('masked')?->label ?? ''
+            get: fn () => $this->getAttributeValue('cfg_masked')?->label ?? ''
         );
     }
 
@@ -129,10 +133,10 @@ class Configuration extends Model
         return Attribute::make(
             get: function () {
                 $configValueText = $this->getRawOriginal('cfg_value');
-                $masked          = $this->getRawOriginal('masked');
+                $masked          = $this->getRawOriginal('cfg_masked');
 
                 if (!is_null($masked) && CfgMasked::YES == $masked) {
-                    $configValueText = '***********************';
+                    $configValueText = '*****';
                 }
 
                 return $configValueText;
@@ -140,10 +144,10 @@ class Configuration extends Model
         );
     }
 
-    protected function usageCategoryLabel(): Attribute
+    protected function cfgUsageCategoryLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttributeValue('usage_category')?->label
+            get: fn () => $this->getAttributeValue('cfg_usage_category')?->label
         );
     }
 }

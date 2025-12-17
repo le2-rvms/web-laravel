@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Payment\RpIsValid;
-use App\Enum\Sale\ScScStatus;
+use App\Enum\Payment\PIsValid;
+use App\Enum\SaleContract\ScStatus;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
@@ -34,12 +34,12 @@ class SaleContractCancelController extends Controller
             []
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($saleContract) {
-                if (!$saleContract->check_sc_status([ScScStatus::PENDING, ScScStatus::SIGNED], $validator)) {
+                if (!$saleContract->check_status([ScStatus::PENDING, ScStatus::SIGNED], $validator)) {
                     return;
                 }
 
                 if (!$vehicle = $saleContract->Vehicle) {
-                    $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                    $validator->errors()->add('sc_ve_id', 'The vehicle does not exist.');
 
                     return;
                 }
@@ -62,30 +62,30 @@ class SaleContractCancelController extends Controller
             ;
 
             match ($saleContract->sc_status->value) {
-                ScScStatus::PENDING => (function () use ($saleContract) {
+                ScStatus::PENDING => (function () use ($saleContract) {
                     $saleContract->Vehicle->updateStatus(
-                        status_rental: VeStatusRental::LISTED,
+                        ve_status_rental: VeStatusRental::LISTED,
                     );
 
                     $saleContract->Payments()->update([
-                        'is_valid' => RpIsValid::INVALID,
+                        'p_is_valid' => PIsValid::INVALID,
                     ]);
                 })(),
-                ScScStatus::SIGNED => (function () use ($saleContract) {
+                ScStatus::SIGNED => (function () use ($saleContract) {
                     $saleContract->Vehicle->updateStatus(
-                        status_rental: VeStatusRental::PENDING,
+                        ve_status_rental: VeStatusRental::PENDING,
                     );
 
                     $saleContract->Payments->each(function ($item, $key) {
                         $item->update([
-                            'is_valid' => RpIsValid::INVALID,
+                            'p_is_valid' => PIsValid::INVALID,
                         ]);
                     });
                 })(),
             };
 
-            $saleContract->sc_status   = ScScStatus::CANCELLED;
-            $saleContract->canceled_at = now();
+            $saleContract->sc_status      = ScStatus::CANCELLED;
+            $saleContract->sc_canceled_at = now();
             $saleContract->save();
         });
 

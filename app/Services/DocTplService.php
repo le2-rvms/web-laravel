@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Enum\Sale\DtDtExportType;
-use App\Enum\Sale\DtDtTypeMacroChars;
+use App\Enum\Sale\DtExportType;
+use App\Enum\Sale\DtTypeMacroChars;
 use App\Exceptions\ServerException;
 use App\Models\Sale\DocTpl;
 use GuzzleHttp\Client;
@@ -60,7 +60,7 @@ class DocTplService
             // 替换模板占位符并保存到新的 DOCX 文件
             // https://phpword.readthedocs.io/en/latest/templates-processing.html
             $tpl = new TemplateProcessor($tempDocx);
-            $tpl->setMacroChars(DtDtTypeMacroChars::Opening->value, DtDtTypeMacroChars::Closing->value);
+            $tpl->setMacroChars(DtTypeMacroChars::Opening->value, DtTypeMacroChars::Closing->value);
 
             $dt_type = $docTpl->dt_type;
             //            $rule = array_map(function ($value) {
@@ -112,7 +112,7 @@ class DocTplService
         })();
 
         // 未生成 PDF时直接上传 DOCX 文件
-        if (DtDtExportType::DOCX === $mode) {
+        if (DtExportType::DOCX === $mode) {
             return temporarySignStorageAppShare($tempFilledDocx);
         }
 
@@ -159,7 +159,7 @@ class DocTplService
         register_shutdown_function(function () {
             foreach ($this->tempFiles as $file) {
                 if ($file && file_exists($file)) {
-                    //                    @unlink($file);
+                    @unlink($file);
                 }
             }
         });

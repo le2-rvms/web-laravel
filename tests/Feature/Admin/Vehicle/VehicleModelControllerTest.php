@@ -23,7 +23,7 @@ class VehicleModelControllerTest extends BaseVehicleControllerTestCase
 
     public function testStoreValidationError(): void
     {
-        // 缺少必填字段 brand_name、model_name、vm_status
+        // 缺少必填字段 vm_brand_name、vm_model_name、vm_status
         $resp = $this->postJson(action([VehicleModelController::class, 'store']), []);
         $resp->assertStatus(422);
     }

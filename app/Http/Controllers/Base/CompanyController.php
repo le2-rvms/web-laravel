@@ -53,26 +53,27 @@ class CompanyController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'company_name'  => ['required', 'string', 'max:100'],
-            'contact_name'  => ['required', 'string', 'max:10'],
-            'contact_phone' => ['required', 'digits:11'],
+            'company_name'    => ['required', 'string', 'max:100'],
+            'cu_contact_name' => ['required', 'string', 'max:10'],
+            'contact_phone'   => ['required', 'digits:11'],
         ], [
-            'company_name.required'  => '请填写公司名称',
-            'company_name.max'       => '公司名称不能超过100个字符',
-            'contact_name.required'  => '请填写联系人',
-            'contact_phone.required' => '请填写手机号',
-            'contact_phone.digits'   => '手机号必须是11位数字',
+            'company_name.required'    => '请填写公司名称',
+            'company_name.max'         => '公司名称不能超过100个字符',
+            'cu_contact_name.required' => '请填写联系人',
+            'contact_phone.required'   => '请填写手机号',
+            'contact_phone.digits'     => '手机号必须是11位数字',
         ])->after(function ($validator) use ($request, &$cacheIpKey) {
-            if (!$validator->failed()) {
-                // 客户端ip限制
-                $ip = $request->ip();
+            if ($validator->failed()) {
+                return;
+            }
+            // 客户端ip限制
+            $ip = $request->ip();
 
-                $cacheIpKey = 'register_attempts_ip:'.$ip;
-                $attempts   = Cache::get($cacheIpKey, 0);
+            $cacheIpKey = 'register_attempts_ip:'.$ip;
+            $attempts   = Cache::get($cacheIpKey, 0);
 
-                if ($attempts > 3) {
-                    $validator->errors()->add('company_name', '超过注册次数限制，请联系客服。');
-                }
+            if ($attempts > 3) {
+                $validator->errors()->add('company_name', '超过注册次数限制，请联系客服。');
             }
         });
         if ($validator->fails()) {

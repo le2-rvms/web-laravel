@@ -38,7 +38,7 @@ class VehicleManualViolationControllerTest extends BaseVehicleControllerTestCase
     public function testShowReturnsResponse(): void
     {
         $controller  = app(VehicleManualViolationController::class);
-        $manualEntry = new VehicleManualViolation(['vmv_id' => 1]);
+        $manualEntry = new VehicleManualViolation(['vv_id' => 1]);
 
         $response = $controller->show($manualEntry);
 
@@ -48,7 +48,7 @@ class VehicleManualViolationControllerTest extends BaseVehicleControllerTestCase
     public function testEditReturnsResponse(): void
     {
         $controller  = app(VehicleManualViolationController::class);
-        $manualEntry = new VehicleManualViolation(['vmv_id' => 1]);
+        $manualEntry = new VehicleManualViolation(['vv_id' => 1]);
 
         $response = $controller->edit($manualEntry);
 
@@ -60,7 +60,7 @@ class VehicleManualViolationControllerTest extends BaseVehicleControllerTestCase
         $this->expectException(ValidationException::class);
 
         $controller  = app(VehicleManualViolationController::class);
-        $manualEntry = new VehicleManualViolation(['vmv_id' => 1]);
+        $manualEntry = new VehicleManualViolation(['vv_id' => 1]);
 
         $controller->update(Request::create('/', 'PUT', []), $manualEntry);
     }
@@ -68,7 +68,7 @@ class VehicleManualViolationControllerTest extends BaseVehicleControllerTestCase
     public function testDestroyReturnsResponse(): void
     {
         $controller  = app(VehicleManualViolationController::class);
-        $manualEntry = new VehicleManualViolation(['vmv_id' => 1]);
+        $manualEntry = new VehicleManualViolation(['vv_id' => 1]);
 
         $response = $controller->destroy($manualEntry);
 

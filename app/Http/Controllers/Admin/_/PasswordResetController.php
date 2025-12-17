@@ -33,26 +33,28 @@ class PasswordResetController extends Controller
                 'email' => ['required', 'email', Rule::exists(Admin::class, 'email')],
             ]
         )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey, &$cacheIpKey) {
-            if (!$validator->failed()) {
-                // 客户端ip限制
-                $ip = $request->ip();
+            if ($validator->failed()) {
+                return;
+            }
 
-                $cacheIpKey = 'password_reset_ip:'.$ip;
-                $attempts   = Cache::get($cacheIpKey, 0);
+            // 客户端ip限制
+            $ip = $request->ip();
 
-                if ($attempts > 3) {
-                    $validator->errors()->add('email', '你已操作超过限制次数，请联系客服。');
+            $cacheIpKey = 'password_reset_ip:'.$ip;
+            $attempts   = Cache::get($cacheIpKey, 0);
 
-                    return;
-                }
+            if ($attempts > 3) {
+                $validator->errors()->add('email', '你已操作超过限制次数，请联系客服。');
 
-                // 限制该邮箱每分钟只能请求一次验证码
-                $cacheKey = 'password_reset_code:'.$request->input('email');
-                if (Cache::has($cacheKey)) {
-                    $validator->errors()->add('email', '请求过于频繁，请稍后再试');
+                return;
+            }
 
-                    return;
-                }
+            // 限制该邮箱每分钟只能请求一次验证码
+            $cacheKey = 'password_reset_code:'.$request->input('email');
+            if (Cache::has($cacheKey)) {
+                $validator->errors()->add('email', '请求过于频繁，请稍后再试');
+
+                return;
             }
         });
 
@@ -90,11 +92,13 @@ class PasswordResetController extends Controller
                 'password_confirmation' => ['required', 'min:8'],
             ]
         )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey) {
-            if (!$validator->failed()) {
-                $cacheKey = 'password_reset_code_'.$request->input('email');
-                if (Cache::get($cacheKey) !== $request->input('code')) {
-                    $validator->errors()->add('code', '验证码无效或已过期');
-                }
+            if ($validator->failed()) {
+                return;
+            }
+
+            $cacheKey = 'password_reset_code_'.$request->input('email');
+            if (Cache::get($cacheKey) !== $request->input('code')) {
+                $validator->errors()->add('code', '验证码无效或已过期');
             }
         });
 

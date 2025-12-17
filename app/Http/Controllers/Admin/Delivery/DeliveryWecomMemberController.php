@@ -53,7 +53,8 @@ class DeliveryWecomMemberController extends Controller
             trans_property(SaleContractExt::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;

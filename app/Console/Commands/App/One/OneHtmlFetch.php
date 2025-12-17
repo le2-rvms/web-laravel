@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\App\One;
 
-use App\Enum\One\OaOaType;
+use App\Enum\One\OaType;
 use App\Models\One\OneAccount;
 use App\Models\One\OneRequest;
 use GuzzleHttp\Client;
@@ -30,10 +30,10 @@ class OneHtmlFetch extends Command
         $this->turn = $this->option('turn') ?: Carbon::now()->format('Y-m-d');
 
         $oneAccounts = OneAccount::query()
-            ->whereRaw('LENGTH(cookie_string) > ?', [30])
+            ->whereRaw('LENGTH(oa_cookie_string) > ?', [30])
             ->where(function (Builder $query) {
-                $query->where('cookie_refresh_at', '>=', now()->subMinutes(30))
-                    ->orWhereNull('cookie_refresh_at')
+                $query->where('oa_cookie_refresh_at', '>=', now()->subMinutes(30))
+                    ->orWhereNull('oa_cookie_refresh_at')
                 ;
             })
 
@@ -41,13 +41,13 @@ class OneHtmlFetch extends Command
         ;
         foreach ($oneAccounts as $oneAccount) {
             switch ($oneAccount->oa_type) {
-                case OaOaType::PERSON:
+                case OaType::PERSON:
                     $this->personVehicle($oneAccount);
                     $this->personViolation($oneAccount);
 
                     break;
 
-                case OaOaType::COMPANY:
+                case OaType::COMPANY:
                     $this->companyVehicle($oneAccount, hpzl: '02');
                     $this->companyVehicle($oneAccount, hpzl: '52');
                     $this->companyViolation($oneAccount);
@@ -71,7 +71,7 @@ class OneHtmlFetch extends Command
         OneRequest::query()
             ->where('turn', '=', $this->turn)
             ->where('key', 'like', "vehs,{$hpzl},%")
-            ->where('status_code', '!=', '200')->delete()
+            ->where('or_status_code', '!=', '200')->delete()
         ;
 
         $domain = $oneAccount->province_value['url'];
@@ -146,7 +146,7 @@ class OneHtmlFetch extends Command
                     // 发送 POST 请求
                     $response = Http::withHeaders($headers)
                         ->withHeaders([
-                            'Cookie' => $oneAccount->cookie_string,
+                            'Cookie' => $oneAccount->oa_cookie_string,
                         ])
                         ->asForm()
                         ->post($url, $formData)
@@ -163,8 +163,8 @@ class OneHtmlFetch extends Command
 
                     // 更新数据库记录
                     $vehRequest->update([
-                        'status_code' => $response->status(),
-                        'response'    => $response->body(),
+                        'or_status_code' => $response->status(),
+                        'response'       => $response->body(),
                     ]);
 
                     $responseData = $response->body();
@@ -209,7 +209,7 @@ class OneHtmlFetch extends Command
         ;
         OneRequest::query()
             ->where('turn', $this->turn)
-            ->where('status_code', '!=', '200')->delete()
+            ->where('or_status_code', '!=', '200')->delete()
         ;
 
         $requests = OneRequest::query()
@@ -296,7 +296,7 @@ class OneHtmlFetch extends Command
                             // 发送违章查询 POST 请求
                             $violationResponse = Http::withHeaders($violationHeaders)
                                 ->withHeaders([
-                                    'Cookie' => $oneAccount->cookie_string,
+                                    'Cookie' => $oneAccount->oa_cookie_string,
                                 ])
                                 ->asForm()
                                 ->post($violationUrl, $violationFormData)
@@ -313,8 +313,8 @@ class OneHtmlFetch extends Command
 
                             // 更新违章查询数据库记录
                             $violationRequest->update([
-                                'status_code' => $violationResponse->status(),
-                                'response'    => $violationResponse->body(),
+                                'or_status_code' => $violationResponse->status(),
+                                'response'       => $violationResponse->body(),
                             ]);
 
                             // 解析响应内容
@@ -353,7 +353,7 @@ class OneHtmlFetch extends Command
         $affect_rows = OneRequest::query()
             ->where('turn', '=', $this->turn)
             ->where('key', 'like', "allvehs,{$oneAccount->oa_name},%")
-            ->where('status_code', '!=', '200')
+            ->where('or_status_code', '!=', '200')
             ->delete()
         ;
 
@@ -449,8 +449,8 @@ class OneHtmlFetch extends Command
 
                     // 更新数据库记录
                     $vehRequest->update([
-                        'status_code' => $statusCode,
-                        'response'    => $responseData,
+                        'or_status_code' => $statusCode,
+                        'response'       => $responseData,
                     ]);
                 } catch (\Throwable $e) {
                     $vehRequest->update([
@@ -496,7 +496,7 @@ class OneHtmlFetch extends Command
         $affect_rows = OneRequest::query()
             ->where('turn', $this->turn)
             ->where('key', 'like', 'violation,%')
-            ->where('status_code', '!=', '200')
+            ->where('or_status_code', '!=', '200')
             ->delete()
         ;
 
@@ -602,8 +602,8 @@ class OneHtmlFetch extends Command
 
                             // 更新违章查询数据库记录
                             $violationRequest->update([
-                                'status_code' => $statusCode,
-                                'response'    => $responseData,
+                                'or_status_code' => $statusCode,
+                                'response'       => $responseData,
                             ]);
 
                             // 解析响应内容

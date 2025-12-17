@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Admin\Config;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Sale\DtDtExportType;
-use App\Enum\Sale\DtDtFileType;
-use App\Enum\Sale\DtDtStatus;
-use App\Enum\Sale\DtDtType;
-use App\Enum\Sale\DtDtTypeMacroChars;
+use App\Enum\Sale\DtExportType;
+use App\Enum\Sale\DtFileType;
+use App\Enum\Sale\DtStatus;
+use App\Enum\Sale\DtType;
+use App\Enum\Sale\DtTypeMacroChars;
 use App\Http\Controllers\Controller;
 use App\Models\Sale\DocTpl;
 use App\Services\DocTplService;
@@ -28,9 +28,9 @@ class DocTplController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            DtDtType::labelOptions(),
-            DtDtFileType::labelOptions(),
-            DtDtStatus::labelOptions(),
+            DtType::labelOptions(),
+            DtFileType::labelOptions(),
+            DtStatus::labelOptions(),
         );
     }
 
@@ -65,16 +65,16 @@ class DocTplController extends Controller
         $this->options();
 
         $docTpl = new DocTpl([
-            'dt_status'    => DtDtStatus::ENABLED,
-            'dt_file_type' => DtDtFileType::WORD,
+            'dt_status'    => DtStatus::ENABLED,
+            'dt_file_type' => DtFileType::WORD,
         ]);
 
         $this->response()->withExtras(
-            DtDtType::tryFrom(DtDtType::SALE_CONTRACT)->getFieldsAndRelations(true),
-            DtDtType::tryFrom(DtDtType::SALE_SETTLEMENT)->getFieldsAndRelations(true),
-            DtDtType::tryFrom(DtDtType::PAYMENT)->getFieldsAndRelations(true),
-            DtDtType::tryFrom(DtDtType::VEHICLE_INSPECTION)->getFieldsAndRelations(true),
-            DtDtStatus::options(),
+            DtType::tryFrom(DtType::SALE_CONTRACT)->getFieldsAndRelations(true),
+            DtType::tryFrom(DtType::SALE_SETTLEMENT)->getFieldsAndRelations(true),
+            DtType::tryFrom(DtType::PAYMENT)->getFieldsAndRelations(true),
+            DtType::tryFrom(DtType::VEHICLE_INSPECTION)->getFieldsAndRelations(true),
+            DtStatus::options(),
         );
 
         return $this->response()->withData($docTpl)->respond();
@@ -100,7 +100,7 @@ class DocTplController extends Controller
     public function preview(Request $request, DocTpl $docTpl, DocTplService $docTplService)
     {
         $input = $request->validate([
-            'mode' => ['required', Rule::in(DtDtExportType::label_keys())],
+            'dt_mode' => ['required', Rule::in(DtExportType::label_keys())],
         ]);
 
         $url = $docTplService->GenerateDoc($docTpl, $input['mode']);
@@ -114,11 +114,11 @@ class DocTplController extends Controller
         $this->options();
 
         $this->response()->withExtras(
-            DtDtType::tryFrom(DtDtType::SALE_CONTRACT)->getFieldsAndRelations(true),
-            DtDtType::tryFrom(DtDtType::SALE_SETTLEMENT)->getFieldsAndRelations(true),
-            DtDtType::tryFrom(DtDtType::PAYMENT)->getFieldsAndRelations(true),
-            DtDtType::tryFrom(DtDtType::VEHICLE_INSPECTION)->getFieldsAndRelations(true),
-            DtDtStatus::options(),
+            DtType::tryFrom(DtType::SALE_CONTRACT)->getFieldsAndRelations(true),
+            DtType::tryFrom(DtType::SALE_SETTLEMENT)->getFieldsAndRelations(true),
+            DtType::tryFrom(DtType::PAYMENT)->getFieldsAndRelations(true),
+            DtType::tryFrom(DtType::VEHICLE_INSPECTION)->getFieldsAndRelations(true),
+            DtStatus::options(),
         );
 
         return $this->response()->withData($docTpl)->respond();
@@ -130,10 +130,10 @@ class DocTplController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'dt_type'      => ['bail', 'required', Rule::in(DtDtType::label_keys())],
-                'dt_file_type' => ['bail', 'required', Rule::in(DtDtFileType::label_keys())],
+                'dt_type'      => ['bail', 'required', Rule::in(DtType::label_keys())],
+                'dt_file_type' => ['bail', 'required', Rule::in(DtFileType::label_keys())],
                 'dt_name'      => ['bail', 'required', 'max:255'],
-                'dt_status'    => ['required', Rule::in(DtDtStatus::label_keys())],
+                'dt_status'    => ['required', Rule::in(DtStatus::label_keys())],
                 'dt_remark'    => ['bail', 'nullable', 'string', 'max:255'],
             ]
             + Uploader::validator_rule_upload_object('dt_file', true),
@@ -141,7 +141,8 @@ class DocTplController extends Controller
             trans_property(DocTpl::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -179,13 +180,14 @@ class DocTplController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'dt_status' => ['bail', 'required', Rule::in(DtDtStatus::label_keys())],
+                'dt_status' => ['bail', 'required', Rule::in(DtStatus::label_keys())],
             ],
             [],
             trans_property(DocTpl::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -211,10 +213,10 @@ class DocTplController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            DtDtType::options(),
-            DtDtFileType::options(),
-            DtDtStatus::options(),
-            DtDtTypeMacroChars::kv(),
+            DtType::options(),
+            DtFileType::options(),
+            DtStatus::options(),
+            DtTypeMacroChars::kv(),
         );
     }
 }

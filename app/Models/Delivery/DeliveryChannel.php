@@ -2,15 +2,15 @@
 
 namespace App\Models\Delivery;
 
-use App\Enum\Delivery\DcDcKey;
-use App\Enum\Delivery\DcDcProvider;
-use App\Enum\Delivery\DcDcStatus;
+use App\Enum\Delivery\DcKey;
+use App\Enum\Delivery\DcProvider;
+use App\Enum\Delivery\DcStatus;
 use App\Enum\Delivery\DlSendStatus;
-use App\Enum\Payment\RpIsValid;
-use App\Enum\Payment\RpPayStatus;
-use App\Enum\Sale\DtDtStatus;
-use App\Enum\Sale\ScScStatus;
-use App\Enum\Vehicle\VvProcessStatus;
+use App\Enum\Payment\PIsValid;
+use App\Enum\Payment\PPayStatus;
+use App\Enum\Sale\DtStatus;
+use App\Enum\SaleContract\ScStatus;
+use App\Enum\VehicleViolation\VvProcessStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Payment\Payment;
 use App\Models\Sale\SaleContract;
@@ -27,26 +27,30 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * @property int                 $dc_id       消息类型ID
- * @property DcDcKey|string      $dc_key      消息类型KEY;不重复
- * @property string              $dc_title    消息类型标题
- * @property string              $dc_template 消息类型模板
- * @property int                 $dc_tn       消息类型触发日期; =T-N
- * @property DcDcProvider|string $dc_provider 消息类型发送方式
- * @property DcDcStatus|int      $dc_status   消息类型状态
+ * @property int               $dc_id       消息类型ID
+ * @property DcKey|string      $dc_key      消息类型KEY;不重复
+ * @property string            $dc_title    消息类型标题
+ * @property string            $dc_template 消息类型模板
+ * @property int               $dc_tn       消息类型触发日期; =T-N
+ * @property DcProvider|string $dc_provider 消息类型发送方式
+ * @property DcStatus|int      $dc_status   消息类型状态
  */
 class DeliveryChannel extends Model
 {
     use ModelTrait;
+
+    public const CREATED_AT = 'dc_created_at';
+    public const UPDATED_AT = 'dc_updated_at';
+    public const UPDATED_BY = 'dc_updated_by';
 
     protected $primaryKey = 'dc_id';
 
     protected $guarded = ['dc_id'];
 
     protected $casts = [
-        'dc_key'      => DcDcKey::class,
-        'dc_provider' => DcDcProvider::class,
-        'dc_status'   => DcDcStatus::class,
+        'dc_key'      => DcKey::class,
+        'dc_provider' => DcProvider::class,
+        'dc_status'   => DcStatus::class,
     ];
 
     protected $attributes = [];
@@ -64,10 +68,10 @@ class DeliveryChannel extends Model
             ->orderByDesc('dc.dc_id')
             ->select('dc.*')
             ->addSelect(
-                DB::raw(DcDcKey::toCaseSQL()),
-                DB::raw(DcDcProvider::toCaseSQL()),
-                DB::raw(DcDcStatus::toCaseSQL()),
-                DB::raw(DcDcStatus::toColorSQL()),
+                DB::raw(DcKey::toCaseSQL()),
+                DB::raw(DcProvider::toCaseSQL()),
+                DB::raw(DcStatus::toCaseSQL()),
+                DB::raw(DcStatus::toColorSQL()),
                 DB::raw(" ('T-' || dc.dc_tn ) as dc_tn_label"),
             )
         ;
@@ -79,7 +83,7 @@ class DeliveryChannel extends Model
 
         $value = DB::query()
             ->from('doc_tpls', 'dt')
-            ->where('dt.dt_status', '=', DtDtStatus::ENABLED)
+            ->where('dt.dt_status', '=', DtStatus::ENABLED)
             ->when($where, $where)
             ->orderBy('dt.dt_id', 'desc')
             ->select(DB::raw("concat(dt_file_type,'|',dt_name,'→docx') as text,concat(dt.dt_id,'|docx') as value"))
@@ -91,7 +95,7 @@ class DeliveryChannel extends Model
 
     public function DeliveryLogs(): HasMany
     {
-        return $this->hasMany(DeliveryLog::class);
+        return $this->hasMany(DeliveryLog::class, 'dl_dc_id', 'dc_id');
     }
 
     public function make_payment(): void
@@ -100,13 +104,13 @@ class DeliveryChannel extends Model
         $to   = Carbon::now()->addDays($this->dc_tn)->format('Y-m-d');
 
         Payment::query()
-            ->where('pay_status', '=', RpPayStatus::UNPAID)
-            ->where('is_valid', '=', RpIsValid::VALID)
-            ->whereBetween('should_pay_date', [$from, $to])
+            ->where('p_pay_status', '=', PPayStatus::UNPAID)
+            ->where('p_is_valid', '=', PIsValid::VALID)
+            ->whereBetween('p_should_pay_date', [$from, $to])
             ->whereHas('SaleContract', function (\Illuminate\Database\Eloquent\Builder $query) {
-                $query->where('sc_status', '=', ScScStatus::SIGNED);
+                $query->where('sc_status', '=', ScStatus::SIGNED);
             })
-            ->orderby('rp_id')
+            ->orderby('p_id')
             ->with('SaleContract', 'SaleContract.Vehicle', 'SaleContract.SaleContractExt')
             ->chunk(100, function ($payments) {
                 /** @var Payment $payment */
@@ -120,7 +124,7 @@ class DeliveryChannel extends Model
 
                     $dc_key = $this->dc_key;
                     $dc_tn  = $this->dc_tn;
-                    $dl_key = $payment->rp_id;
+                    $dl_key = $payment->p_id;
                     $exist  = DeliveryLog::query()
                         ->where('dc_key', '=', $dc_key)
                         ->where('dc_tn', '=', $dc_tn)
@@ -135,7 +139,7 @@ class DeliveryChannel extends Model
                         'dc_key'         => $dc_key,
                         'dc_tn'          => $dc_tn,
                         'dl_key'         => $dl_key,
-                        'rp_id'          => $payment->rp_id,
+                        'p_id'           => $payment->p_id,
                         'recipients_url' => $sce_wecom_group_url,
                         'content_title'  => $this->dc_title,
                         'content_body'   => Blade::render($this->dc_template, $payment),
@@ -154,8 +158,8 @@ class DeliveryChannel extends Model
         $to   = Carbon::now()->addDays($this->dc_tn)->format('Y-m-d');
 
         SaleContract::query()
-            ->where('sc_status', '=', ScScStatus::SIGNED)
-            ->whereBetween('rental_end', [$from, $to])
+            ->where('sc_status', '=', ScStatus::SIGNED)
+            ->whereBetween('sc_end_date', [$from, $to])
             ->orderby('sc_id')
             ->with(['Vehicle', 'SaleContractExt'])
             ->chunk(100, function ($saleContracts) {
@@ -205,7 +209,7 @@ class DeliveryChannel extends Model
         $to   = Carbon::now()->addDays($this->dc_tn)->format('Y-m-d');
 
         VehicleInsurance::query()
-            ->whereBetween('compulsory_end_date', [$from, $to])
+            ->whereBetween('vi_compulsory_end_date', [$from, $to])
             ->orderBy('vi_id')
             ->with(['Vehicle.VehicleManager'])
             ->chunk(100, function ($vehicleInsurances) {
@@ -213,14 +217,14 @@ class DeliveryChannel extends Model
                 foreach ($vehicleInsurances as $vehicleInsurance) {
                     $wecom_name = $vehicleInsurance?->Vehicle?->VehicleManager?->wecom_name;
                     if (!$wecom_name) {
-                        Log::channel('console')->info("wecom_name,跳过{$this->dc_key}类型通知。", [$vehicleInsurance?->Vehicle?->plate_no, $vehicleInsurance?->Vehicle?->VehicleManager?->name]);
+                        Log::channel('console')->info("wecom_name,跳过{$this->dc_key}类型通知。", [$vehicleInsurance?->Vehicle?->ve_plate_no, $vehicleInsurance?->Vehicle?->VehicleManager?->name]);
 
                         continue;
                     }
 
                     $dc_key = $this->dc_key;
                     $dc_tn  = $this->dc_tn;
-                    $dl_key = $vehicleInsurance->compulsory_plate_no.'|'.$vehicleInsurance->compulsory_end_date;
+                    $dl_key = $vehicleInsurance->vi_compulsory_plate_no.'|'.$vehicleInsurance->vi_compulsory_end_date;
 
                     $exist = DeliveryLog::query()
                         ->where('dc_key', '=', $dc_key)
@@ -255,7 +259,7 @@ class DeliveryChannel extends Model
         $to   = Carbon::now()->addDays($this->dc_tn)->format('Y-m-d');
 
         VehicleSchedule::query()
-            ->whereBetween('next_inspection_date', [$from, $to])
+            ->whereBetween('vs_next_inspection_date', [$from, $to])
             ->orderBy('vs_id')
             ->with(['Vehicle'])
             ->chunk(100, function ($vehicleSchedules) {
@@ -263,14 +267,14 @@ class DeliveryChannel extends Model
                 foreach ($vehicleSchedules as $vehicleSchedule) {
                     $wecom_name = $vehicleSchedule?->Vehicle?->VehicleManager?->wecom_name;
                     if (!$wecom_name) {
-                        Log::channel('console')->info("wecom_name,跳过{$this->dc_key}类型通知。", [$vehicleSchedule?->Vehicle?->plate_no, $vehicleSchedule?->Vehicle?->VehicleManager?->name]);
+                        Log::channel('console')->info("wecom_name,跳过{$this->dc_key}类型通知。", [$vehicleSchedule?->Vehicle?->ve_plate_no, $vehicleSchedule?->Vehicle?->VehicleManager?->name]);
 
                         continue;
                     }
 
                     $dc_key = $this->dc_key;
                     $dc_tn  = $this->dc_tn;
-                    $dl_key = $vehicleSchedule->inspection_type.'|'.$vehicleSchedule->Vehicle->plate_no.'|'.$vehicleSchedule->next_inspection_date->format('Y-m-d');
+                    $dl_key = $vehicleSchedule->vs_inspection_type.'|'.$vehicleSchedule->Vehicle->ve_plate_no.'|'.$vehicleSchedule->vs_next_inspection_date->format('Y-m-d');
 
                     $exist = DeliveryLog::query()
                         ->where('dc_key', '=', $dc_key)
@@ -304,8 +308,8 @@ class DeliveryChannel extends Model
         $to   = Carbon::now()->format('Y-m-d');
 
         VehicleViolation::query()
-            ->where('process_status', '=', VvProcessStatus::UNPROCESSED)
-            ->whereBetween('violation_datetime', [$from, $to])
+            ->where('vv_process_status', '=', VvProcessStatus::UNPROCESSED)
+            ->whereBetween('vv_violation_datetime', [$from, $to])
             ->whereHas('VehicleUsage.SaleContract', function (\Illuminate\Database\Eloquent\Builder $q) {
                 $q->where('sc_id', '>', '0');
             })
@@ -323,7 +327,7 @@ class DeliveryChannel extends Model
 
                     $dc_key = $this->dc_key;
                     $dc_tn  = $this->dc_tn;
-                    $dl_key = $vehicleViolation->plate_no.'|'.$vehicleViolation->violation_datetime;
+                    $dl_key = $vehicleViolation->vv_plate_no.'|'.$vehicleViolation->vv_violation_datetime;
 
                     $exist = DeliveryLog::query()
                         ->where('dc_key', '=', $dc_key)

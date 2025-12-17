@@ -58,7 +58,7 @@ class VehiclePreparationController extends Controller
             YesNo::options(),
             Vehicle::options(
                 where: function (Builder $builder) {
-                    $builder->whereIn('status_rental', [VeStatusRental::PENDING]);
+                    $builder->whereIn('ve_status_rental', [VeStatusRental::PENDING]);
                 }
             )
         );
@@ -86,34 +86,35 @@ class VehiclePreparationController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                've_id' => ['bail', 'required', 'integer'],
+                'vp_ve_id' => ['bail', 'required', 'integer'],
             ]
            + ($role_prep_vehicle ? [
-               'vehicle_check_is' => ['required', Rule::in(YesNo::YES)],
+               'vp_vehicle_check_is' => ['required', Rule::in(YesNo::YES)],
            ] : [])
             + ($role_prep_document ? [
-                'annual_check_is'   => ['required', Rule::in(YesNo::YES)],
-                'insured_check_is'  => ['required', Rule::in(YesNo::YES)],
-                'document_check_is' => ['required', Rule::in(YesNo::YES)],
+                'vp_annual_check_is'   => ['required', Rule::in(YesNo::YES)],
+                'vp_insured_check_is'  => ['required', Rule::in(YesNo::YES)],
+                'vp_document_check_is' => ['required', Rule::in(YesNo::YES)],
             ] : []),
             [],
             trans_property(VehiclePreparation::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$vehicle, &$customer) {
-                if (!$validator->failed()) {
-                    // ve_id
-                    $ve_id   = $request->input('ve_id');
-                    $vehicle = Vehicle::query()->find($ve_id);
-                    if (!$vehicle) {
-                        $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                if ($validator->failed()) {
+                    return;
+                }
+                // ve_id
+                $ve_id   = $request->input('vp_ve_id');
+                $vehicle = Vehicle::query()->find($ve_id);
+                if (!$vehicle) {
+                    $validator->errors()->add('vp_ve_id', 'The vehicle does not exist.');
 
-                        return;
-                    }
+                    return;
+                }
 
-                    $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::PENDING], [VeStatusDispatch::NOT_DISPATCHED], $validator);
-                    if (!$pass) {
-                        return;
-                    }
+                $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::PENDING], [VeStatusDispatch::NOT_DISPATCHED], $validator);
+                if (!$pass) {
+                    return;
                 }
             })
         ;
@@ -124,17 +125,17 @@ class VehiclePreparationController extends Controller
 
         $input = $validator->validated();
 
-        if ($input['annual_check_is']) {
-            $input['annual_check_dt'] = now();
+        if ($input['vp_annual_check_is']) {
+            $input['vp_annual_check_dt'] = now();
         }
-        if ($input['insured_check_is']) {
-            $input['insured_check_dt'] = now();
+        if ($input['vp_insured_check_is']) {
+            $input['vp_insured_check_dt'] = now();
         }
-        if ($input['document_check_is']) {
-            $input['document_check_dt'] = now();
+        if ($input['vp_document_check_is']) {
+            $input['vp_document_check_dt'] = now();
         }
-        if ($input['vehicle_check_is']) {
-            $input['vehicle_check_dt'] = now();
+        if ($input['vp_vehicle_check_is']) {
+            $input['vp_vehicle_check_dt'] = now();
         }
 
         DB::transaction(function () use (&$input, &$vehiclePreparation) {
@@ -143,10 +144,10 @@ class VehiclePreparationController extends Controller
                 ->where('ve_id', '=', $input['ve_id'])
                 ->where(
                     function (Builder $query) {
-                        $query->where('annual_check_is', '=', YesNo::NO)
-                            ->orWhere('insured_check_is', '=', YesNo::NO)
-                            ->orWhere('vehicle_check_is', '=', YesNo::NO)
-                            ->orWhere('document_check_is', '=', YesNo::NO)
+                        $query->where('vp_annual_check_is', '=', YesNo::NO)
+                            ->orWhere('vp_insured_check_is', '=', YesNo::NO)
+                            ->orWhere('vp_vehicle_check_is', '=', YesNo::NO)
+                            ->orWhere('vp_document_check_is', '=', YesNo::NO)
                         ;
                     }
                 )->first()
@@ -157,11 +158,11 @@ class VehiclePreparationController extends Controller
                 $vehiclePreparation->update($input);
             }
 
-            if (YesNo::YES == $vehiclePreparation->annual_check_is
-                && YesNo::YES == $vehiclePreparation->insured_check_is
-                && YesNo::YES == $vehiclePreparation->vehicle_check_is
-                && YesNo::YES == $vehiclePreparation->document_check_is) {
-                $vehiclePreparation->Vehicle->updateStatus(status_rental: VeStatusRental::LISTED);
+            if (YesNo::YES == $vehiclePreparation->vp_annual_check_is
+                && YesNo::YES == $vehiclePreparation->vp_insured_check_is
+                && YesNo::YES == $vehiclePreparation->vp_vehicle_check_is
+                && YesNo::YES == $vehiclePreparation->vp_document_check_is) {
+                $vehiclePreparation->Vehicle->updateStatus(ve_status_rental: VeStatusRental::LISTED);
             }
         });
 

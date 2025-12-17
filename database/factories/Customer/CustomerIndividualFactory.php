@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Customer;
 
-use App\Enum\Customer\CuiCuiGender;
+use App\Enum\Customer\CuiGender;
 use App\Models\Customer\CustomerIndividual;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -15,7 +15,7 @@ class CustomerIndividualFactory extends Factory
     {
         return [
             'cui_name'                       => $this->faker->name(),
-            'cui_gender'                     => CuiCuiGender::label_key_random(),
+            'cui_gender'                     => CuiGender::label_key_random(),
             'cui_date_of_birth'              => $this->faker->date('Y-m-d', '2000-01-01'),
             'cui_id1_photo'                  => fake_one_photo(),
             'cui_id2_photo'                  => fake_one_photo(),

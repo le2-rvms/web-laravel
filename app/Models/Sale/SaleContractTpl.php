@@ -3,12 +3,12 @@
 namespace App\Models\Sale;
 
 use App\Attributes\ClassName;
-use App\Enum\Sale\ScPaymentDayType;
-use App\Enum\Sale\ScRentalType;
-use App\Enum\Sale\ScRentalType_Short;
-use App\Enum\Sale\SctPaymentDayType;
-use App\Enum\Sale\SctRentalType;
-use App\Enum\Sale\SctSctStatus;
+use App\Enum\SaleContract\ScPaymentPeriod;
+use App\Enum\SaleContract\ScRentalType;
+use App\Enum\SaleContract\ScRentalType_Short;
+use App\Enum\SaleContract\SctPaymentPeriod;
+use App\Enum\SaleContract\SctRentalType;
+use App\Enum\SaleContract\SctStatus;
 use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -17,53 +17,57 @@ use Illuminate\Support\Facades\DB;
 
 #[ClassName('租车合同模板')]
 /**
- * @property int         $sct_id                          签约模板序号
- * @property string      $sct_name                        签约模板名称
- * @property mixed       $sct_status                      签约模板状态
- * @property mixed       $rental_type                     租车类型；长租或短租
- * @property mixed       $payment_day_type                付款类型；例如月付预付、月付后付等
- * @property string      $contract_number_prefix          合同编号前缀
- * @property int         $free_days                       免租天数
- * @property null|int    $installments                    分期数
- * @property null|float  $deposit_amount                  一次性押金金额
- * @property null|float  $management_fee_amount           一次性管理费金额;
- * @property null|float  $rent_amount                     每期租金金额;短租的每日金额
- * @property null|float  $insurance_base_fee_amount       基础保险费金额
- * @property null|float  $insurance_additional_fee_amount 附加保险费总金额
- * @property null|float  $other_fee_amount                其他费总金额
- * @property null|int    $payment_day                     付款日
- * @property null|array  $additional_photos               附加照片
- * @property null|array  $additional_file                 附加文件
- * @property null|string $cus_1                           自定义合同内容1
- * @property null|string $cus_2                           自定义合同内容2
- * @property null|string $cus_3                           自定义合同内容3
- * @property null|string $discount_plan                   优惠方案
- * @property null|string $sc_remark                       合同备注
+ * @property int         $sct_id                             签约模板序号
+ * @property string      $sct_name                           签约模板名称
+ * @property mixed       $sct_status                         签约模板状态
+ * @property mixed       $sc_rental_type                     租车类型；长租或短租
+ * @property mixed       $sc_payment_period                  付款类型；例如月付预付、月付后付等
+ * @property string      $sc_no_prefix                       合同编号前缀
+ * @property int         $sc_free_days                       免租天数
+ * @property null|int    $sc_installments                    分期数
+ * @property null|float  $sc_deposit_amount                  一次性押金金额
+ * @property null|float  $sc_management_fee_amount           一次性管理费金额;
+ * @property null|float  $sc_rent_amount                     每期租金金额;短租的每日金额
+ * @property null|float  $sc_insurance_base_fee_amount       基础保险费金额
+ * @property null|float  $sc_insurance_additional_fee_amount 附加保险费总金额
+ * @property null|float  $sc_other_fee_amount                其他费总金额
+ * @property null|int    $sc_payment_day                     付款日
+ * @property null|array  $sc_additional_photos               附加照片
+ * @property null|array  $sc_additional_file                 附加文件
+ * @property null|string $sc_cus_1                           自定义合同内容1
+ * @property null|string $sc_cus_2                           自定义合同内容2
+ * @property null|string $sc_cus_3                           自定义合同内容3
+ * @property null|string $sc_discount_plan                   优惠方案
+ * @property null|string $sc_remark                          合同备注
  */
 class SaleContractTpl extends Model
 {
     use ModelTrait;
+
+    public const CREATED_AT = 'sct_created_at';
+    public const UPDATED_AT = 'sct_updated_at';
+    public const UPDATED_BY = 'sct_updated_by';
 
     protected $primaryKey = 'sct_id';
 
     protected $guarded = ['sct_id'];
 
     protected $casts = [
-        'sct_status'       => SctSctStatus::class,
-        'rental_type'      => ScRentalType::class,
-        'payment_day_type' => ScPaymentDayType::class,
+        'sct_status'        => SctStatus::class,
+        'sc_rental_type'    => ScRentalType::class,
+        'sc_payment_period' => ScPaymentPeriod::class,
     ];
 
     protected $attributes = [
-        'sct_status' => SctSctStatus::ENABLED,
+        'sct_status' => SctStatus::ENABLED,
     ];
 
     protected $appends = [
         'sct_status_label',
-        'rental_type_label',
-        'rental_type_short_label',
-        'payment_day_type_label',
-        'payment_day_label',
+        'sc_rental_type_label',
+        'sc_rental_type_short_label',
+        'sc_payment_period_label',
+        'sc_payment_day_label',
     ];
 
     public static function indexQuery(array $search = []): Builder
@@ -74,9 +78,9 @@ class SaleContractTpl extends Model
             ->select('sct.*')
             ->addSelect(
                 DB::raw(SctRentalType::toCaseSQL()),
-                DB::raw(SctPaymentDayType::toCaseSQL()),
-                DB::raw(SctSctStatus::toCaseSQL()),
-                DB::raw(SctSctStatus::toColorSQL()),
+                DB::raw(SctPaymentPeriod::toCaseSQL()),
+                DB::raw(SctStatus::toCaseSQL()),
+                DB::raw(SctStatus::toColorSQL()),
             )
         ;
     }
@@ -86,7 +90,7 @@ class SaleContractTpl extends Model
         $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
         $value = DB::query()
             ->from('sale_contract_tpls', 'sct')
-            ->where('sct.sct_status', '=', SctSctStatus::ENABLED)
+            ->where('sct.sct_status', '=', SctStatus::ENABLED)
             ->orderBy('sct.sct_id', 'desc')
             ->select(DB::raw('sct_name as text,sct.sct_id as value'))
             ->get()->toArray()
@@ -95,27 +99,27 @@ class SaleContractTpl extends Model
         return [$key => $value];
     }
 
-    protected function paymentDayTypeLabel(): Attribute
+    protected function scPaymentPeriodLabel(): Attribute
     {
         return Attribute::make(
-            get : fn () => $this->getAttribute('payment_day_type')?->label
+            get : fn () => $this->getAttribute('sc_payment_period')?->label
         );
     }
 
-    protected function paymentDayLabel(): Attribute
+    protected function scPaymentDayLabel(): Attribute
     {
         return Attribute::make(
             get: function () {
-                $payment_day_type = $this->getAttribute('payment_day_type');
-                if (null === $payment_day_type) {
+                $sc_payment_period = $this->getAttribute('sc_payment_period');
+                if (null === $sc_payment_period) {
                     return null;
                 }
 
-                $class = ScPaymentDayType::payment_day_classes[$payment_day_type->value];
+                $class = ScPaymentPeriod::payment_day_classes[$sc_payment_period->value];
 
                 $map = $class::LABELS;
 
-                return $map[$this->getOriginal('payment_day')] ?? '';
+                return $map[$this->getOriginal('sc_payment_day')] ?? '';
             }
         );
     }
@@ -127,17 +131,17 @@ class SaleContractTpl extends Model
         );
     }
 
-    protected function rentalTypeLabel(): Attribute
+    protected function scRentalTypeLabel(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $this->getAttribute('rental_type')?->label
+            get: fn ($value) => $this->getAttribute('sc_rental_type')?->label
         );
     }
 
-    protected function rentalTypeShortLabel(): Attribute
+    protected function scRentalTypeShortLabel(): Attribute
     {
         return Attribute::make(
-            get : fn ($value) => ScRentalType_Short::tryFrom($this->getRawOriginal('rental_type'))?->label,
+            get : fn ($value) => ScRentalType_Short::tryFrom($this->getRawOriginal('sc_rental_type'))?->label,
         );
     }
 
@@ -147,19 +151,19 @@ class SaleContractTpl extends Model
             get: function () {
                 $datetime = \DateTime::createFromFormat('U.u', sprintf('%.6f', microtime(true)));
                 $datetime->setTimezone(new \DateTimeZone(date_default_timezone_get()));  // 转换为目标时区
-                $contract_number = $datetime->format('ymdHisv');
+                $no = $datetime->format('ymdHisv');
 
-                return $this->getOriginal('contract_number_prefix').$contract_number;
+                return $this->getOriginal('sc_no_prefix').$no;
             }
         );
     }
 
-    protected function additionalFile(): Attribute
+    protected function scAdditionalFile(): Attribute
     {
         return $this->uploadFile();
     }
 
-    protected function additionalPhotos(): Attribute
+    protected function scAdditionalPhotos(): Attribute
     {
         return $this->uploadFileArray();
     }

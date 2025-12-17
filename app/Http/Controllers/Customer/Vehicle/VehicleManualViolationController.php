@@ -22,7 +22,7 @@ class VehicleManualViolationController extends Controller
             ->when(
                 $request->get('last_id'),
                 function (Builder $query) use ($request) {
-                    $query->where('vmv.vmv_id', '<', $request->get('last_id'));
+                    $query->where('vv.vv_id', '<', $request->get('last_id'));
                 }
             )
             ->get()

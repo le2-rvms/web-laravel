@@ -5,16 +5,16 @@ namespace App\Http\Controllers\Admin\Sale;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Admin\AdmTeamLimit;
-use App\Enum\Payment\RpPtId;
-use App\Enum\Sale\DtDtExportType;
-use App\Enum\Sale\DtDtStatus;
-use App\Enum\Sale\DtDtType;
-use App\Enum\Sale\ScPaymentDay_Month;
-use App\Enum\Sale\ScPaymentDay_Week;
-use App\Enum\Sale\ScPaymentDayType;
-use App\Enum\Sale\ScRentalType;
-use App\Enum\Sale\ScRentalType_Short;
-use App\Enum\Sale\ScScStatus;
+use App\Enum\Payment\PPtId;
+use App\Enum\Sale\DtExportType;
+use App\Enum\Sale\DtStatus;
+use App\Enum\Sale\DtType;
+use App\Enum\SaleContract\ScPaymentDay_Month;
+use App\Enum\SaleContract\ScPaymentDay_Week;
+use App\Enum\SaleContract\ScPaymentPeriod;
+use App\Enum\SaleContract\ScRentalType;
+use App\Enum\SaleContract\ScRentalType_Short;
+use App\Enum\SaleContract\ScStatus;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
@@ -28,7 +28,7 @@ use App\Models\Sale\DocTpl;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleContractTpl;
 use App\Models\Sale\SaleSettlement;
-use App\Models\Sale\VehicleReplacement;
+use App\Models\Sale\VehicleTmp;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleManualViolation;
@@ -60,7 +60,7 @@ class SaleContractController extends Controller
         $controller->response()->withExtras(
             ScRentalType::labelOptions(),
             ScRentalType_Short::labelOptions(),
-            ScPaymentDayType::labelOptions(),
+            ScPaymentPeriod::labelOptions(),
             ScPaymentDay_Month::labelOptions(),
             ScPaymentDay_Week::labelOptions(),
         );
@@ -92,14 +92,14 @@ class SaleContractController extends Controller
         $role_sales_manager = $admin->hasRole(AdminRole::role_sales);
         if ($role_sales_manager) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereNull('cu.sales_manager')->orWhere('cu.sales_manager', '=', $admin->id);
+                $query->whereNull('cu.cu_sales_manager')->orWhere('cu.cu_sales_manager', '=', $admin->id);
             });
         }
 
         $paginate = new PaginateService(
             [],
             [['sc.sc_id', 'desc']],
-            ['kw', 'sc_sc_status', 'sc_ve_id', 'sc_cu_id', 'sc_rental_start', 'sc_rental_type'],
+            ['kw', 'sc_status', 'sc_ve_id', 'sc_cu_id', 'sc_start_date', 'sc_rental_type', 'sc_is_current_version'], // todo  start_date 的范围是整体的
             []
         );
 
@@ -109,9 +109,9 @@ class SaleContractController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('sc.contract_number', 'like', '%'.$value.'%')
-                            ->orWhere('ve.plate_no', 'like', '%'.$value.'%')
-                            ->orWhere('cu.contact_name', 'like', '%'.$value.'%')
+                        $builder->where('sc.sc_no', 'like', '%'.$value.'%')
+                            ->orWhere('ve.ve_plate_no', 'like', '%'.$value.'%')
+                            ->orWhere('cu.cu_contact_name', 'like', '%'.$value.'%')
                             ->orWhere('sc.sc_remark', 'like', '%'.$value.'%')
                         ;
                     });
@@ -127,8 +127,8 @@ class SaleContractController extends Controller
     public function create(Request $request): Response
     {
         $saleContract = new SaleContract([
-            'rental_type'  => ScRentalType::LONG_TERM,
-            'rental_start' => date('Y-m-d'),
+            'sc_rental_type' => ScRentalType::LONG_TERM,
+            'sc_start_date'  => date('Y-m-d'),
         ]);
 
         /** @var Admin $admin */
@@ -140,8 +140,8 @@ class SaleContractController extends Controller
             Vehicle::options(
                 where: function (Builder $builder) use ($admin) {
                     $builder
-                        ->whereIn('status_rental', [VeStatusRental::LISTED])
-                        ->whereIn('status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
+                        ->whereIn('ve_status_rental', [VeStatusRental::LISTED])
+                        ->whereIn('ve_status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
                         ->when(
                             ($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids,
                             function ($query) use ($admin) {
@@ -172,7 +172,7 @@ class SaleContractController extends Controller
         $saleContract->load('Customer', 'Vehicle', 'Payments');
 
         $this->response()->withExtras(
-            VehicleReplacement::kvList(sc_id: $saleContract->sc_id),
+            VehicleTmp::kvList(sc_id: $saleContract->sc_id),
             VehicleInspection::kvList(sc_id: $saleContract->sc_id),
             Payment::kvList(sc_id: $saleContract->sc_id),
             Payment::kvStat(),
@@ -187,6 +187,7 @@ class SaleContractController extends Controller
         return $this->response()->withData($saleContract)->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function edit(SaleContract $saleContract): Response
     {
         $saleContract->load('Customer', 'Vehicle', 'Payments');
@@ -198,11 +199,11 @@ class SaleContractController extends Controller
             Vehicle::options(
                 where: function (Builder $builder) use ($saleContract) {
                     $builder->where(function (Builder $query) {
-                        $query->whereIn('status_rental', [VeStatusRental::LISTED])
-                            ->whereIn('status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
+                        $query->whereIn('ve_status_rental', [VeStatusRental::LISTED])
+                            ->whereIn('ve_status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
                         ;
                     })->when(VeStatusRental::PENDING === $saleContract->sc_status->value, function (Builder $query) use ($saleContract) {
-                        $query->orWhere('ve.ve_id', '=', $saleContract->ve_id); // 显示出原车辆
+                        $query->orWhere('ve.ve_id', '=', $saleContract->sc_ve_id); // 显示出原车辆
                     });
                 }
             ),
@@ -210,7 +211,7 @@ class SaleContractController extends Controller
         );
 
         $this->response()->withExtras(
-            VehicleReplacement::kvList(sc_id: $saleContract->sc_id),
+            VehicleTmp::kvList(sc_id: $saleContract->sc_id),
             VehicleInspection::kvList(sc_id: $saleContract->sc_id),
             Payment::kvList(sc_id: $saleContract->sc_id),
             Payment::kvStat(),
@@ -223,7 +224,7 @@ class SaleContractController extends Controller
             VehicleManualViolation::kvList(sc_id: $saleContract->sc_id),
             VehicleManualViolation::kvStat(),
             DocTpl::options(function (Builder $query) {
-                $query->where('dt.dt_type', '=', DtDtType::SALE_CONTRACT);
+                $query->where('dt.dt_type', '=', DtType::SALE_CONTRACT);
             }),
         );
 
@@ -234,140 +235,142 @@ class SaleContractController extends Controller
     public function doc(Request $request, SaleContract $saleContract, DocTplService $docTplService)
     {
         $input = $request->validate([
-            'mode'  => ['required', Rule::in(DtDtExportType::label_keys())],
-            'dt_id' => ['required', Rule::exists(DocTpl::class)->where('dt_type', DtDtType::SALE_CONTRACT)->where('dt_status', DtDtStatus::ENABLED)],
+            'dt_export_type' => ['required', Rule::in(DtExportType::label_keys())],
+            'dt_id'          => ['required', Rule::exists(DocTpl::class, 'dt_id')->where('dt_type', DtType::SALE_CONTRACT)->where('dt_status', DtStatus::ENABLED)],
         ]);
 
         $saleContract->load('Customer', 'Vehicle', 'Vehicle.VehicleInsurances', 'Company', 'Payments'); // 'Company',
 
         $docTpl = DocTpl::query()->find($input['dt_id']);
 
-        $url = $docTplService->GenerateDoc($docTpl, $input['mode'], $saleContract);
+        $url = $docTplService->GenerateDoc($docTpl, $input['dt_export_type'], $saleContract);
 
         return $this->response()->withData($url)->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?SaleContract $saleContract): Response
     {
         $input1 = $request->validate(
             [
-                'rental_type' => ['bail', 'required', Rule::in(ScRentalType::label_keys())],
+                'sc_rental_type' => ['bail', 'required', Rule::in(ScRentalType::label_keys())],
             ],
             [],
             trans_property(SaleContract::class)
         );
-        $rental_type = $input1['rental_type'];
+        $rental_type = $input1['sc_rental_type'];
 
         $is_long_term  = ScRentalType::LONG_TERM === $rental_type;
         $is_short_term = ScRentalType::SHORT_TERM === $rental_type;
 
         $input2 = $request->validate(
             [
-                'payment_day_type' => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'string', Rule::in(ScPaymentDayType::label_keys())],
+                'sc_payment_period' => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'string', Rule::in(ScPaymentPeriod::label_keys())],
             ],
             [],
             trans_property(SaleContract::class)
         );
 
-        $payment_day_type = $input2['payment_day_type'] ?? null;
+        $sc_payment_period = $input2['sc_payment_period'] ?? null;
 
         $validator = Validator::make(
             $request->all(),
             [
-                'cu_id'           => ['bail', 'required', 'integer'],
-                've_id'           => ['bail', 'required', 'integer'],
-                'contract_number' => ['bail', 'required', 'string', 'max:50', Rule::unique(SaleContract::class, 'contract_number')->ignore($saleContract)],
-                'free_days'       => ['bail', 'nullable', 'int:4'],
-                'rental_start'    => ['bail', 'required', 'date', 'before_or_equal:rental_end'],
-                'installments'    => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', 'min:1'],
-                'rental_days'     => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'nullable', 'int:4'], // 短租的
-                'rental_end'      => ['bail', 'required', 'date', 'after_or_equal:rental_start'],
+                'sc_cu_id'        => ['bail', 'required', 'integer'],
+                'sc_ve_id'        => ['bail', 'required', 'integer'],
+                'sc_no'           => ['bail', 'required', 'string', 'max:50', Rule::unique(SaleContract::class, 'sc_no')->ignore($saleContract)],
+                'sc_free_days'    => ['bail', 'nullable', 'int:4'],
+                'sc_start_date'   => ['bail', 'required', 'date', 'before_or_equal:sc_end_date'],
+                'sc_installments' => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', 'min:1'],
+                'sc_rental_days'  => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'nullable', 'int:4'], // 短租的
+                'sc_end_date'     => ['bail', 'required', 'date', 'after_or_equal:sc_start_date'],
 
-                'deposit_amount'                  => ['bail', 'required', 'decimal:0,2', 'gte:0'],
-                'management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'rent_amount'                     => ['bail', 'required', 'numeric', 'min:0'],
-                'payment_day'                     => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', new PaymentDayCheck($payment_day_type)],
-                'total_rent_amount'               => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-                'insurance_base_fee_amount'       => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-                'insurance_additional_fee_amount' => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-                'other_fee_amount'                => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-                'total_amount'                    => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+                'sc_deposit_amount'                  => ['bail', 'required', 'decimal:0,2', 'gte:0'],
+                'sc_management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sc_rent_amount'                     => ['bail', 'required', 'numeric', 'min:0'],
+                'sc_payment_day'                     => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', new PaymentDayCheck($sc_payment_period)],
+                'sc_total_rent_amount'               => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+                'sc_insurance_base_fee_amount'       => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+                'sc_insurance_additional_fee_amount' => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+                'sc_other_fee_amount'                => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+                'sc_total_amount'                    => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
 
-                'cus_1'                        => ['bail', 'nullable', 'max:255'],
-                'cus_2'                        => ['bail', 'nullable', 'max:255'],
-                'cus_3'                        => ['bail', 'nullable', 'max:255'],
-                'discount_plan'                => ['bail', 'nullable', 'max:255'],
-                'sc_remark'                    => ['bail', 'nullable', 'max:255'],
-                'payments'                     => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'array', 'min:1'],
-                'payments.*.pt_id'             => ['bail', 'required', 'integer', Rule::exists(PaymentType::class)],
-                'payments.*.should_pay_date'   => ['bail', 'required', 'date'],
-                'payments.*.should_pay_amount' => ['bail', 'required', 'decimal:0,2', 'gte:0'],
-                'payments.*.rp_remark'         => ['nullable', 'string'],
+                'sc_cus_1'                       => ['bail', 'nullable', 'max:255'],
+                'sc_cus_2'                       => ['bail', 'nullable', 'max:255'],
+                'sc_cus_3'                       => ['bail', 'nullable', 'max:255'],
+                'sc_discount_plan'               => ['bail', 'nullable', 'max:255'],
+                'sc_remark'                      => ['bail', 'nullable', 'max:255'],
+                'payments'                       => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'array', 'min:1'],
+                'payments.*.p_pt_id'             => ['bail', 'required', 'integer', Rule::exists(PaymentType::class, 'pt_id')],
+                'payments.*.p_should_pay_date'   => ['bail', 'required', 'date'],
+                'payments.*.p_should_pay_amount' => ['bail', 'required', 'decimal:0,2', 'gte:0'],
+                'payments.*.p_remark'            => ['nullable', 'string'],
             ]
-            + Uploader::validator_rule_upload_array('additional_photos')
-            + Uploader::validator_rule_upload_object('additional_file'),
+            + Uploader::validator_rule_upload_array('sc_additional_photos')
+            + Uploader::validator_rule_upload_object('sc_additional_file'),
             [],
             trans_property(SaleContract::class) + Arr::dot(['payments' => ['*' => trans_property(Payment::class)]])
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($is_short_term, $saleContract, $request) {
-                if (!$validator->failed()) {
-                    // ve_id
-                    $ve_id   = $request->input('ve_id');
-                    $vehicle = Vehicle::query()->find($ve_id);
-                    if (!$vehicle) {
-                        $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                if ($validator->failed()) {
+                    return;
+                }
+                // ve_id
+                $sc_ve_id = $request->input('sc_ve_id');
+                $vehicle  = Vehicle::query()->find($sc_ve_id);
+                if (!$vehicle) {
+                    $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+
+                    return;
+                }
+
+                $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::LISTED, VeStatusRental::RESERVED], [VeStatusDispatch::NOT_DISPATCHED], $validator);
+                if (!$pass) {
+                    return;
+                }
+
+                // 当车辆变化时候，状态必须是待签约
+                if ($saleContract && $saleContract->sc_ve_id !== $sc_ve_id) {
+                    if (ScStatus::PENDING !== $saleContract->sc_status->value) {
+                        $validator->errors()->add('ve_id', '合同在待签约状态下才允许修改车辆。');
 
                         return;
                     }
+                }
 
-                    $pass = $vehicle->check_status(VeStatusService::YES, [VeStatusRental::LISTED, VeStatusRental::RESERVED], [VeStatusDispatch::NOT_DISPATCHED], $validator);
-                    if (!$pass) {
+                $sc_cu_id = $request->input('sc_cu_id');
+                $customer = Customer::query()->find($sc_cu_id);
+                if (!$customer) {
+                    $validator->errors()->add('cu_id', 'The customer does not exist.');
+
+                    return;
+                }
+
+                if ($saleContract) {
+                    if (!$saleContract->check_status([ScStatus::PENDING], $validator)) {
                         return;
                     }
+                }
 
-                    // 当车辆变化时候，状态必须是待签约
-                    if ($saleContract->ve_id !== $ve_id) {
-                        if (ScScStatus::PENDING !== $saleContract->sc_status->value) {
-                            $validator->errors()->add('ve_id', '合同在待签约状态下才允许修改车辆。');
-
-                            return;
-                        }
-                    }
-
-                    $cu_id    = $request->input('cu_id');
-                    $customer = Customer::query()->find($cu_id);
-                    if (!$customer) {
-                        $validator->errors()->add('cu_id', 'The customer does not exist.');
-
-                        return;
-                    }
-
-                    if ($saleContract) {
-                        if (!$saleContract->check_sc_status([ScScStatus::PENDING], $validator)) {
-                            return;
-                        }
-                    }
-
-                    if ($is_short_term) {
-                        if (0 !== bccomp(
-                            $request->input('total_rent_amount'),
-                            bcmul(
-                                $request->input('rent_amount'),
-                                bcsub($request->input('rental_days'), $request->input('free_days'), 0),
-                                2
-                            ),
+                if ($is_short_term) {
+                    if (0 !== bccomp(
+                        $request->input('sc_total_rent_amount'),
+                        bcmul(
+                            $request->input('sc_rent_amount'),
+                            bcsub($request->input('sc_rental_days'), $request->input('sc_free_days'), 0),
                             2
-                        )) {
-                            $validator->errors()->add('total_rent_amount', '总租金计算错误');
-                        }
+                        ),
+                        2
+                    )) {
+                        $validator->errors()->add('total_rent_amount', '总租金计算错误');
+                    }
 
-                        if (0 !== bccomp(
-                            math_array_bcadd(2, $request->input('deposit_amount'), $request->input('management_fee_amount'), $request->input('total_rent_amount'), $request->input('insurance_base_fee_amount'), $request->input('insurance_additional_fee_amount'), $request->input('other_fee_amount')),
-                            $request->input('total_amount'),
-                            2
-                        )) {
-                            $validator->errors()->add('total_amount', '总金额计算错误');
-                        }
+                    if (0 !== bccomp(
+                        math_array_bcadd(2, $request->input('sc_deposit_amount'), $request->input('sc_management_fee_amount'), $request->input('sc_total_rent_amount'), $request->input('sc_insurance_base_fee_amount'), $request->input('sc_insurance_additional_fee_amount'), $request->input('sc_other_fee_amount')),
+                        $request->input('sc_total_amount'),
+                        2
+                    )) {
+                        $validator->errors()->add('sc_total_amount', '总金额计算错误');
                     }
                 }
             })
@@ -379,31 +382,36 @@ class SaleContractController extends Controller
         $input = $input1 + $input2 + $validator->validated();
 
         // input数据修正
-        if (ScRentalType::LONG_TERM === $input['rental_type']) {
+        if (ScRentalType::LONG_TERM === $input['sc_rental_type']) {
             // 总计租金金额
-            $input['total_rent_amount'] = bcmul($input['installments'], $input['rent_amount'], 2);
+            $input['sc_total_rent_amount'] = bcmul($input['sc_installments'], $input['sc_rent_amount'], 2);
 
             // 总计金额
-            $input['total_amount'] = math_array_bcadd(2, $input['total_rent_amount'], $input['deposit_amount'], $input['management_fee_amount']);
+            $input['sc_total_amount'] = math_array_bcadd(2, $input['sc_total_rent_amount'], $input['sc_deposit_amount'], $input['sc_management_fee_amount']);
 
             // 租期天数 rental_days
-            $input['rental_days'] = Carbon::parse($input['rental_start'])->diffInDays(Carbon::parse($input['rental_end']), true) + 1;
+            $input['sc_rental_days'] = Carbon::parse($input['sc_start_date'])->diffInDays(Carbon::parse($input['sc_end_date']), true) + 1;
         }
 
         DB::transaction(function () use (&$input, &$saleContract) {
             /** @var SaleContract $saleContract */
             if (null === $saleContract) {
-                $saleContract = SaleContract::query()->create($input + ['order_at' => now(), 'sc_status' => ScScStatus::PENDING]);
+                $saleContract = SaleContract::query()->create($input + [
+                    'sc_order_at'           => now(),
+                    'sc_status'             => ScStatus::PENDING,
+                    'sc_version'            => 1,
+                    'sc_is_current_version' => true,
+                ]);
             } else {
                 // 有修改车辆，前提是必须是在初始阶段，要把原车辆的状态改回来。
-                if ($saleContract->ve_id !== $input['ve_id']) {
-                    $saleContract->Vehicle->updateStatus(status_rental: VeStatusRental::LISTED);
+                if ($saleContract->sc_ve_id !== $input['sc_ve_id']) {
+                    $saleContract->Vehicle->updateStatus(ve_status_rental: VeStatusRental::LISTED);
                 }
 
                 $saleContract->update($input);
             }
 
-            if (ScRentalType::LONG_TERM === $saleContract->rental_type->value) {
+            if (ScRentalType::LONG_TERM === $saleContract->sc_rental_type->value) {
                 $saleContract->Payments()->delete();
 
                 foreach ($input['payments'] as $payment) {
@@ -411,7 +419,7 @@ class SaleContractController extends Controller
                 }
             }
 
-            $saleContract->Vehicle->updateStatus(status_rental: VeStatusRental::RESERVED);
+            $saleContract->Vehicle->updateStatus(ve_status_rental: VeStatusRental::RESERVED);
         });
 
         $saleContract->refresh()->load('Payments');
@@ -436,14 +444,14 @@ class SaleContractController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'rental_type'           => ['bail', 'required', Rule::in([ScRentalType::LONG_TERM])],
-                'payment_day_type'      => ['bail', 'required', 'string', Rule::in(ScPaymentDayType::label_keys())],
-                'deposit_amount'        => ['bail', 'required', 'decimal:0,2', 'gte:0'],
-                'management_fee_amount' => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'rental_start'          => ['bail', 'required', 'date'],
-                'installments'          => ['bail', 'required', 'integer', 'min:1'],
-                'rent_amount'           => ['bail', 'required', 'decimal:0,2', 'gte:0'],
-                'payment_day'           => ['bail', 'required', 'integer', new PaymentDayCheck($request->input('payment_day_type'))],
+                'sc_rental_type'           => ['bail', 'required', Rule::in([ScRentalType::LONG_TERM])],
+                'sc_payment_period'        => ['bail', 'required', 'string', Rule::in(ScPaymentPeriod::label_keys())],
+                'sc_deposit_amount'        => ['bail', 'required', 'decimal:0,2', 'gte:0'],
+                'sc_management_fee_amount' => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sc_start_date'            => ['bail', 'required', 'date'],
+                'sc_installments'          => ['bail', 'required', 'integer', 'min:1'],
+                'sc_rent_amount'           => ['bail', 'required', 'decimal:0,2', 'gte:0'],
+                'sc_payment_day'           => ['bail', 'required', 'integer', new PaymentDayCheck($request->input('sc_payment_period'))],
             ],
             [],
             trans_property(SaleContract::class)
@@ -458,13 +466,13 @@ class SaleContractController extends Controller
         // 创建数字到星期名称的映射
         $daysOfWeek = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
 
-        $paymentType = $input['payment_day_type'];
+        $paymentType = $input['sc_payment_period'];
 
-        list('interval' => $interval, 'interval_unit' => $interval_unit, 'prepaid' => $prepaid) = ScPaymentDayType::interval[$paymentType];
+        list('interval' => $interval, 'interval_unit' => $interval_unit, 'prepaid' => $prepaid) = ScPaymentPeriod::interval[$paymentType];
 
-        $paymentDayType = ScPaymentDayType::payment_day_classes[$paymentType];
+        $paymentPeriod = ScPaymentPeriod::payment_day_classes[$paymentType];
 
-        $startDate = Carbon::parse($input['rental_start']);
+        $startDate = Carbon::parse($input['sc_start_date']);
 
         $free_days = $request->input('free_days');
 
@@ -472,18 +480,18 @@ class SaleContractController extends Controller
 
         // 添加一次性押金
         $schedule->push(new Payment([
-            'pt_id'             => RpPtId::DEPOSIT,
-            'should_pay_date'   => $startDate->toDateString(),
-            'should_pay_amount' => $input['deposit_amount'],
-            'rp_remark'         => new RpPtId(RpPtId::DEPOSIT)->label,
+            'p_pt_id'             => PPtId::DEPOSIT,
+            'p_should_pay_date'   => $startDate->toDateString(),
+            'p_should_pay_amount' => $input['sc_deposit_amount'],
+            'p_remark'            => new PPtId(PPtId::DEPOSIT)->label,
         ]));
 
-        if (($management_fee_amount = ($input['management_fee_amount'] ?? null)) && $input['management_fee_amount'] > 0) {// 添加一次性管理费（如果有）
+        if (($sc_management_fee_amount = ($input['sc_management_fee_amount'] ?? null)) && $input['sc_management_fee_amount'] > 0) {// 添加一次性管理费（如果有）
             $schedule->push(new Payment([
-                'pt_id'             => RpPtId::MANAGEMENT_FEE,
-                'should_pay_date'   => $startDate->toDateString(),
-                'should_pay_amount' => $management_fee_amount,
-                'rp_remark'         => new RpPtId(RpPtId::MANAGEMENT_FEE)->label,
+                'p_pt_id'             => PPtId::MANAGEMENT_FEE,
+                'p_should_pay_date'   => $startDate->toDateString(),
+                'p_should_pay_amount' => $sc_management_fee_amount,
+                'p_remark'            => new PPtId(PPtId::MANAGEMENT_FEE)->label,
             ]));
         }
 
@@ -512,11 +520,11 @@ class SaleContractController extends Controller
             }
 
             // 调整付款日期
-            if (ScPaymentDay_Week::class == $paymentDayType) {
+            if (ScPaymentDay_Week::class == $paymentPeriod) {
                 if ($prepaid) {
                     if (1 !== $installmentNumber) {
                         // 获取指定的星期名称
-                        $dayName = $daysOfWeek[$input['payment_day']];
+                        $dayName = $daysOfWeek[$input['sc_payment_day']];
 
                         $paymentDate->modify('this '.$dayName);
 
@@ -526,7 +534,7 @@ class SaleContractController extends Controller
                     }
                 } else {
                     // 获取指定的星期名称
-                    $dayName = $daysOfWeek[$input['payment_day']];
+                    $dayName = $daysOfWeek[$input['sc_payment_day']];
 
                     $paymentDate->modify('this '.$dayName);
 
@@ -541,7 +549,7 @@ class SaleContractController extends Controller
                 if ($prepaid) {
                     if (1 !== $installmentNumber) {
                         // 将付款日转换为整数
-                        $paymentDay = (int) $input['payment_day'];
+                        $paymentDay = (int) $input['sc_payment_day'];
                         // 设置付款日期的天数部分
                         $paymentDate->day($paymentDay);
 
@@ -553,7 +561,7 @@ class SaleContractController extends Controller
                     }
                 } else {
                     // 将付款日转换为整数
-                    $paymentDay = (int) $input['payment_day'];
+                    $paymentDay = (int) $input['sc_payment_day'];
                     // 设置付款日期的天数部分
                     $paymentDate->day($paymentDay);
 
@@ -570,20 +578,20 @@ class SaleContractController extends Controller
 
             // 创建备注信息
             $beginDateText = 1 === $installmentNumber ? '白天' : '0点';
-            $endDateText   = $installmentNumber === (int) $input['installments'] ? '白天' : '24点';
+            $endDateText   = $installmentNumber === (int) $input['sc_installments'] ? '白天' : '24点';
             $remark        = sprintf('第%d期租金(%d天,账单周期：%s %s ~ %s %s)', $installmentNumber, $days, $billingPeriodStart->toDateString(), $beginDateText, $billingPeriodEnd->toDateString(), $endDateText);
 
             // 添加租金付款
             $payment = new Payment([
-                'pt_id' => RpPtId::RENT, 'should_pay_date' => $paymentDate->toDateString(), 'should_pay_amount' => $input['rent_amount'], 'rp_remark' => $remark,
+                'p_pt_id' => PPtId::RENT, 'p_should_pay_date' => $paymentDate->toDateString(), 'p_should_pay_amount' => $input['sc_rent_amount'], 'p_remark' => $remark,
             ]);
-            $payment->period = ['start_d' => $billingPeriodStart->toDateString(), 'end_d' => $billingPeriodEnd->toDateString()];
+            $payment->p_period = ['start_d' => $billingPeriodStart->toDateString(), 'end_d' => $billingPeriodEnd->toDateString()];
 
             $schedule->push($payment);
 
             // 检查是否达到总期数
             ++$installmentNumber;
-            if ($installmentNumber > (int) $input['installments']) {
+            if ($installmentNumber > (int) $input['sc_installments']) {
                 break;
             }
 
@@ -630,7 +638,7 @@ class SaleContractController extends Controller
     #[PermissionAction(PermissionAction::READ)]
     public function generate(Request $request, SaleContractTpl $saleContractTpl): Response
     {
-        $saleContractTpl->append('contract_number');
+        $saleContractTpl->append('sc_no');
 
         $result = array_filter($saleContractTpl->toArray());
 
@@ -644,8 +652,8 @@ class SaleContractController extends Controller
             $request,
             'sale_contract',
             [
-                'additional_photos',
-                'additional_file',
+                'sc_additional_photos',
+                'sc_additional_file',
             ],
             $this
         );
@@ -656,10 +664,10 @@ class SaleContractController extends Controller
         $this->response()->withExtras(
             ScRentalType::options(),
             $with_group_count ? ScRentalType_Short::options_with_count(SaleContract::class) : ScRentalType_Short::options(),
-            ScPaymentDayType::options(),
+            ScPaymentPeriod::options(),
             ScPaymentDay_Month::options(),
             ScPaymentDay_Week::options(),
-            $with_group_count ? ScScStatus::options_with_count(SaleContract::class) : ScScStatus::options(),
+            $with_group_count ? ScStatus::options_with_count(SaleContract::class) : ScStatus::options(),
         );
     }
 }

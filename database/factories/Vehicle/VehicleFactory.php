@@ -5,7 +5,7 @@ namespace Database\Factories\Vehicle;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
-use App\Enum\Vehicle\VeVeType;
+use App\Enum\Vehicle\VeType;
 use App\Models\Admin\AdminRole;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleModel;
@@ -51,12 +51,12 @@ class VehicleFactory extends Factory
         $tail = $this->faker->regexify('[A-Z0-9]{5}');
 
         return [
-            'plate_no'        => $province.$letter.$tail,
-            've_type'         => VeVeType::label_key_random(),
-            'vm_id'           => $vehicleModelIds->random(), // 外键可空；如需生成有效外键，可在自定义 state 里赋值
-            'status_service'  => VeStatusService::label_key_random(),
-            'status_rental'   => VeStatusRental::label_key_random(),
-            'status_dispatch' => VeStatusDispatch::label_key_random(),
+            've_plate_no'        => $province.$letter.$tail,
+            've_type'            => VeType::label_key_random(),
+            've_vm_id'           => $vehicleModelIds->random(), // 外键可空；如需生成有效外键，可在自定义 state 里赋值
+            've_status_service'  => VeStatusService::label_key_random(),
+            've_status_rental'   => VeStatusRental::label_key_random(),
+            've_status_dispatch' => VeStatusDispatch::label_key_random(),
 
             // jsonb 可空；给出一个简单对象，Eloquent 会自动 JSON 编码
             've_license_face_photo' => $this->faker->boolean(60) ? [
@@ -79,7 +79,7 @@ class VehicleFactory extends Factory
             've_mileage'                  => $this->faker->numberBetween(0, 300000),
             've_color'                    => $this->faker->safeColorName(),
 
-            'vehicle_manager' => $this->faker->boolean(70) ? $this->randomAdmin(AdminRole::role_vehicle_mgr) : null,
+            've_vehicle_manager' => $this->faker->boolean(70) ? $this->randomAdmin(AdminRole::role_vehicle_mgr) : null,
 
             // 车证信息
             've_cert_no'       => strtoupper(Str::random(20)),

@@ -5,17 +5,18 @@ namespace App\Models\Sale;
 use App\Attributes\ClassName;
 use App\Attributes\ColumnDesc;
 use App\Attributes\ColumnType;
-use App\Enum\Payment\RpPayStatus;
-use App\Enum\Payment\RpPtId;
-use App\Enum\Sale\ScPaymentDay_Month;
-use App\Enum\Sale\ScPaymentDay_Week;
-use App\Enum\Sale\ScPaymentDayType;
-use App\Enum\Sale\ScRentalType;
-use App\Enum\Sale\ScRentalType_Short;
-use App\Enum\Sale\ScRentalType_ShortOnlyShort;
-use App\Enum\Sale\ScScStatus;
+use App\Enum\Payment\PPayStatus;
+use App\Enum\Payment\PPtId;
+use App\Enum\SaleContract\ScPaymentDay_Month;
+use App\Enum\SaleContract\ScPaymentDay_Week;
+use App\Enum\SaleContract\ScPaymentPeriod;
+use App\Enum\SaleContract\ScRentalType;
+use App\Enum\SaleContract\ScRentalType_Short;
+use App\Enum\SaleContract\ScRentalType_ShortOnlyShort;
+use App\Enum\SaleContract\ScStatus;
 use App\Exceptions\ClientException;
 use App\Http\Controllers\Admin\Sale\SaleContractController;
+use App\Http\Controllers\Controller;
 use App\Models\_\Company;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
@@ -43,89 +44,94 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
 
 #[ClassName('租车合同')]
 #[ColumnDesc('sc_id')]
-#[ColumnDesc('rental_type', required: true, enum_class: ScRentalType_Short::class)]
-#[ColumnDesc('payment_day_type', required: true, enum_class: ScPaymentDayType::class)]
-#[ColumnDesc('cu_id')]
-#[ColumnDesc('contact_name', required: true)]
-#[ColumnDesc('plate_no', required: true)]
-#[ColumnDesc('contract_number', required: true, unique: true)]
-#[ColumnDesc('rental_start', type: ColumnType::DATE, required: true)]
-#[ColumnDesc('rental_days', required: true)]
-#[ColumnDesc('installments', required: true)]
-#[ColumnDesc('rental_end', type: ColumnType::DATE, required: true)]
-#[ColumnDesc('deposit_amount', required: true)]
-#[ColumnDesc('management_fee_amount', required: true)]
-#[ColumnDesc('rent_amount', required: true)]
-#[ColumnDesc('payment_day', required: true, desc: '填入1表示星期1或每月1号')]
-#[ColumnDesc('total_rent_amount', required: true)]
-#[ColumnDesc('insurance_base_fee_amount', )]
-#[ColumnDesc('insurance_additional_fee_amount')]
-#[ColumnDesc('other_fee_amount')]
-#[ColumnDesc('total_amount', required: true)]
-#[ColumnDesc('sc_status', required: true, enum_class: ScScStatus::class)]
-#[ColumnDesc('order_at', type: ColumnType::DATETIME)]
-#[ColumnDesc('signed_at', type: ColumnType::DATETIME)]
-#[ColumnDesc('canceled_at', type: ColumnType::DATETIME)]
-#[ColumnDesc('completed_at', type: ColumnType::DATETIME)]
-#[ColumnDesc('early_termination_at', type: ColumnType::DATETIME)]
+#[ColumnDesc('sc_rental_type', required: true, enum_class: ScRentalType_Short::class)]
+#[ColumnDesc('sc_payment_period', required: true, enum_class: ScPaymentPeriod::class)]
+#[ColumnDesc('sc_cu_id')]
+#[ColumnDesc('sc_contact_name', required: true)]
+#[ColumnDesc('sc_plate_no', required: true)]
+#[ColumnDesc('sc_no', required: true, unique: true)]
+#[ColumnDesc('sc_version', required: true, desc: '合同版本号')]
+#[ColumnDesc('sc_is_current_version', required: true, desc: '是否当前版本')]
+#[ColumnDesc('sc_start_date', type: ColumnType::DATE, required: true)]
+#[ColumnDesc('sc_rental_days', required: true)]
+#[ColumnDesc('sc_installments', required: true)]
+#[ColumnDesc('sc_end_date', type: ColumnType::DATE, required: true)]
+#[ColumnDesc('sc_deposit_amount', required: true)]
+#[ColumnDesc('sc_management_fee_amount', required: true)]
+#[ColumnDesc('sc_rent_amount', required: true)]
+#[ColumnDesc('sc_payment_day', required: true, desc: '填入1表示星期1或每月1号')]
+#[ColumnDesc('sc_total_rent_amount', required: true)]
+#[ColumnDesc('sc_insurance_base_fee_amount', )]
+#[ColumnDesc('sc_insurance_additional_fee_amount')]
+#[ColumnDesc('sc_other_fee_amount')]
+#[ColumnDesc('sc_total_amount', required: true)]
+#[ColumnDesc('sc_status', required: true, enum_class: ScStatus::class)]
+#[ColumnDesc('sc_order_at', type: ColumnType::DATETIME)]
+#[ColumnDesc('sc_signed_at', type: ColumnType::DATETIME)]
+#[ColumnDesc('sc_canceled_at', type: ColumnType::DATETIME)]
+#[ColumnDesc('sc_completed_at', type: ColumnType::DATETIME)]
+#[ColumnDesc('sc_early_termination_at', type: ColumnType::DATETIME)]
 /**
- * @property int                                    $sc_id                               租车序号
- * @property ScRentalType|ScRentalType_Short|string $rental_type                         租车类型；长租或短租
- * @property string                                 $rental_type_label                   租车类型-中文;长租或短租
- * @property string                                 $rental_type_short_label             租车类型-短中文
- * @property null|ScPaymentDayType|string           $payment_day_type                    付款周期；例如月付预付、月付后付等
- * @property null|string                            $payment_day_type_label              付款类型-中文
- * @property int                                    $cu_id                               客户序号；指向客户表
- * @property int                                    $ve_id                               车辆序号；指向车辆表
- * @property null|int                               $sc_ve_id_replace                    临时车辆序号
- * @property string                                 $contract_number                     合同编号
- * @property int                                    $free_days                           免租天数
- * @property Carbon                                 $rental_start                        合同开始日期
- * @property Carbon                                 $rental_start__zh                    合同开始日期-中文
- * @property null|int                               $installments                        分期数
- * @property int                                    $rental_days                         租期天数;短租的属性
- * @property Carbon                                 $rental_end                          合同结束日期
- * @property Carbon                                 $rental_end__zh                      合同结束日期-中文
- * @property null|float                             $deposit_amount                      一次性押金
- * @property null|string                            $deposit_amount__zh                  一次性押金-中文大写
- * @property null|float                             $management_fee_amount               一次性管理费用
- * @property null|string                            $management_fee_amount__zh           一次性管理费用-中文大写
- * @property null|float                             $rent_amount                         每期租金金额
- * @property null|string                            $rent_amount__zh                     每期租金金额-中文大写
- * @property null|int                               $payment_day                         付款日
- * @property null|string                            $payment_day_label                   付款日-中文
- * @property null|float                             $total_rent_amount                   总计租金金额
- * @property null|string                            $total_rent_amount__zh               总计租金金额-中文大写
- * @property null|float                             $insurance_base_fee_amount           基础保险费金额
- * @property null|string                            $insurance_base_fee_amount__zh       基础保险费金额-中文大写
- * @property null|float                             $insurance_additional_fee_amount     附加保险费总金额
- * @property null|string                            $insurance_additional_fee_amount__zh 附加保险费总金额-中文大写
- * @property null|float                             $other_fee_amount                    其他费总金额
- * @property null|string                            $other_fee_amount__zh                其他费总金额-中文大写
- * @property null|string                            $total_amount                        总计金额
- * @property null|string                            $total_amount__zh                    总计金额-中文大写
- * @property mixed|ScScStatus                       $sc_status                           合同状态；例如未签约、已签约、已完成等
- * @property null|string                            $sc_status_label                     合同状态-中文
- * @property null|Carbon                            $order_at                            合同生成日时
- * @property null|Carbon                            $signed_at                           签约日时
- * @property null|Carbon                            $canceled_at                         取消日时
- * @property Carbon                                 $completed_at                        结算日时
- * @property Carbon                                 $early_termination_at                提前结算日时
- * @property callable                               $payments_phpword_func               计划收款表-表格; 生成 docx 文件使用
- * @property null|array                             $additional_photos                   附加照片
- * @property null|array                             $additional_file                     附加文件
- * @property null|string                            $cus_1                               自定义合同内容1
- * @property null|string                            $cus_2                               自定义合同内容2
- * @property null|string                            $cus_3                               自定义合同内容3
- * @property null|string                            $discount_plan                       优惠方案
- * @property null|string                            $sc_remark                           租车合同备注
- *                                                                                       --
+ * @property int                                    $sc_id                                  租车序号
+ * @property ScRentalType|ScRentalType_Short|string $sc_rental_type                         租车类型；长租或短租
+ * @property string                                 $sc_rental_type_label                   租车类型-中文;长租或短租
+ * @property string                                 $sc_rental_type_short_label             租车类型-短中文
+ * @property null|ScPaymentPeriod|string            $sc_payment_period                      付款周期；例如月付预付、月付后付等
+ * @property null|string                            $sc_payment_period_label                付款类型-中文
+ * @property int                                    $sc_cu_id                               客户序号；指向客户表
+ * @property int                                    $sc_ve_id                               车辆序号；指向车辆表
+ * @property null|int                               $sc_ve_id_replace                       临时车辆序号
+ * @property int                                    $sc_version                             合同版本号
+ * @property bool                                   $sc_is_current_version                  是否当前版本
+ * @property string                                 $sc_no                                  合同编号
+ * @property int                                    $sc_free_days                           免租天数
+ * @property Carbon                                 $sc_start_date                          合同开始日期
+ * @property Carbon                                 $sc_start_date__zh                      合同开始日期-中文
+ * @property null|int                               $sc_installments                        分期数
+ * @property int                                    $sc_rental_days                         租期天数;短租的属性
+ * @property Carbon                                 $sc_end_date                            合同结束日期
+ * @property Carbon                                 $sc_end_date__zh                        合同结束日期-中文
+ * @property null|float                             $sc_deposit_amount                      一次性押金
+ * @property null|string                            $sc_deposit_amount__zh                  一次性押金-中文大写
+ * @property null|float                             $sc_management_fee_amount               一次性管理费用
+ * @property null|string                            $sc_management_fee_amount__zh           一次性管理费用-中文大写
+ * @property null|float                             $sc_rent_amount                         每期租金金额
+ * @property null|string                            $sc_rent_amount__zh                     每期租金金额-中文大写
+ * @property null|int                               $sc_payment_day                         付款日
+ * @property null|string                            $sc_payment_day_label                   付款日-中文
+ * @property null|float                             $sc_total_rent_amount                   总计租金金额
+ * @property null|string                            $sc_total_rent_amount__zh               总计租金金额-中文大写
+ * @property null|float                             $sc_insurance_base_fee_amount           基础保险费金额
+ * @property null|string                            $sc_insurance_base_fee_amount__zh       基础保险费金额-中文大写
+ * @property null|float                             $sc_insurance_additional_fee_amount     附加保险费总金额
+ * @property null|string                            $sc_insurance_additional_fee_amount__zh 附加保险费总金额-中文大写
+ * @property null|float                             $sc_other_fee_amount                    其他费总金额
+ * @property null|string                            $sc_other_fee_amount__zh                其他费总金额-中文大写
+ * @property null|string                            $sc_total_amount                        总计金额
+ * @property null|string                            $sc_total_amount__zh                    总计金额-中文大写
+ * @property mixed|ScStatus                         $sc_status                              合同状态；例如未签约、已签约、已完成等
+ * @property null|string                            $sc_status_label                        合同状态-中文
+ * @property null|Carbon                            $sc_order_at                            合同生成日时
+ * @property null|Carbon                            $sc_signed_at                           签约日时
+ * @property null|Carbon                            $sc_canceled_at                         取消日时
+ * @property Carbon                                 $sc_completed_at                        结算日时
+ * @property Carbon                                 $sc_early_termination_at                提前结算日时
+ * @property callable                               $sc_payments_phpword_func               计划收款表-表格; 生成 docx 文件使用
+ * @property null|array                             $sc_additional_photos                   附加照片
+ * @property null|array                             $sc_additional_file                     附加文件
+ * @property null|string                            $sc_cus_1                               自定义合同内容1
+ * @property null|string                            $sc_cus_2                               自定义合同内容2
+ * @property null|string                            $sc_cus_3                               自定义合同内容3
+ * @property null|string                            $sc_discount_plan                       优惠方案
+ * @property null|string                            $sc_remark                              租车合同备注
+ *                                                                                          --
  * @property Customer                               $Customer
  * @property SaleSettlement                         $SaleSettlement
  * @property Vehicle                                $Vehicle
  * @property Vehicle                                $VehicleReplace
  * @property Collection<Payment>                    $Payments
  * @property SaleContractExt                        $SaleContractExt
+ * @property Collection<Payment>                    $UnpaidRentPayments
  */
 class SaleContract extends Model
 {
@@ -133,52 +139,61 @@ class SaleContract extends Model
 
     use ImportTrait;
 
+    public const CREATED_AT = 'sc_created_at';
+    public const UPDATED_AT = 'sc_updated_at';
+    public const UPDATED_BY = 'sc_updated_by';
+
     protected $primaryKey = 'sc_id';
 
     protected $guarded = ['sc_id'];
 
     protected $casts = [
-        'rental_start'         => 'date:Y-m-d',
-        'rental_end'           => 'date:Y-m-d',
-        'order_at'             => 'datetime:Y-m-d H:i',
-        'signed_at'            => 'datetime:Y-m-d H:i',
-        'canceled_at'          => 'datetime:Y-m-d H:i',
-        'completed_at'         => 'datetime:Y-m-d H:i',
-        'early_termination_at' => 'datetime:Y-m-d H:i',
-        'rental_type'          => ScRentalType::class,
-        'payment_day_type'     => ScPaymentDayType::class,
-        'sc_status'            => ScScStatus::class,
+        'sc_start_date'           => 'date:Y-m-d',
+        'sc_end_date'             => 'date:Y-m-d',
+        'sc_order_at'             => 'datetime:Y-m-d H:i',
+        'sc_signed_at'            => 'datetime:Y-m-d H:i',
+        'sc_canceled_at'          => 'datetime:Y-m-d H:i',
+        'sc_completed_at'         => 'datetime:Y-m-d H:i',
+        'sc_early_termination_at' => 'datetime:Y-m-d H:i',
+        'sc_rental_type'          => ScRentalType::class,
+        'sc_payment_period'       => ScPaymentPeriod::class,
+        'sc_status'               => ScStatus::class,
+        'sc_version'              => 'integer',
+        'sc_is_current_version'   => 'boolean',
     ];
 
-    protected $attributes = [];
+    protected $attributes = [
+        'sc_version'            => 1,
+        'sc_is_current_version' => true,
+    ];
 
     protected $appends = [
-        'rental_type_label',
-        'rental_type_short_label',
-        'payment_day_type_label',
-        'payment_day_label',
+        'sc_rental_type_label',
+        'sc_rental_type_short_label',
+        'sc_payment_period_label',
+        'sc_payment_day_label',
         'sc_status_label',
         'sc_full_label',
-        'rental_start__zh',
-        'rental_end__zh',
-        'rent_amount__zh',
-        'total_rent_amount__zh',
-        'total_amount__zh',
-        'deposit_amount__zh',
-        'management_fee_amount__zh',
-        'insurance_base_fee_amount__zh',
-        'insurance_additional_fee_amount__zh',
-        'other_fee_amount__zh',
+        'sc_start_date__zh',
+        'sc_end_date__zh',
+        'sc_rent_amount__zh',
+        'sc_total_rent_amount__zh',
+        'sc_total_amount__zh',
+        'sc_deposit_amount__zh',
+        'sc_management_fee_amount__zh',
+        'sc_insurance_base_fee_amount__zh',
+        'sc_insurance_additional_fee_amount__zh',
+        'sc_other_fee_amount__zh',
     ];
 
     public function Customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class, 'cu_id', 'cu_id');
+        return $this->belongsTo(Customer::class, 'sc_cu_id', 'cu_id');
     }
 
     public function Vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 've_id', 've_id')->with('VehicleModel');
+        return $this->belongsTo(Vehicle::class, 'sc_ve_id', 've_id')->with('VehicleModel');
     }
 
     public function VehicleReplace(): BelongsTo
@@ -188,12 +203,12 @@ class SaleContract extends Model
 
     public function Payments(): HasMany
     {
-        return $this->hasMany(Payment::class, 'sc_id', 'sc_id')->with('PaymentType');
+        return $this->hasMany(Payment::class, 'p_sc_id', 'sc_id')->with('PaymentType');
     }
 
     public function SaleContractExt(): HasOne
     {
-        return $this->HasOne(SaleContractExt::class, 'sc_id', 'sc_id');
+        return $this->hasOne(SaleContractExt::class, 'sce_sc_id', 'sc_id');
     }
 
     /**
@@ -201,8 +216,8 @@ class SaleContract extends Model
      */
     public function SignPayments(): HasMany
     {
-        return $this->hasMany(Payment::class, 'sc_id', 'sc_id')
-            ->whereIn('pt_id', [RpPtId::DEPOSIT, RpPtId::MANAGEMENT_FEE])
+        return $this->hasMany(Payment::class, 'p_sc_id', 'sc_id')
+            ->whereIn('p_pt_id', [PPtId::DEPOSIT, PPtId::MANAGEMENT_FEE])
             ->with('PaymentType')
         ;
     }
@@ -212,19 +227,19 @@ class SaleContract extends Model
      */
     public function UnpaidRentPayments(): HasMany
     {
-        return $this->hasMany(Payment::class, 'sc_id', 'sc_id')
-            ->whereIn('pt_id', [RpPtId::RENT])
-            ->where('pay_status', '=', RpPayStatus::UNPAID)
+        return $this->hasMany(Payment::class, 'p_sc_id', 'sc_id')
+            ->whereIn('p_pt_id', [PPtId::RENT])
+            ->where('p_pay_status', '=', PPayStatus::UNPAID)
             ->with('PaymentType')
         ;
     }
 
     public function SaleSettlement(): HasOne
     {
-        return $this->hasOne(SaleSettlement::class, 'sc_id', 'sc_id');
+        return $this->hasOne(SaleSettlement::class, 'ss_sc_id', 'sc_id');
     }
 
-    public function check_sc_status(array $sc_statuses, Validator $validator): bool
+    public function check_status(array $sc_statuses, Validator $validator): bool
     {
         if ($sc_statuses && !in_array($this->sc_status, $sc_statuses)) {
             $validator->errors()->add('sc_id', '租车状态不应该为：'.$this->sc_status->label);
@@ -237,28 +252,32 @@ class SaleContract extends Model
 
     public static function indexQuery(array $search = []): Builder
     {
-        $cu_id = $search['cu_id'] ?? null;
+        $cu_id                 = $search['cu_id'] ?? null;
+        $sc_is_current_version = $search['sc_is_current_version'] ?? null;
 
         return DB::query()
             ->from('sale_contracts', 'sc')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.ve_id')
-            ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.vm_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
+            ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.ve_vm_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
             ->when($cu_id, function (Builder $query) use ($cu_id) {
                 $query->where('cu.cu_id', '=', $cu_id);
             })
+            ->when(null !== $sc_is_current_version, function (Builder $query) use ($sc_is_current_version) {
+                $query->where('sc.sc_is_current_version', '=', $sc_is_current_version);
+            })
             ->orderByDesc('sc.sc_id')
-            ->select('sc.*', 'cu.*', 've.*', '_vm.brand_name', '_vm.model_name')
+            ->select('sc.*', 'cu.*', 've.*', '_vm.vm_brand_name', '_vm.vm_model_name')
             ->addSelect(
                 DB::raw(ScRentalType_Short::toCaseSQL()),
-                DB::raw(ScPaymentDayType::toCaseSQL()),
-                DB::raw(ScScStatus::toCaseSQL()),
-                DB::raw(ScScStatus::toColorSQL()),
-                DB::raw("to_char(sc.order_at, 'YYYY-MM-DD HH24:MI:SS') as order_at_"),
-                DB::raw("to_char(sc.signed_at, 'YYYY-MM-DD HH24:MI:SS') as signed_at_"),
-                DB::raw("to_char(sc.canceled_at, 'YYYY-MM-DD HH24:MI:SS') as canceled_at_"),
-                DB::raw("to_char(sc.completed_at, 'YYYY-MM-DD HH24:MI:SS') as completed_at_"),
-                DB::raw("to_char(sc.early_termination_at, 'YYYY-MM-DD HH24:MI:SS') as early_termination_at_"),
+                DB::raw(ScPaymentPeriod::toCaseSQL()),
+                DB::raw(ScStatus::toCaseSQL()),
+                DB::raw(ScStatus::toColorSQL()),
+                DB::raw("to_char(sc.sc_order_at, 'YYYY-MM-DD HH24:MI:SS') as sc_order_at_"),
+                DB::raw("to_char(sc.sc_signed_at, 'YYYY-MM-DD HH24:MI:SS') as sc_signed_at_"),
+                DB::raw("to_char(sc.sc_canceled_at, 'YYYY-MM-DD HH24:MI:SS') as sc_canceled_at_"),
+                DB::raw("to_char(sc.sc_completed_at, 'YYYY-MM-DD HH24:MI:SS') as sc_completed_at_"),
+                DB::raw("to_char(sc.sc_early_termination_at, 'YYYY-MM-DD HH24:MI:SS') as sc_early_termination_at_"),
             )
         ;
     }
@@ -266,16 +285,18 @@ class SaleContract extends Model
     public static function indexColumns(): array
     {
         return [
-            'SaleContract.rental_type'                     => fn ($item) => $item->rental_type_label,
-            'SaleContract.payment_day_type'                => fn ($item) => $item->payment_day_type_label,
-            'Customer.contact_name'                        => fn ($item) => $item->contact_name,
+            'SaleContract.sc_rental_type'                  => fn ($item) => $item->rental_type_label,
+            'SaleContract.sc_payment_period'               => fn ($item) => $item->sc_payment_period_label,
+            'Customer.cu_contact_name'                     => fn ($item) => $item->cu_contact_name,
             'Customer.contact_phone'                       => fn ($item) => $item->contact_phone,
             'Vehicle.plate_no'                             => fn ($item) => $item->plate_no,
-            'VehicleModel.brand_model'                     => fn ($item) => $item->brand_name.'-'.$item->model_name,
-            'SaleContract.contract_number'                 => fn ($item) => $item->contract_number,
-            'SaleContract.rental_start'                    => fn ($item) => $item->rental_start,
+            'VehicleModel.brand_model'                     => fn ($item) => $item->vm_brand_name.'-'.$item->vm_model_name,
+            'SaleContract.sc_no'                           => fn ($item) => $item->sc_no,
+            'SaleContract.sc_version'                      => fn ($item) => $item->sc_version,
+            'SaleContract.sc_is_current_version'           => fn ($item) => $item->is_current_version,
+            'SaleContract.sc_start_date'                   => fn ($item) => $item->sc_start_date,
             'SaleContract.installments'                    => fn ($item) => $item->installments,
-            'SaleContract.rental_end'                      => fn ($item) => $item->rental_end,
+            'SaleContract.sc_end_date'                     => fn ($item) => $item->sc_end_date,
             'SaleContract.deposit_amount'                  => fn ($item) => $item->deposit_amount,
             'SaleContract.management_fee_amount'           => fn ($item) => $item->management_fee_amount,
             'SaleContract.rent_amount'                     => fn ($item) => $item->rent_amount,
@@ -300,9 +321,10 @@ class SaleContract extends Model
 
         return DB::query()
             ->from('sale_contracts', 'sc')
-            ->where('sc.cu_id', '=', $cu_id)
-            ->whereIn('sc.sc_status', [ScScStatus::SIGNED])
-            ->select('sc.ve_id')
+            ->where('sc.sc_cu_id', '=', $cu_id)
+            ->where('sc.sc_is_current_version', '=', true)
+            ->whereIn('sc.sc_status', [ScStatus::SIGNED])
+            ->select('sc.sc_ve_id')
         ;
     }
 
@@ -315,21 +337,39 @@ class SaleContract extends Model
         return [$key => $value];
     }
 
+    public static function customerQuery(Controller $controller): Builder
+    {
+        $perPage = 20;
+
+        $controller->response()->withExtras(
+            ['perPage' => $perPage]
+        );
+
+        $auth = auth();
+
+        return static::indexQuery(['cu_id' => $auth->id(), 'sc_is_current_version' => true])
+            ->forPage(1, $perPage)
+        ;
+    }
+
     public static function options_value(?\Closure $where = null): array
     {
         return DB::query()
             ->from('sale_contracts', 'sc')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.ve_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
-            ->where($where)
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
+            ->where('sc.sc_is_current_version', '=', true)
+            ->when($where, function (Builder $builder) use ($where) {
+                $builder->where($where);
+            })
             ->orderBy('sc.sc_id', 'desc')
             ->select(
                 DB::raw(sprintf(
-                    "CONCAT(cu.contact_name,'|',%s,'|', ve.plate_no ,'|',  %s, %s ,'|', %s ) as text,sc.sc_id as value",
-                    "(CONCAT(SUBSTRING(cu.contact_phone, 1, 0), '', SUBSTRING(cu.contact_phone, 8, 4)) )",
-                    ScPaymentDayType::toCaseSQL(false),
+                    "CONCAT(cu.cu_contact_name,'|',%s,'|', ve.ve_plate_no ,'|',  %s, %s ,'|', %s ) as text,sc.sc_id as value",
+                    "(CONCAT(SUBSTRING(cu.cu_contact_phone, 1, 0), '', SUBSTRING(cu.cu_contact_phone, 8, 4)) )",
+                    ScPaymentPeriod::toCaseSQL(false),
                     ScRentalType_ShortOnlyShort::toCaseSQL(false),
-                    ScScStatus::toCaseSQL(false)
+                    ScStatus::toCaseSQL(false)
                 ))
             )
             ->get()->toArray()
@@ -343,16 +383,19 @@ class SaleContract extends Model
         $value = DB::query()
             ->from('sale_contracts', 'sc')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id_replace')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
-            ->where($where)
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
+            ->where('sc.sc_is_current_version', '=', true)
+            ->when($where, function (Builder $builder) use ($where) {
+                $builder->where($where);
+            })
             ->orderBy('sc.sc_id', 'desc')
             ->select(
                 DB::raw(sprintf(
-                    "CONCAT(cu.contact_name,'|',%s,'|', ve.plate_no ,'|',  %s, %s ,'|', %s ) as text,sc.sc_id as value",
-                    "(CONCAT(SUBSTRING(cu.contact_phone, 1, 0), '', SUBSTRING(cu.contact_phone, 8, 4)) )",
-                    ScPaymentDayType::toCaseSQL(false),
+                    "CONCAT(cu.cu_contact_name,'|',%s,'|', ve.ve_plate_no ,'|',  %s, %s ,'|', %s ) as text,sc.sc_id as value",
+                    "(CONCAT(SUBSTRING(cu.cu_contact_phone, 1, 0), '', SUBSTRING(cu.cu_contact_phone, 8, 4)) )",
+                    ScPaymentPeriod::toCaseSQL(false),
                     ScRentalType_ShortOnlyShort::toCaseSQL(false),
-                    ScScStatus::toCaseSQL(false)
+                    ScStatus::toCaseSQL(false)
                 ))
             )
             ->get()->toArray()
@@ -361,9 +404,9 @@ class SaleContract extends Model
         return [$key => $value];
     }
 
-    public function getRentalStartZhAttribute(): ?string
+    public function getScStartDateZhAttribute(): ?string
     {
-        $raw = $this->attributes['rental_start'] ?? null;
+        $raw = $this->attributes['sc_start_date'] ?? null;
         if (!$raw) {
             return null;
         }
@@ -374,9 +417,9 @@ class SaleContract extends Model
         ;
     }
 
-    public function getRentalEndZhAttribute(): ?string
+    public function getScEndDateZhAttribute(): ?string
     {
-        $raw = $this->attributes['rental_end'] ?? null;
+        $raw = $this->attributes['sc_end_date'] ?? null;
         if (!$raw) {
             return null;
         }
@@ -387,46 +430,46 @@ class SaleContract extends Model
         ;
     }
 
-    public function getRentAmountZhAttribute(): string
+    public function getScRentAmountZhAttribute(): string
     {
-        return money_format_zh($this->getAttribute('rent_amount'));
+        return money_format_zh($this->getAttribute('sc_rent_amount'));
     }
 
-    public function getTotalRentAmountZhAttribute()
+    public function getScTotalRentAmountZhAttribute()
     {
         // 简单相乘计算总租金
-        return money_format_zh($this->getAttribute('total_rent_amount'));
+        return money_format_zh($this->getAttribute('sc_total_rent_amount'));
     }
 
-    public function getTotalAmountZhAttribute()
+    public function getScTotalAmountZhAttribute()
     {
         // 简单相乘计算总租金
-        return money_format_zh($this->getAttribute('total_amount'));
+        return money_format_zh($this->getAttribute('sc_total_amount'));
     }
 
-    public function getDepositAmountZhAttribute(): string
+    public function getScDepositAmountZhAttribute(): string
     {
-        return money_format_zh($this->getAttribute('deposit_amount'));
+        return money_format_zh($this->getAttribute('sc_deposit_amount'));
     }
 
-    public function getManagementFeeAmountZhAttribute(): string
+    public function getScManagementFeeAmountZhAttribute(): string
     {
-        return money_format_zh($this->getAttribute('management_fee_amount') ?? '0');
+        return money_format_zh($this->getAttribute('sc_management_fee_amount') ?? '0');
     }
 
-    public function getInsuranceBaseFeeAmountZhAttribute(): string
+    public function getScInsuranceBaseFeeAmountZhAttribute(): string
     {
-        return money_format_zh($this->getAttribute('insurance_base_fee_amount') ?? '0');
+        return money_format_zh($this->getAttribute('sc_insurance_base_fee_amount') ?? '0');
     }
 
-    public function getInsuranceAdditionalFeeAmountZhAttribute(): string
+    public function getScInsuranceAdditionalFeeAmountZhAttribute(): string
     {
-        return money_format_zh($this->getAttribute('insurance_additional_fee_amount') ?? '0');
+        return money_format_zh($this->getAttribute('sc_insurance_additional_fee_amount') ?? '0');
     }
 
-    public function getOtherFeeAmountZhAttribute(): string
+    public function getScOtherFeeAmountZhAttribute(): string
     {
-        return money_format_zh($this->getAttribute('other_fee_amount') ?? '0');
+        return money_format_zh($this->getAttribute('sc_other_fee_amount') ?? '0');
     }
 
     public function payments_phpword_func($tp, $rule_label)
@@ -451,29 +494,29 @@ class SaleContract extends Model
         foreach ($this->Payments as $payment) {
             $table->addRow();
             $table->addCell()->addText($payment->PaymentType->pt_name, [], ['alignment' => Jc::CENTER]);
-            $table->addCell()->addText($payment->should_pay_date.'('.$payment->day_of_week_name.')');
-            $table->addCell()->addText($payment->should_pay_amount);
-            $table->addCell()->addText($payment->rp_remark);
+            $table->addCell()->addText($payment->p_should_pay_date.'('.$payment->p_day_of_week_name.')');
+            $table->addCell()->addText($payment->p_should_pay_amount);
+            $table->addCell()->addText($payment->p_remark);
         }
 
         $tp->setComplexBlock($rule_label, $table);
     }
 
-    public static function contractNumberKv(?string $contract_number = null)
+    public static function contractNumberKv(?string $sc_no = null)
     {
         static $kv = null;
 
         if (null === $kv) {
             $kv = DB::query()
                 ->from('sale_contracts')
-                ->select('sc_id', 'contract_number')
-                ->pluck('sc_id', 'contract_number')
+                ->select('sc_id', 'sc_no')
+                ->pluck('sc_id', 'sc_no')
                 ->toArray()
             ;
         }
 
-        if ($contract_number) {
-            return $kv[$contract_number] ?? null;
+        if ($sc_no) {
+            return $kv[$sc_no] ?? null;
         }
 
         return $kv;
@@ -481,23 +524,25 @@ class SaleContract extends Model
 
     public function Company(): BelongsTo
     {
-        return $this->belongsTo(Company::class)->withDefault(
-            Company::query()->firstOrNew()->toArray()
-        );
+        return $this->belongsTo(Company::class)
+            ->withDefault(
+                Company::query()->firstOrNew()->toArray()
+            )
+        ;
     }
 
     public static function importColumns(): array
     {
         return [
-            'rental_type'                     => [SaleContract::class, 'rental_type'],
-            'payment_day_type'                => [SaleContract::class, 'payment_day_type'],
-            'contact_name'                    => [Customer::class, 'contact_name'],
+            'sc_rental_type'                  => [SaleContract::class, 'sc_rental_type'],
+            'sc_payment_period'               => [SaleContract::class, 'sc_payment_period'],
+            'cu_contact_name'                 => [Customer::class, 'cu_contact_name'],
             'contact_phone'                   => [Customer::class, 'contact_phone'],
             'plate_no'                        => [Vehicle::class, 'plate_no'],
-            'contract_number'                 => [SaleContract::class, 'contract_number'],
-            'rental_start'                    => [SaleContract::class, 'rental_start'],
+            'sc_no'                           => [SaleContract::class, 'sc_no'],
+            'sc_start_date'                   => [SaleContract::class, 'sc_start_date'],
             'installments'                    => [SaleContract::class, 'installments'],
-            'rental_end'                      => [SaleContract::class, 'rental_end'],
+            'sc_end_date'                     => [SaleContract::class, 'sc_end_date'],
             'deposit_amount'                  => [SaleContract::class, 'deposit_amount'],
             'management_fee_amount'           => [SaleContract::class, 'management_fee_amount'],
             'rent_amount'                     => [SaleContract::class, 'rent_amount'],
@@ -519,13 +564,13 @@ class SaleContract extends Model
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['ve_id']            = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['cu_id']            = Customer::plateNoKv($item['contact_phone'] ?? null);
-            $item['rental_type']      = ScRentalType_Short::searchValue($item['rental_type'] ?? null);
-            $item['payment_day_type'] = ScPaymentDayType::searchValue($item['payment_day_type'] ?? null);
-            $item['sc_status']        = ScScStatus::searchValue($item['sc_status'] ?? null);
+            $item['ve_id']             = Vehicle::plateNoKv($item['plate_no'] ?? null);
+            $item['cu_id']             = Customer::plateNoKv($item['contact_phone'] ?? null);
+            $item['sc_rental_type']    = ScRentalType_Short::searchValue($item['sc_rental_type'] ?? null);
+            $item['sc_payment_period'] = ScPaymentPeriod::searchValue($item['sc_payment_period'] ?? null);
+            $item['sc_status']         = ScStatus::searchValue($item['sc_status'] ?? null);
 
-            static::$fields['contract_number'][] = $item['contract_number'] ?? null;
+            static::$fields['sc_no'][] = $item['sc_no'] ?? null;
         };
     }
 
@@ -534,7 +579,7 @@ class SaleContract extends Model
         $validator1 = \Illuminate\Support\Facades\Validator::make(
             $item,
             [
-                'rental_type' => ['bail', 'required', Rule::in(ScRentalType::label_keys())],
+                'sc_rental_type' => ['bail', 'required', Rule::in(ScRentalType::label_keys())],
             ],
             [],
             $fieldAttributes
@@ -544,14 +589,14 @@ class SaleContract extends Model
         }
 
         $input1        = $validator1->validated();
-        $rental_type   = $input1['rental_type'];
+        $rental_type   = $input1['sc_rental_type'];
         $is_long_term  = ScRentalType::LONG_TERM === $rental_type;
         $is_short_term = ScRentalType::SHORT_TERM === $rental_type;
 
         $validator2 = \Illuminate\Support\Facades\Validator::make(
             $item,
             [
-                'payment_day_type' => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'string', Rule::in(ScPaymentDayType::label_keys())],
+                'sc_payment_period' => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'string', Rule::in(ScPaymentPeriod::label_keys())],
             ],
             [],
             $fieldAttributes
@@ -563,21 +608,21 @@ class SaleContract extends Model
 
         $input2 = $validator2->validated();
 
-        $payment_day_type = $input2['payment_day_type'] ?? null;
+        $sc_payment_period = $input2['sc_payment_period'] ?? null;
 
         $rules = [
-            'cu_id'           => ['bail', 'required', 'integer'],
-            've_id'           => ['bail', 'required', 'integer'],
-            'contract_number' => ['bail', 'required', 'string', 'max:50', Rule::unique(SaleContract::class, 'contract_number')],
-            'free_days'       => ['bail', 'nullable', 'int:4'],
-            'rental_start'    => ['bail', 'required', 'date', 'before_or_equal:rental_end'],
-            'installments'    => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', 'min:1'],
-            'rental_end'      => ['bail', 'required', 'date', 'after_or_equal:rental_start'],
+            'cu_id'         => ['bail', 'required', 'integer'],
+            've_id'         => ['bail', 'required', 'integer'],
+            'sc_no'         => ['bail', 'required', 'string', 'max:50', Rule::unique(SaleContract::class, 'sc_no')],
+            'free_days'     => ['bail', 'nullable', 'int:4'],
+            'sc_start_date' => ['bail', 'required', 'date', 'before_or_equal:sc_end_date'],
+            'installments'  => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', 'min:1'],
+            'sc_end_date'   => ['bail', 'required', 'date', 'after_or_equal:sc_start_date'],
 
             'deposit_amount'                  => ['bail', 'required', 'decimal:0,2', 'gte:0'],
             'management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
             'rent_amount'                     => ['bail', 'required', 'numeric', 'min:0'],
-            'payment_day'                     => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', new PaymentDayCheck($payment_day_type)],
+            'payment_day'                     => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', new PaymentDayCheck($sc_payment_period)],
             'total_rent_amount'               => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
             'insurance_base_fee_amount'       => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
             'insurance_additional_fee_amount' => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
@@ -601,10 +646,10 @@ class SaleContract extends Model
     public static function importAfterValidatorDo(): \Closure
     {
         return function () {
-            // contract_number
-            $contract_number = SaleContract::query()->whereIn('contract_number', static::$fields['contract_number'])->pluck('contract_number')->toArray();
-            if (count($contract_number) > 0) {
-                throw new ClientException('以下合同编号已存在：'.join(',', $contract_number));
+            // sc_no
+            $sc_no = SaleContract::query()->whereIn('sc_no', static::$fields['sc_no'])->pluck('sc_no')->toArray();
+            if (count($sc_no) > 0) {
+                throw new ClientException('以下合同编号已存在：'.join(',', $sc_no));
             }
         };
     }
@@ -641,24 +686,24 @@ class SaleContract extends Model
         };
     }
 
-    protected function paymentDayTypeLabel(): Attribute
+    protected function scPaymentPeriodLabel(): Attribute
     {
         return Attribute::make(
-            get : fn () => $this->getAttribute('payment_day_type')?->label
+            get : fn () => $this->getAttribute('sc_payment_period')?->label
         );
     }
 
-    protected function paymentDayLabel(): Attribute
+    protected function scPaymentDayLabel(): Attribute
     {
         return Attribute::make(
             get: function () {
-                $payment_day_type = $this->getAttribute('payment_day_type');
-                if (null === $payment_day_type) {
+                $sc_payment_period = $this->getAttribute('sc_payment_period');
+                if (null === $sc_payment_period) {
                     return null;
                 }
-                $map = str_starts_with('week', $payment_day_type) ? ScPaymentDay_Week::LABELS : ScPaymentDay_Month::LABELS;
+                $map = str_starts_with('week', $sc_payment_period) ? ScPaymentDay_Week::LABELS : ScPaymentDay_Month::LABELS;
 
-                $payment_day = $this->getOriginal('payment_day');
+                $payment_day = $this->getOriginal('sc_payment_day');
                 if (null === $payment_day) {
                     return null;
                 }
@@ -675,18 +720,18 @@ class SaleContract extends Model
         );
     }
 
-    protected function rentalTypeLabel(): Attribute
+    protected function scRentalTypeLabel(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $this->getAttribute('rental_type')?->label
+            get: fn ($value) => $this->getAttribute('sc_rental_type')?->label
         );
     }
 
-    protected function rentalTypeShortLabel(): Attribute
+    protected function scRentalTypeShortLabel(): Attribute
     {
         return Attribute::make(
             get : function ($value) {
-                $rental_type = $this->getRawOriginal('rental_type');
+                $rental_type = $this->getRawOriginal('sc_rental_type');
                 if (is_string($rental_type)) {
                     $rental_type = ScRentalType_Short::tryFrom($rental_type);
                 }
@@ -700,22 +745,22 @@ class SaleContract extends Model
     {
         return Attribute::make(
             get: fn () => join(' | ', array_filter([
-                $this->Customer?->getOriginal('contact_name'),
-                substr($this->Customer?->getOriginal('contact_phone'), -4),
-                $this->Vehicle?->getOriginal('plate_no'),
-                $this->getOriginal('rental_type_short_label'),
-                $this->getOriginal('payment_day_type_label'),
+                $this->Customer?->getOriginal('sc_contact_name'),
+                substr($this->Customer?->getOriginal('sc_contact_phone'), -4),
+                $this->Vehicle?->getOriginal('ve_plate_no'),
+                $this->getOriginal('sc_rental_type_short_label'),
+                $this->getOriginal('sc_payment_period_label'),
                 $this->getOriginal('sc_status_label'),
             ]))
         );
     }
 
-    protected function additionalFile(): Attribute
+    protected function scAdditionalFile(): Attribute
     {
         return $this->uploadFile();
     }
 
-    protected function additionalPhotos(): Attribute
+    protected function scAdditionalPhotos(): Attribute
     {
         return $this->uploadFileArray();
     }

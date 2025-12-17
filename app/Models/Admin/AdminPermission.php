@@ -14,6 +14,8 @@ use Spatie\Permission\Models\Permission;
  */
 class AdminPermission extends Permission
 {
+    public const UPDATED_BY = 'updated_by';
+
     protected $table = 'permissions';
 
     public static function options(?\Closure $where = null): array

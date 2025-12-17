@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Payment;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Payment\RptIsActive;
+use App\Enum\Payment\PtIsActive;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\PaymentType;
 use Illuminate\Http\Request;
@@ -30,7 +30,7 @@ class PaymentTypeController extends Controller
         );
 
         $ids = PaymentType::query()
-            ->where('is_active', '=', RptIsActive::ENABLED)
+            ->where('pt_is_active', '=', PtIsActive::ENABLED)
             ->pluck('pt_id')
             ->toArray()
         ;
@@ -57,8 +57,8 @@ class PaymentTypeController extends Controller
         $input = $validator->validated();
 
         DB::transaction(function () use ($input) {
-            PaymentType::query()->whereIn('pt_id', $input['selected_types'])->update(['is_active' => RptIsActive::ENABLED]);
-            PaymentType::query()->whereNotIn('pt_id', $input['selected_types'])->update(['is_active' => RptIsActive::DISABLED]);
+            PaymentType::query()->whereIn('pt_id', $input['selected_types'])->update(['pt_is_active' => PtIsActive::ENABLED]);
+            PaymentType::query()->whereNotIn('pt_id', $input['selected_types'])->update(['pt_is_active' => PtIsActive::DISABLED]);
         });
 
         return $this->response()->withData($input)->respond();

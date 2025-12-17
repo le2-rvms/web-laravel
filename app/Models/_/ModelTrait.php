@@ -30,10 +30,10 @@ trait ModelTrait
 
     public static $kvValue;
 
-    public function getHidden()
-    {
-        return array_merge($this->hidden, ['created_at', 'updated_at']);
-    }
+    //    public function getHidden()
+    //    {
+    //        return array_merge($this->hidden, ['created_at', 'updated_at']);
+    //    }
 
     abstract public static function indexQuery(array $search = []);
 
@@ -97,7 +97,7 @@ trait ModelTrait
 
     public function ProcessedBy(): BelongsTo
     {
-        return $this->BelongsTo(Admin::class, 'processed_by', 'id');
+        return $this->belongsTo(Admin::class, 'processed_by', 'id');
     }
 
     abstract public static function options(?\Closure $where = null): array;
@@ -183,7 +183,9 @@ trait ModelTrait
     {
         static::saving(function (self $model) {
             if (Auth::check()) {
-                $model->updated_by = AuthUserType::getValue();
+                $updated_by_name = static::UPDATED_BY ?? 'updated_by';
+
+                $model->{$updated_by_name} = AuthUserType::getValue();
             }
         });
     }

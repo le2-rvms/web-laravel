@@ -6,7 +6,7 @@ use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Admin\AdmTeamLimit;
 use App\Enum\Vehicle\VeStatusService;
-use App\Enum\Vehicle\VmvStatus;
+use App\Enum\VehicleManualViolation\VvStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Vehicle\Vehicle;
@@ -26,7 +26,7 @@ class VehicleManualViolationController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            VmvStatus::labelOptions(),
+            VvStatus::labelOptions(),
         );
     }
 
@@ -51,16 +51,16 @@ class VehicleManualViolationController extends Controller
 
         $paginate = new PaginateService(
             [],
-            [['vmv.violation_datetime', 'desc']],
-            ['kw', 'vmv_violation_datetime', 'vmv_status'],
+            [['vv.vv_violation_datetime', 'desc']],
+            ['kw', 'vv_violation_datetime', 'vv_status'],
             []
         );
 
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('vmv.violation_content', 'like', '%'.$value.'%')
-                        ->orWhere('vmv.vmv_remark', 'like', "%{$value}%")
+                    $builder->where('vv.violation_content', 'like', '%'.$value.'%')
+                        ->orWhere('vv.vv_remark', 'like', "%{$value}%")
                     ;
                 });
             },
@@ -109,35 +109,36 @@ class VehicleManualViolationController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                've_id'              => ['required', 'integer', Rule::exists(Vehicle::class, 've_id')],
-                'violation_datetime' => ['required', 'date'],
-                'violation_content'  => ['nullable', 'string', 'max:200'],
-                'location'           => ['nullable', 'string', 'max:255'],
-                'fine_amount'        => ['nullable', 'numeric'],
-                'penalty_points'     => ['nullable', 'integer'],
-                'status'             => ['required', 'integer', Rule::in(VmvStatus::label_keys())],
-                'vmv_remark'         => ['nullable', 'string'],
+                'vv_ve_id'              => ['required', 'integer', Rule::exists(Vehicle::class, 've_id')],
+                'vv_violation_datetime' => ['required', 'date'],
+                'vv_violation_content'  => ['nullable', 'string', 'max:200'],
+                'vv_location'           => ['nullable', 'string', 'max:255'],
+                'vv_fine_amount'        => ['nullable', 'numeric'],
+                'vv_penalty_points'     => ['nullable', 'integer'],
+                'vv_status'             => ['required', 'integer', Rule::in(VvStatus::label_keys())],
+                'vv_remark'             => ['nullable', 'string'],
             ],
             [],
             trans_property(VehicleManualViolation::class)
         )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$vehicle, &$customer) {
-            if (!$validator->failed()) {
-                if (null === $request->input('vi_id')) {
-                    // ve_id
-                    $ve_id = $request->input('ve_id');
+            if ($validator->failed()) {
+                return;
+            }
+            if (null === $request->input('vv_vi_id')) {
+                // ve_id
+                $ve_id = $request->input('vv_ve_id');
 
-                    /** @var Vehicle $vehicle */
-                    $vehicle = Vehicle::query()->find($ve_id);
-                    if (!$vehicle) {
-                        $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                /** @var Vehicle $vehicle */
+                $vehicle = Vehicle::query()->find($ve_id);
+                if (!$vehicle) {
+                    $validator->errors()->add('vv_ve_id', 'The vehicle does not exist.');
 
-                        return;
-                    }
+                    return;
+                }
 
-                    $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
-                    if (!$pass) {
-                        return;
-                    }
+                $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
+                if (!$pass) {
+                    return;
                 }
             }
         });
@@ -170,7 +171,7 @@ class VehicleManualViolationController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            $with_group_count ? VmvStatus::options_with_count(VehicleManualViolation::class) : VmvStatus::options(),
+            $with_group_count ? VvStatus::options_with_count(VehicleManualViolation::class) : VvStatus::options(),
         );
     }
 }

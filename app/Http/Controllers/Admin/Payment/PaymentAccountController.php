@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Payment;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Payment\PaPaStatus;
+use App\Enum\Payment\PaStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\PaymentAccount;
 use App\Services\PaginateService;
@@ -31,7 +31,7 @@ class PaymentAccountController extends Controller
         );
 
         $paymentAccount = new PaymentAccount([
-            'pa_status' => PaPaStatus::ENABLED,
+            'pa_status' => PaStatus::ENABLED,
         ]);
 
         return $this->response()->withData($paymentAccount)->respond();
@@ -87,14 +87,15 @@ class PaymentAccountController extends Controller
             $request->all(),
             [
                 'pa_name'   => ['required', 'string', 'max:255'],
-                'pa_status' => ['required', Rule::in(PaPaStatus::label_keys())],
+                'pa_status' => ['required', Rule::in(PaStatus::label_keys())],
                 'pa_remark' => ['nullable', 'string'],
             ],
             [],
             trans_property(PaymentAccount::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use (&$vehicle, &$customer) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -124,7 +125,7 @@ class PaymentAccountController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            PaPaStatus::options(),
+            PaStatus::options(),
         );
     }
 }

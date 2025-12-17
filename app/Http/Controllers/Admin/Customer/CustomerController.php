@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin\Customer;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Admin\AdmTeamLimit;
-use App\Enum\Customer\CuCuType;
-use App\Enum\Customer\CuiCuiGender;
+use App\Enum\Customer\CuiGender;
+use App\Enum\Customer\CuType;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
@@ -38,8 +38,8 @@ class CustomerController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            CuCuType::labelOptions(),
-            CuiCuiGender::labelOptions(),
+            CuType::labelOptions(),
+            CuiGender::labelOptions(),
         );
     }
 
@@ -68,14 +68,14 @@ class CustomerController extends Controller
         $role_sales_manager = $admin->hasRole(AdminRole::role_sales);
         if ($role_sales_manager) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereNull('cu.sales_manager')->orWhere('cu.sales_manager', '=', $admin->id);
+                $query->whereNull('cu.cu_sales_manager')->orWhere('cu.cu_sales_manager', '=', $admin->id);
             });
         }
 
         $has_role_driver = $admin->hasRole(AdminRole::role_driver_mgr);
         if ($has_role_driver) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereNull('cu.driver_manager')->orWhere('cu.driver_manager', '=', $admin->id);
+                $query->whereNull('cu.cu_driver_manager')->orWhere('cu.cu_driver_manager', '=', $admin->id);
             });
         }
 
@@ -89,8 +89,8 @@ class CustomerController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->whereLike('cu.contact_name', '%'.$value.'%')
-                        ->orWhereLike('cu.contact_phone', '%'.$value.'%')
+                    $builder->whereLike('cu.cu_contact_name', '%'.$value.'%')
+                        ->orWhereLike('cu.cu_contact_phone', '%'.$value.'%')
                         ->orWhereLike('cu.cu_remark', '%'.$value.'%')
                     ;
                 });
@@ -112,9 +112,9 @@ class CustomerController extends Controller
         $customer->load('CustomerIndividual', 'CustomerCompany');
 
         $this->response()->withExtras(
-            CuCuType::options(),
-            CuiCuiGender::options(),
-            CuiCuiGender::flipLabelDic(),
+            CuType::options(),
+            CuiGender::options(),
+            CuiGender::flipLabelDic(),
         );
 
         $this->response()->withExtras(
@@ -137,32 +137,32 @@ class CustomerController extends Controller
         $input0 = Validator::make(
             $request->all(),
             [
-                'cu_type'              => ['required', 'string', Rule::in(CuCuType::label_keys())],
-                'contact_name'         => ['required', 'string', 'max:255'],
-                'contact_phone'        => ['required', 'regex:/^\d{11}$/', Rule::unique(Customer::class, 'contact_phone')->ignore($customer)],
-                'contact_email'        => ['nullable', 'email', Rule::unique(Customer::class, 'contact_email')->ignore($customer)],
-                'contact_wechat'       => ['nullable', 'string', 'max:255'],
-                'contact_live_city'    => ['nullable', 'string', 'max:64'],
-                'contact_live_address' => ['nullable', 'string', 'max:255'],
-                'cu_cert_no'           => ['nullable', 'string', 'max:50'],
-                'cu_cert_valid_to'     => ['nullable', 'date'],
-                'cu_remark'            => ['nullable', 'string', 'max:255'],
-                'cu_team_id'           => ['required', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
+                'cu_type'                 => ['required', 'string', Rule::in(CuType::label_keys())],
+                'cu_contact_name'         => ['required', 'string', 'max:255'],
+                'cu_contact_phone'        => ['required', 'regex:/^\d{11}$/', Rule::unique(Customer::class, 'contact_phone')->ignore($customer)],
+                'cu_contact_email'        => ['nullable', 'email', Rule::unique(Customer::class, 'contact_email')->ignore($customer)],
+                'cu_contact_wechat'       => ['nullable', 'string', 'max:255'],
+                'cu_contact_live_city'    => ['nullable', 'string', 'max:64'],
+                'cu_contact_live_address' => ['nullable', 'string', 'max:255'],
+                'cu_cert_no'              => ['nullable', 'string', 'max:50'],
+                'cu_cert_valid_to'        => ['nullable', 'date'],
+                'cu_remark'               => ['nullable', 'string', 'max:255'],
+                'cu_team_id'              => ['required', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
 
-                'sales_manager'  => ['nullable', Rule::exists(Admin::class)],
-                'driver_manager' => ['nullable', Rule::exists(Admin::class)],
+                'cu_sales_manager'  => ['nullable', Rule::exists(Admin::class, 'id')],
+                'cu_driver_manager' => ['nullable', Rule::exists(Admin::class, 'id')],
             ],
             [],
             trans_property(Customer::class),
         )->validate();
 
         $validator = match ($input0['cu_type']) {
-            CuCuType::INDIVIDUAL => Validator::make(
+            CuType::INDIVIDUAL => Validator::make(
                 $request->all(),
                 [
                     'customer_individual'                                => ['nullable', 'array'],
                     'customer_individual.cui_name'                       => ['nullable', 'string', 'max:255'],
-                    'customer_individual.cui_gender'                     => ['nullable', Rule::in(CuiCuiGender::label_keys())],
+                    'customer_individual.cui_gender'                     => ['nullable', Rule::in(CuiGender::label_keys())],
                     'customer_individual.cui_date_of_birth'              => ['nullable', 'date', 'before:today'],
                     'customer_individual.cui_id_number'                  => ['nullable', 'regex:/^\d{17}[\dXx]$/'],
                     'customer_individual.cui_id_address'                 => ['nullable', 'string', 'max:500'],
@@ -184,7 +184,7 @@ class CustomerController extends Controller
                 trans_property(CustomerIndividual::class),
             ),
 
-            CuCuType::COMPANY => Validator::make(
+            CuType::COMPANY => Validator::make(
                 $request->all(),
                 [
                     'customer_company' => ['nullable', 'required', 'array'],
@@ -195,7 +195,8 @@ class CustomerController extends Controller
         };
 
         $validator->after(function (\Illuminate\Validation\Validator $validator) {
-            if (!$validator->failed()) {
+            if ($validator->failed()) {
+                return;
             }
         });
 
@@ -213,7 +214,7 @@ class CustomerController extends Controller
             }
 
             switch ($customer->cu_type) {
-                case CuCuType::INDIVIDUAL:
+                case CuType::INDIVIDUAL:
                     $customer->CustomerCompany()->delete();
 
                     $input_individual = $input['customer_individual'] ?? [];
@@ -227,7 +228,7 @@ class CustomerController extends Controller
 
                     break;
 
-                case CuCuType::COMPANY:
+                case CuType::COMPANY:
                     $customer->CustomerIndividual()->delete();
 
                     $input_company = $input['customer_company'];
@@ -272,7 +273,7 @@ class CustomerController extends Controller
         );
 
         $customer = new Customer([
-            'cu_type' => CuCuType::INDIVIDUAL,
+            'cu_type' => CuType::INDIVIDUAL,
         ]);
 
         return $this->response()->withData($customer)->respond();
@@ -318,9 +319,9 @@ class CustomerController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            CuCuType::options(),
-            CuiCuiGender::options(),
-            CuiCuiGender::flipLabelDic(),
+            CuType::options(),
+            CuiGender::options(),
+            CuiGender::flipLabelDic(),
         );
     }
 }

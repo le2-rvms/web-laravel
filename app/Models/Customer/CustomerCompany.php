@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 #[ClassName('企业客户')]
 /**
  * @property int         $cuc_id                      企业客户序号
- * @property int         $cu_id                       客户序号；外键关联到 customers.cu_id
+ * @property int         $cuc_cu_id                   客户序号；外键关联到 customers.cu_id
  * @property null|string $cuc_unified_credit_code     公司统一信用代码
  * @property null|mixed  $cuc_business_license_photo  营业执照;存储文件路径或URL
  * @property null|string $cuc_registration_address    注册地址
@@ -32,7 +32,9 @@ class CustomerCompany extends Model
 {
     use ModelTrait;
 
-    //    public $incrementing = false;
+    public const CREATED_AT = 'cuc_created_at';
+    public const UPDATED_AT = 'cuc_updated_at';
+    public const UPDATED_BY = 'cuc_updated_by';
 
     protected $primaryKey = 'cuc_id';
 
@@ -40,7 +42,7 @@ class CustomerCompany extends Model
 
     public function Customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class, 'cu_id', 'cu_id');
+        return $this->belongsTo(Customer::class, 'cuc_cu_id', 'cu_id');
     }
 
     public static function indexQuery(array $search = []): Builder

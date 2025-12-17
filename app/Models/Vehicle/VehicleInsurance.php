@@ -5,7 +5,7 @@ namespace App\Models\Vehicle;
 use App\Attributes\ClassName;
 use App\Attributes\ColumnDesc;
 use App\Attributes\ColumnType;
-use App\Enum\Vehicle\ViIsCompanyBorne;
+use App\Enum\VehicleInspection\ViIsCompanyBorne;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -19,79 +19,79 @@ use Illuminate\Validation\ValidationException;
 
 #[ClassName('车辆保险单', '信息')]
 #[ColumnDesc('vi_id')]
-#[ColumnDesc('ve_id', required: true)]
-#[ColumnDesc('plate_no', required: true)]
-#[ColumnDesc('compulsory_policy_file')]
-#[ColumnDesc('compulsory_policy_photos')]
-#[ColumnDesc('compulsory_policy_addendum_file')]
-#[ColumnDesc('compulsory_plate_no')]
-#[ColumnDesc('compulsory_policy_number')]
-#[ColumnDesc('compulsory_start_date', type: ColumnType::DATE)]
-#[ColumnDesc('compulsory_end_date', type: ColumnType::DATE)]
-#[ColumnDesc('compulsory_premium')]
-#[ColumnDesc('compulsory_insured_company')]
-#[ColumnDesc('compulsory_org_code')]
-#[ColumnDesc('compulsory_insurance_company')]
-#[ColumnDesc('carrier_liability_policy_file')]
-#[ColumnDesc('carrier_liability_policy_photos')]
-#[ColumnDesc('carrier_liability_plate_no')]
-#[ColumnDesc('carrier_liability_policy_number')]
-#[ColumnDesc('carrier_liability_start_date', type: ColumnType::DATE)]
-#[ColumnDesc('carrier_liability_end_date', type: ColumnType::DATE)]
-#[ColumnDesc('carrier_liability_premium')]
-#[ColumnDesc('carrier_liability_insured_company')]
-#[ColumnDesc('carrier_liability_org_code')]
-#[ColumnDesc('carrier_liability_insurance_company')]
-#[ColumnDesc('commercial_policy_file')]
-#[ColumnDesc('commercial_policy_photos')]
-#[ColumnDesc('commercial_policy_addendum_file')]
-#[ColumnDesc('commercial_plate_no')]
-#[ColumnDesc('commercial_policy_number')]
-#[ColumnDesc('commercial_start_date', type: ColumnType::DATE)]
-#[ColumnDesc('commercial_end_date', type: ColumnType::DATE)]
-#[ColumnDesc('commercial_premium')]
-#[ColumnDesc('commercial_insured_company')]
-#[ColumnDesc('commercial_org_code')]
-#[ColumnDesc('commercial_insurance_company')]
-#[ColumnDesc('is_company_borne', desc: '输入0、1')]
+#[ColumnDesc('vi_ve_id', required: true)]
+#[ColumnDesc('vi_plate_no', required: true)]
+#[ColumnDesc('vi_compulsory_policy_file')]
+#[ColumnDesc('vi_compulsory_policy_photos')]
+#[ColumnDesc('vi_compulsory_policy_addendum_file')]
+#[ColumnDesc('vi_compulsory_plate_no')]
+#[ColumnDesc('vi_compulsory_policy_number')]
+#[ColumnDesc('vi_compulsory_start_date', type: ColumnType::DATE)]
+#[ColumnDesc('vi_compulsory_end_date', type: ColumnType::DATE)]
+#[ColumnDesc('vi_compulsory_premium')]
+#[ColumnDesc('vi_compulsory_insured_company')]
+#[ColumnDesc('vi_compulsory_org_code')]
+#[ColumnDesc('vi_compulsory_insurance_company')]
+#[ColumnDesc('vi_carrier_liability_policy_file')]
+#[ColumnDesc('vi_carrier_liability_policy_photos')]
+#[ColumnDesc('vi_carrier_liability_plate_no')]
+#[ColumnDesc('vi_carrier_liability_policy_number')]
+#[ColumnDesc('vi_carrier_liability_start_date', type: ColumnType::DATE)]
+#[ColumnDesc('vi_carrier_liability_end_date', type: ColumnType::DATE)]
+#[ColumnDesc('vi_carrier_liability_premium')]
+#[ColumnDesc('vi_carrier_liability_insured_company')]
+#[ColumnDesc('vi_carrier_liability_org_code')]
+#[ColumnDesc('vi_carrier_liability_insurance_company')]
+#[ColumnDesc('vi_commercial_policy_file')]
+#[ColumnDesc('vi_commercial_policy_photos')]
+#[ColumnDesc('vi_commercial_policy_addendum_file')]
+#[ColumnDesc('vi_commercial_plate_no')]
+#[ColumnDesc('vi_commercial_policy_number')]
+#[ColumnDesc('vi_commercial_start_date', type: ColumnType::DATE)]
+#[ColumnDesc('vi_commercial_end_date', type: ColumnType::DATE)]
+#[ColumnDesc('vi_commercial_premium')]
+#[ColumnDesc('vi_commercial_insured_company')]
+#[ColumnDesc('vi_commercial_org_code')]
+#[ColumnDesc('vi_commercial_insurance_company')]
+#[ColumnDesc('vi_is_company_borne', desc: '输入0、1')]
 #[ColumnDesc('vi_remark')]
 /**
- * @property int         $vi_id                               保险单序号
- * @property int         $ve_id                               车辆序号
- * @property null|mixed  $compulsory_policy_file              交强险保单文件路径
- * @property null|mixed  $compulsory_policy_photos            交强险保单照片路径
- * @property null|mixed  $compulsory_policy_addendum_file     交强险批单文件路径
- * @property null|string $compulsory_plate_no
- * @property null|string $compulsory_policy_number            交强险保单号
- * @property null|Carbon $compulsory_start_date               交强险开始日期
- * @property null|Carbon $compulsory_end_date                 交强险结束日期
- * @property null|float  $compulsory_premium                  交强险保费
- * @property null|string $compulsory_insured_company          交强险被保险公司
- * @property null|string $compulsory_org_code                 交强险组织机构代码
- * @property null|string $compulsory_insurance_company        交强险保险公司
- * @property null|mixed  $carrier_liability_policy_file       承运人责任险保单文件路径
- * @property null|mixed  $carrier_liability_policy_photos     承运人责任险保单照片路径
- * @property null|string $carrier_liability_plate_no
- * @property null|string $carrier_liability_policy_number     承运人责任险保单号
- * @property null|Carbon $carrier_liability_start_date        承运人责任险开始日期
- * @property null|Carbon $carrier_liability_end_date          承运人责任险结束日期
- * @property null|float  $carrier_liability_premium           承运人责任险保费
- * @property null|string $carrier_liability_insured_company   承运人责任险被保险公司
- * @property null|string $carrier_liability_org_code          承运人责任险组织机构代码
- * @property null|string $carrier_liability_insurance_company 承运人责任险保险公司
- * @property null|mixed  $commercial_policy_file              商业险保单文件路径
- * @property null|mixed  $commercial_policy_photos            商业险保单照片路径
- * @property null|mixed  $commercial_policy_addendum_file     商业险批单文件路径
- * @property null|string $commercial_plate_no
- * @property null|string $commercial_policy_number            商业险保单号
- * @property null|Carbon $commercial_start_date               商业险开始日期
- * @property null|Carbon $commercial_end_date                 商业险结束日期
- * @property null|float  $commercial_premium                  商业险保费
- * @property null|string $commercial_insured_company          商业险被保险公司
- * @property null|string $commercial_org_code                 商业险组织机构代码
- * @property null|string $commercial_insurance_company        商业险保险公司
- * @property null|int    $is_company_borne                    是否公司承担;1表示是，0表示否
- * @property null|string $vi_remark                           保险单备注
+ * @property int         $vi_id                                  保险单序号
+ * @property int         $vi_ve_id                               车辆序号
+ * @property null|mixed  $vi_compulsory_policy_file              交强险保单文件路径
+ * @property null|mixed  $vi_compulsory_policy_photos            交强险保单照片路径
+ * @property null|mixed  $vi_compulsory_policy_addendum_file     交强险批单文件路径
+ * @property null|string $vi_compulsory_plate_no
+ * @property null|string $vi_compulsory_policy_number            交强险保单号
+ * @property null|Carbon $vi_compulsory_start_date               交强险开始日期
+ * @property null|Carbon $vi_compulsory_end_date                 交强险结束日期
+ * @property null|float  $vi_compulsory_premium                  交强险保费
+ * @property null|string $vi_compulsory_insured_company          交强险被保险公司
+ * @property null|string $vi_compulsory_org_code                 交强险组织机构代码
+ * @property null|string $vi_compulsory_insurance_company        交强险保险公司
+ * @property null|mixed  $vi_carrier_liability_policy_file       承运人责任险保单文件路径
+ * @property null|mixed  $vi_carrier_liability_policy_photos     承运人责任险保单照片路径
+ * @property null|string $vi_carrier_liability_plate_no
+ * @property null|string $vi_carrier_liability_policy_number     承运人责任险保单号
+ * @property null|Carbon $vi_carrier_liability_start_date        承运人责任险开始日期
+ * @property null|Carbon $vi_carrier_liability_end_date          承运人责任险结束日期
+ * @property null|float  $vi_carrier_liability_premium           承运人责任险保费
+ * @property null|string $vi_carrier_liability_insured_company   承运人责任险被保险公司
+ * @property null|string $vi_carrier_liability_org_code          承运人责任险组织机构代码
+ * @property null|string $vi_carrier_liability_insurance_company 承运人责任险保险公司
+ * @property null|mixed  $vi_commercial_policy_file              商业险保单文件路径
+ * @property null|mixed  $vi_commercial_policy_photos            商业险保单照片路径
+ * @property null|mixed  $vi_commercial_policy_addendum_file     商业险批单文件路径
+ * @property null|string $vi_commercial_plate_no
+ * @property null|string $vi_commercial_policy_number            商业险保单号
+ * @property null|Carbon $vi_commercial_start_date               商业险开始日期
+ * @property null|Carbon $vi_commercial_end_date                 商业险结束日期
+ * @property null|float  $vi_commercial_premium                  商业险保费
+ * @property null|string $vi_commercial_insured_company          商业险被保险公司
+ * @property null|string $vi_commercial_org_code                 商业险组织机构代码
+ * @property null|string $vi_commercial_insurance_company        商业险保险公司
+ * @property null|int    $vi_is_company_borne                    是否公司承担;1表示是，0表示否
+ * @property null|string $vi_remark                              保险单备注
  *
  * -- relation
  * @property Vehicle $Vehicle
@@ -102,12 +102,16 @@ class VehicleInsurance extends Model
 
     use ImportTrait;
 
+    public const CREATED_AT = 'vi_created_at';
+    public const UPDATED_AT = 'vi_updated_at';
+    public const UPDATED_BY = 'vi_updated_by';
+
     protected $primaryKey = 'vi_id';
 
     protected $guarded = ['vi_id'];
 
     protected $casts = [
-        'is_company_borne' => ViIsCompanyBorne::class,
+        'vi_is_company_borne' => ViIsCompanyBorne::class,
     ];
 
     protected $appends = [];
@@ -116,36 +120,36 @@ class VehicleInsurance extends Model
 
     public function Vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 've_id', 've_id')->with('VehicleModel');
+        return $this->belongsTo(Vehicle::class, 'vi_ve_id', 've_id')->with('VehicleModel');
     }
 
     public static function indexQuery(array $search = []): Builder
     {
-        $ve_id = $search['ve_id'] ?? null;
+        $vi_ve_id = $search['vi_ve_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_insurances', 'vi')
-            ->when(null === $ve_id, function (Builder $query) {
+            ->when(null === $vi_ve_id, function (Builder $query) {
                 return $query->joinSub(
                     // 直接在 joinSub 中定义子查询
                     DB::table('vehicle_insurances')
-                        ->select('ve_id', DB::raw('MAX(compulsory_start_date) as max_compulsory_start_date'))
-                        ->groupBy('ve_id'),
+                        ->select('vi_ve_id', DB::raw('MAX(vi_compulsory_start_date) as max_vi_compulsory_start_date'))
+                        ->groupBy('vi_ve_id'),
                     'p2',
                     function ($join) {
-                        $join->on('vi.ve_id', '=', 'p2.ve_id')
-                            ->on('vi.compulsory_start_date', '=', 'p2.max_compulsory_start_date')
+                        $join->on('vi.vi_ve_id', '=', 'p2.vi_ve_id')
+                            ->on('vi.vi_compulsory_start_date', '=', 'p2.max_vi_compulsory_start_date')
                         ;
                     }
                 );
             })
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vi.ve_id')
-            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.vm_id')
-            ->when($ve_id, function (Builder $query) use ($ve_id) {
-                $query->where('vi.ve_id', '=', $ve_id);
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vi.vi_ve_id')
+            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
+            ->when($vi_ve_id, function (Builder $query) use ($vi_ve_id) {
+                $query->where('vi.vi_ve_id', '=', $vi_ve_id);
             })
             ->when(
-                null === $ve_id,
+                null === $vi_ve_id,
                 function (Builder $query) {
                     $query->orderByDesc('vi.vi_id');
                 },
@@ -153,11 +157,11 @@ class VehicleInsurance extends Model
                     $query->orderBy('vi.vi_id');
                 }
             )
-            ->select('vi.*', 've.plate_no', 'vm.brand_name', 'vm.model_name')
-            ->when(null === $ve_id, function (Builder $query) {
-                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.compulsory_end_date) / 86400.0 AS integer ) as compulsory_interval_day'));
-                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.commercial_end_date) / 86400.0 AS integer ) as commercial_interval_day'));
-                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.carrier_liability_end_date) / 86400.0 AS integer ) as carrier_liability_interval_day'));
+            ->select('vi.*', 've.ve_plate_no', 'vm.vm_brand_name', 'vm.vm_model_name')
+            ->when(null === $vi_ve_id, function (Builder $query) {
+                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_compulsory_end_date) / 86400.0 AS integer ) as vi_compulsory_interval_day'));
+                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_commercial_end_date) / 86400.0 AS integer ) as vi_commercial_interval_day'));
+                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_carrier_liability_end_date) / 86400.0 AS integer ) as vi_carrier_liability_interval_day'));
             })
         ;
     }
@@ -266,42 +270,42 @@ class VehicleInsurance extends Model
         return [];
     }
 
-    protected function compulsoryPolicyFile(): Attribute
+    protected function viCompulsoryPolicyFile(): Attribute
     {
         return $this->uploadFile();
     }
 
-    protected function compulsoryPolicyPhotos(): Attribute
+    protected function viCompulsoryPolicyPhotos(): Attribute
     {
         return $this->uploadFileArray();
     }
 
-    protected function compulsoryPolicyAddendumFile(): Attribute
+    protected function viCompulsoryPolicyAddendumFile(): Attribute
     {
         return $this->uploadFile();
     }
 
-    protected function carrierLiabilityPolicyFile(): Attribute
+    protected function viCarrierLiabilityPolicyFile(): Attribute
     {
         return $this->uploadFile();
     }
 
-    protected function carrierLiabilityPolicyPhotos(): Attribute
+    protected function viCarrierLiabilityPolicyPhotos(): Attribute
     {
         return $this->uploadFileArray();
     }
 
-    protected function commercialPolicyFile(): Attribute
+    protected function viCommercialPolicyFile(): Attribute
     {
         return $this->uploadFile();
     }
 
-    protected function commercialPolicyPhotos(): Attribute
+    protected function viCommercialPolicyPhotos(): Attribute
     {
         return $this->uploadFileArray();
     }
 
-    protected function commercialPolicyAddendumFile(): Attribute
+    protected function viCommercialPolicyAddendumFile(): Attribute
     {
         return $this->uploadFile();
     }

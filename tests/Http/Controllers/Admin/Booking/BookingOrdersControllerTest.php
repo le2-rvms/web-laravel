@@ -2,10 +2,10 @@
 
 namespace Tests\Http\Controllers\Admin\Booking;
 
-use App\Enum\Booking\BoBoSource;
 use App\Enum\Booking\BoOrderStatus;
 use App\Enum\Booking\BoPaymentStatus;
 use App\Enum\Booking\BoRefundStatus;
+use App\Enum\Booking\BoSource;
 use App\Enum\Booking\BvIsListed;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Admin\Sale\BookingOrderController;
@@ -30,15 +30,15 @@ class BookingOrdersControllerTest extends TestCase
     {
         parent::setUp();
 
-        Customer::query()->whereLike('contact_name', 'TEST-%')->delete();
-        Vehicle::query()->whereLike('plate_no', 'TEST-%')->delete();
-        BookingVehicle::query()->whereLike('plate_no', 'TEST-%')->delete();
-        BookingOrder::query()->whereLike('plate_no', 'TEST-%')->delete();
+        Customer::query()->whereLike('cu_contact_name', 'TEST-%')->delete();
+        Vehicle::query()->whereLike('ve_plate_no', 'TEST-%')->delete();
+        BookingVehicle::query()->whereLike('bv_plate_no', 'TEST-%')->delete();
+        BookingOrder::query()->whereLike('bo_plate_no', 'TEST-%')->delete();
 
-        $this->vehicle  = Vehicle::factory()->create(['plate_no' => 'TEST-001', 'status_service' => VeStatusService::YES]);
-        $this->customer = Customer::factory()->create(['contact_name' => 'TEST-001']);
+        $this->vehicle  = Vehicle::factory()->create(['ve_plate_no' => 'TEST-001', 've_status_service' => VeStatusService::YES]);
+        $this->customer = Customer::factory()->create(['cu_contact_name' => 'TEST-001']);
 
-        $this->bookingVehicle = BookingVehicle::factory()->for($this->vehicle)->create(['is_listed' => BvIsListed::LISTED]);
+        $this->bookingVehicle = BookingVehicle::factory()->for($this->vehicle)->create(['bv_is_listed' => BvIsListed::LISTED]);
     }
 
     public function testIndexReturnsPaginatedList()
@@ -88,8 +88,8 @@ class BookingOrdersControllerTest extends TestCase
                 [
                     'data' => [
                         'bo_no'           => '',
-                        'bo_source'       => BoBoSource::STORE,
-                        'bo_source_label' => BoBoSource::tryFrom(BoBoSource::STORE)->label,
+                        'bo_source'       => BoSource::STORE,
+                        'bo_source_label' => BoSource::tryFrom(BoSource::STORE)->label,
                     ]],
             )
         ;
@@ -118,7 +118,7 @@ class BookingOrdersControllerTest extends TestCase
             ->raw()
         ;
 
-        $payload['bv_id'] = $this->bookingVehicle->bv_id;
+        $payload['bo_bv_id'] = $this->bookingVehicle->bv_id;
 
         $resp = $this->postJson(
             action([BookingOrderController::class, 'store'], $payload)
@@ -128,8 +128,8 @@ class BookingOrdersControllerTest extends TestCase
             ->assertJson(
                 [
                     'data' => [
-                        'bo_no'          => $payload['bo_no'],
-                        'payment_status' => $payload['payment_status'],
+                        'bo_no'             => $payload['bo_no'],
+                        'bo_payment_status' => $payload['bo_payment_status'],
                     ],
                 ]
             )
@@ -153,6 +153,7 @@ class BookingOrdersControllerTest extends TestCase
 
     public function testUpdateChangesStatusFieldsOnExistingOrder()
     {
+        /** @var BookingOrder $bookingOrder */
         $bookingOrder = BookingOrder::factory()
             ->forBookingVehicle($this->bookingVehicle)
             ->for($this->customer)
@@ -161,10 +162,10 @@ class BookingOrdersControllerTest extends TestCase
 
         $payload = [
             // update 请求里，仅这些枚举必填（其余在 update 中 excludeIf）
-            'payment_status' => BoPaymentStatus::PAID,
-            'sc_status'      => BoOrderStatus::PROCESSED,
-            'refund_status'  => BoRefundStatus::REFUNDED,
-            'earnest_amount' => $bookingOrder->earnest_amount,
+            'bo_payment_status' => BoPaymentStatus::PAID,
+            'bo_order_status'   => BoOrderStatus::PROCESSED,
+            'bo_refund_status'  => BoRefundStatus::REFUNDED,
+            'bo_earnest_amount' => $bookingOrder->earnest_amount,
         ];
 
         $resp = $this->putJson(
@@ -176,17 +177,17 @@ class BookingOrdersControllerTest extends TestCase
             ->assertJson(
                 [
                     'data' => [
-                        'payment_status' => BoPaymentStatus::PAID,
-                        'sc_status'      => BoOrderStatus::PROCESSED,
-                        'refund_status'  => BoRefundStatus::REFUNDED,
+                        'bo_payment_status' => BoPaymentStatus::PAID,
+                        'bo_order_status'   => BoOrderStatus::PROCESSED,
+                        'bo_refund_status'  => BoRefundStatus::REFUNDED,
                     ],
                 ]
             )
         ;
 
         $bookingOrder->refresh();
-        $this->assertEquals(BoPaymentStatus::PAID, $bookingOrder->payment_status);
-        $this->assertEquals(BoOrderStatus::PROCESSED, $bookingOrder->sc_status);
+        $this->assertEquals(BoPaymentStatus::PAID, $bookingOrder->bo_payment_status);
+        $this->assertEquals(BoOrderStatus::PROCESSED, $bookingOrder->bo_order_status);
     }
 
     public function testDestroyDeletesTheOrder()

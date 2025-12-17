@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\VehicleService;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Vehicle\VcVcStatus;
+use App\Enum\Vehicle\VcStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
@@ -27,7 +27,7 @@ class VehicleCenterController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            VcVcStatus::labelOptions(),
+            VcStatus::labelOptions(),
         );
     }
 
@@ -67,7 +67,7 @@ class VehicleCenterController extends Controller
         $this->options();
 
         $vehicleCenter = new VehicleCenter([
-            'vc_status' => VcVcStatus::ENABLED,
+            'vc_status' => VcStatus::ENABLED,
         ]);
 
         $this->response()->withExtras(
@@ -121,7 +121,7 @@ class VehicleCenterController extends Controller
                 'vc_address'       => ['bail', 'required', 'string'],
                 'vc_contact_name'  => ['bail', 'required'],
                 'vc_contact_phone' => ['bail', 'nullable', 'string', 'max:32'],
-                'vc_status'        => ['bail', 'required', Rule::in(VcVcStatus::label_keys())],
+                'vc_status'        => ['bail', 'required', Rule::in(VcStatus::label_keys())],
                 'vc_note'          => ['bail', 'nullable', 'string', 'max:255'],
                 'vc_permitted'     => ['bail', 'nullable', 'array'],
                 'vc_permitted.*'   => ['bail', 'integer'],
@@ -131,7 +131,8 @@ class VehicleCenterController extends Controller
             trans_property(VehicleCenter::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -166,7 +167,7 @@ class VehicleCenterController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            VcVcStatus::options(),
+            VcStatus::options(),
         );
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Tests\Http\Controllers\Admin\Admin;
 
-use App\Enum\Admin\AtAtStatus;
+use App\Enum\Admin\AtStatus;
 use App\Http\Controllers\Admin\Admin\AdminTeamController;
 use App\Models\Admin\AdminTeam;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -27,7 +27,7 @@ class AdminTeamControllerTest extends TestCase
             'at_id'        => 1,
             'at_parent_id' => null,
             'at_name'      => 'Alpha',
-            'at_status'    => AtAtStatus::ENABLED,
+            'at_status'    => AtStatus::ENABLED,
             'at_sort'      => 1,
         ]);
 
@@ -35,7 +35,7 @@ class AdminTeamControllerTest extends TestCase
             'at_id'        => 2,
             'at_parent_id' => null,
             'at_name'      => 'Beta',
-            'at_status'    => AtAtStatus::DISABLED,
+            'at_status'    => AtStatus::DISABLED,
         ]);
 
         $response = $this->getJson(action([AdminTeamController::class, 'index']));
@@ -43,7 +43,7 @@ class AdminTeamControllerTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data'  => ['data'],
-                'extra' => ['AtAtStatusOptions'],
+                'extra' => ['AtStatusOptions'],
                 'option',
             ])
         ;
@@ -66,7 +66,7 @@ class AdminTeamControllerTest extends TestCase
         $payload = [
             'at_parent_id' => null,
             'at_name'      => 'North Team',
-            'at_status'    => AtAtStatus::ENABLED,
+            'at_status'    => AtStatus::ENABLED,
             'at_sort'      => 10,
             'at_remark'    => 'Primary',
         ];
@@ -77,7 +77,7 @@ class AdminTeamControllerTest extends TestCase
 
         $this->assertDatabaseHas('admin_teams', [
             'at_name'   => 'North Team',
-            'at_status' => AtAtStatus::ENABLED,
+            'at_status' => AtStatus::ENABLED,
             'at_sort'   => 10,
         ]);
     }
@@ -87,20 +87,20 @@ class AdminTeamControllerTest extends TestCase
         $first = AdminTeam::query()->create([
             'at_id'     => 1,
             'at_name'   => 'Alpha',
-            'at_status' => AtAtStatus::ENABLED,
+            'at_status' => AtStatus::ENABLED,
         ]);
 
         $second = AdminTeam::query()->create([
             'at_id'     => 2,
             'at_name'   => 'Bravo',
-            'at_status' => AtAtStatus::ENABLED,
+            'at_status' => AtStatus::ENABLED,
         ]);
 
         $response = $this->putJson(
             action([AdminTeamController::class, 'update'], ['admin_team' => $second]),
             [
                 'at_name'   => $first->at_name,
-                'at_status' => AtAtStatus::ENABLED,
+                'at_status' => AtStatus::ENABLED,
             ]
         );
 
@@ -114,7 +114,7 @@ class AdminTeamControllerTest extends TestCase
         $team = AdminTeam::query()->create([
             'at_id'     => 3,
             'at_name'   => 'Gamma',
-            'at_status' => AtAtStatus::DISABLED,
+            'at_status' => AtStatus::DISABLED,
             'at_sort'   => 3,
             'at_remark' => 'Old',
         ]);
@@ -124,7 +124,7 @@ class AdminTeamControllerTest extends TestCase
             [
                 'at_parent_id' => null,
                 'at_name'      => 'Gamma Updated',
-                'at_status'    => AtAtStatus::ENABLED,
+                'at_status'    => AtStatus::ENABLED,
                 'at_sort'      => 5,
                 'at_remark'    => 'Updated remark',
             ]
@@ -134,7 +134,7 @@ class AdminTeamControllerTest extends TestCase
 
         $team->refresh();
         $this->assertSame('Gamma Updated', $team->at_name);
-        $this->assertSame(AtAtStatus::ENABLED, $team->at_status);
+        $this->assertSame(AtStatus::ENABLED, $team->at_status);
         $this->assertSame(5, $team->at_sort);
         $this->assertSame('Updated remark', $team->at_remark);
     }
@@ -144,7 +144,7 @@ class AdminTeamControllerTest extends TestCase
         $team = AdminTeam::query()->create([
             'at_id'     => 4,
             'at_name'   => 'Delta',
-            'at_status' => AtAtStatus::ENABLED,
+            'at_status' => AtStatus::ENABLED,
         ]);
 
         $show = $this->getJson(action([AdminTeamController::class, 'show'], ['admin_team' => $team]));

@@ -47,7 +47,7 @@ abstract class ConfigurationController extends Controller
 
         // 因为有可能要显示 mask 之后的值，所以需要直接query orm。
         $query = Configuration::query()
-            ->where('usage_category', $this->usageCategory)
+            ->where('cfg_usage_category', $this->usageCategory)
         ;
 
         $paginate = new PaginateService(
@@ -102,7 +102,7 @@ abstract class ConfigurationController extends Controller
     public function destroy(Configuration $configuration): Response
     {
         DB::transaction(function () use ($configuration) {
-            if ($configuration->usage_category->value === $this->usageCategory) {
+            if ($configuration->cfg_usage_category->value === $this->usageCategory) {
                 $configuration->deleteOrFail();
             }
         });
@@ -117,8 +117,8 @@ abstract class ConfigurationController extends Controller
         $this->options();
 
         $config = new Configuration([
-            'masked'         => CfgMasked::NO,
-            'usage_category' => $this->usageCategory,
+            'cfg_masked'         => CfgMasked::NO,
+            'cfg_usage_category' => $this->usageCategory,
         ]);
 
         return $this->response()->withData($config)->respond();
@@ -138,7 +138,7 @@ abstract class ConfigurationController extends Controller
         $input = $this->validatedCreateRequest($request);
 
         DB::transaction(function () use ($input) {
-            $configuration = Configuration::query()->create($input + ['usage_category' => $this->usageCategory]);
+            $configuration = Configuration::query()->create($input + ['cfg_usage_category' => $this->usageCategory]); // todo 改为前端要传，控制器要验证。
         });
 
         $this->response()->withMessages(message_success(str_replace(get_parent_class($this), get_called_class(), __METHOD__)));
@@ -160,7 +160,7 @@ abstract class ConfigurationController extends Controller
             [
                 'cfg_key'    => ['required', 'max:255', Rule::unique(Configuration::class, 'cfg_key')],
                 'cfg_value'  => ['required'],
-                'masked'     => ['required', Rule::in(CfgMasked::label_keys())],
+                'cfg_masked' => ['required', Rule::in(CfgMasked::label_keys())],
                 'cfg_remark' => ['nullable'],
             ],
             [],
@@ -181,14 +181,15 @@ abstract class ConfigurationController extends Controller
             [
                 'cfg_key'    => ['required', 'max:255', Rule::unique(Configuration::class, 'cfg_key')->ignore($configuration, 'cfg_key')],
                 'cfg_value'  => ['required'],
-                'masked'     => ['required', Rule::in(CfgMasked::label_keys())],
+                'cfg_masked' => ['required', Rule::in(CfgMasked::label_keys())],
                 'cfg_remark' => ['nullable'],
             ],
             [],
             trans_property(Configuration::class)
         )
             ->after(function ($validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;

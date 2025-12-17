@@ -2,11 +2,11 @@
 
 namespace Tests\Http\Controllers\Sale;
 
-use App\Enum\Payment\RpPtId;
-use App\Enum\Sale\ScPaymentDay_Month;
-use App\Enum\Sale\ScPaymentDayType;
-use App\Enum\Sale\ScRentalType;
-use App\Enum\Sale\ScScStatus;
+use App\Enum\Payment\PPtId;
+use App\Enum\SaleContract\ScPaymentDay_Month;
+use App\Enum\SaleContract\ScPaymentPeriod;
+use App\Enum\SaleContract\ScRentalType;
+use App\Enum\SaleContract\ScStatus;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
@@ -33,19 +33,19 @@ class SaleContractControllerTest extends TestCase
     {
         parent::setUp();
 
-        Customer::query()->whereLike('contact_name', '测试客户%')->delete();
-        Vehicle::query()->whereLike('plate_no', 'TEST-%')->delete();
+        Customer::query()->whereLike('cu_contact_name', '测试客户%')->delete();
+        Vehicle::query()->whereLike('ve_plate_no', 'TEST-%')->delete();
 
         $this->customer = Customer::factory()->create([
-            'contact_name'  => '测试客户'.Str::upper(Str::random(4)),
-            'contact_phone' => '199'.rand(10000000, 99999999),
+            'cu_contact_name'  => '测试客户'.Str::upper(Str::random(4)),
+            'cu_contact_phone' => '199'.rand(10000000, 99999999),
         ]);
 
         $this->vehicle = Vehicle::factory()->create([
-            'plate_no'        => 'TEST-001',
-            'status_service'  => VeStatusService::YES,
-            'status_rental'   => VeStatusRental::LISTED,
-            'status_dispatch' => VeStatusDispatch::NOT_DISPATCHED,
+            've_plate_no'        => 'TEST-001',
+            've_status_service'  => VeStatusService::YES,
+            've_status_rental'   => VeStatusRental::LISTED,
+            've_status_dispatch' => VeStatusDispatch::NOT_DISPATCHED,
         ]);
     }
 
@@ -60,7 +60,7 @@ class SaleContractControllerTest extends TestCase
         $response = $this->getJson(action([SaleContractController::class, 'index']));
 
         $response->assertOk()
-            ->assertJsonFragment(['contract_number' => $order->contract_number])
+            ->assertJsonFragment(['sc_no' => $order->sc_no])
         ;
 
         $extra = $response->json('extra');
@@ -75,7 +75,7 @@ class SaleContractControllerTest extends TestCase
 
         $response->assertOk();
 
-        $this->assertSame(ScRentalType::LONG_TERM, $response->json('data.rental_type'));
+        $this->assertSame(ScRentalType::LONG_TERM, $response->json('data.sc_rental_type'));
         $this->assertArrayHasKey('CustomerOptions', $response->json('extra'));
     }
 
@@ -97,7 +97,7 @@ class SaleContractControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('data.sc_id', $order->getKey())
-            ->assertJsonPath('data.payments.0.rp_id', $payment->getKey())
+            ->assertJsonPath('data.payments.0.p_id', $payment->getKey())
         ;
     }
 
@@ -107,7 +107,7 @@ class SaleContractControllerTest extends TestCase
             ->for($this->customer)
             ->for($this->vehicle)->raw()
         ;
-        if (ScRentalType::LONG_TERM === $payload['rental_type']) {
+        if (ScRentalType::LONG_TERM === $payload['sc_rental_type']) {
             $payment             = Payment::factory()->raw();
             $payload['payments'] = [$payment];
         } else {
@@ -117,16 +117,16 @@ class SaleContractControllerTest extends TestCase
         $response = $this->postJson(action([SaleContractController::class, 'store']), $payload);
 
         $response->assertOk()
-            ->assertJsonFragment(['contract_number' => $payload['contract_number']])
+            ->assertJsonFragment(['sc_no' => $payload['sc_no']])
         ;
 
         $this->assertDatabaseHas((new SaleContract())->getTable(), [
-            'contract_number' => $payload['contract_number'],
-            'cu_id'           => $this->customer->getKey(),
+            'sc_no'    => $payload['sc_no'],
+            'sc_cu_id' => $this->customer->getKey(),
         ]);
 
         $created = SaleContract::query()
-            ->where('contract_number', $payload['contract_number'])
+            ->where('sc_no', $payload['sc_no'])
             ->with('Payments')
             ->firstOrFail()
         ;
@@ -134,7 +134,7 @@ class SaleContractControllerTest extends TestCase
         $this->assertCount(count($payload['payments']), $created->Payments);
         $this->assertSame(
             VeStatusRental::RESERVED,
-            $this->vehicle->fresh()->status_rental->value
+            $this->vehicle->fresh()->ve_status_rental->value
         );
     }
 
@@ -142,7 +142,7 @@ class SaleContractControllerTest extends TestCase
     {
         $order = SaleContract::factory()
             ->for($this->customer)
-            ->for($this->vehicle)->create(['sc_status' => ScScStatus::PENDING])
+            ->for($this->vehicle)->create(['sc_status' => ScStatus::PENDING])
         ;
 
         Payment::factory()
@@ -155,7 +155,7 @@ class SaleContractControllerTest extends TestCase
             ->for($this->vehicle)->raw()
         ;
 
-        if (ScRentalType::LONG_TERM === $payload['rental_type']) {
+        if (ScRentalType::LONG_TERM === $payload['sc_rental_type']) {
             $payment             = Payment::factory()->raw();
             $payload['payments'] = [$payment];
         } else {
@@ -168,13 +168,13 @@ class SaleContractControllerTest extends TestCase
         );
 
         $response->assertOk()
-            ->assertJsonPath('data.rent_amount', bcadd($payload['rent_amount'], '0', 2))
-            ->assertJsonPath('data.total_rent_amount', bcadd($payload['total_rent_amount'], '0', 2))
+            ->assertJsonPath('data.sc_rent_amount', bcadd($payload['sc_rent_amount'], '0', 2))
+            ->assertJsonPath('data.sc_total_rent_amount', bcadd($payload['sc_total_rent_amount'], '0', 2))
         ;
 
         $order->refresh()->load('Payments');
 
-        $this->assertSame((float) $payload['rent_amount'], (float) $order->rent_amount);
+        $this->assertSame((float) $payload['sc_rent_amount'], (float) $order->sc_rent_amount);
     }
 
     public function testDestroyRemovesOrder(): void
@@ -197,14 +197,14 @@ class SaleContractControllerTest extends TestCase
     public function testPaymentsOptionGeneratesSchedule(): void
     {
         $params = [
-            'rental_type'           => ScRentalType::LONG_TERM,
-            'payment_day_type'      => ScPaymentDayType::MONTHLY_PREPAID,
-            'deposit_amount'        => '300.00',
-            'management_fee_amount' => '50.00',
-            'rental_start'          => '2024-01-01',
-            'installments'          => 2,
-            'rent_amount'           => '800.00',
-            'payment_day'           => ScPaymentDay_Month::DAY_5,
+            'sc_rental_type'           => ScRentalType::LONG_TERM,
+            'sc_payment_period'        => ScPaymentPeriod::MONTHLY_PREPAID,
+            'sc_deposit_amount'        => '300.00',
+            'sc_management_fee_amount' => '50.00',
+            'sc_start_date'            => '2024-01-01',
+            'sc_installments'          => 2,
+            'sc_rent_amount'           => '800.00',
+            'sc_payment_day'           => ScPaymentDay_Month::DAY_5,
         ];
 
         $response = $this->getJson(
@@ -213,8 +213,8 @@ class SaleContractControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonCount(4, 'data');
-        $this->assertSame(RpPtId::DEPOSIT, $response->json('data.0.pt_id'));
-        $this->assertSame(RpPtId::MANAGEMENT_FEE, $response->json('data.1.pt_id'));
-        $this->assertSame(RpPtId::RENT, $response->json('data.2.pt_id'));
+        $this->assertSame(PPtId::DEPOSIT, $response->json('data.0.p_pt_id'));
+        $this->assertSame(PPtId::MANAGEMENT_FEE, $response->json('data.1.p_pt_id'));
+        $this->assertSame(PPtId::RENT, $response->json('data.2.p_pt_id'));
     }
 }

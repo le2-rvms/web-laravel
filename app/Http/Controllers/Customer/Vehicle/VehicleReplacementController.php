@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Customer\Vehicle;
 
 use App\Http\Controllers\Controller;
-use App\Models\Sale\VehicleReplacement;
+use App\Models\Sale\VehicleTmp;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +18,7 @@ class VehicleReplacementController extends Controller
 
     public function index(Request $request): Response
     {
-        $data = VehicleReplacement::customerQuery($this)
+        $data = VehicleTmp::customerQuery($this)
             ->when(
                 $request->get('last_id'),
                 function (Builder $query) use ($request) {

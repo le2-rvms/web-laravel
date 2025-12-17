@@ -18,7 +18,7 @@ class Vehicle122AccountObserver
      */
     public function updated(OneAccount $oneAccount): void
     {
-        if ($oneAccount->wasChanged('cookie_string')) {
+        if ($oneAccount->wasChanged('oa_cookie_string')) {
             $oneAccount->deleteCookies();
         }
     }

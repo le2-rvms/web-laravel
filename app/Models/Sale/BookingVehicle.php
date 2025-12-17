@@ -3,8 +3,8 @@
 namespace App\Models\Sale;
 
 use App\Attributes\ClassName;
-use App\Enum\Booking\BvBType;
 use App\Enum\Booking\BvIsListed;
+use App\Enum\Booking\BvType;
 use App\Models\_\ModelTrait;
 use App\Models\Vehicle\Vehicle;
 use Carbon\Carbon;
@@ -16,61 +16,65 @@ use Illuminate\Support\Facades\DB;
 
 #[ClassName('预定车辆')]
 /**
- * @property int             $bv_id                预订车辆序号
- * @property BvBType|string  $b_type               租期类型
- * @property string          $plate_no             车牌号
- * @property null|Carbon     $pickup_date          提车日期
- * @property int             $rent_per_amount      每期租金;(元)
- * @property int             $deposit_amount       押金;(元)
- * @property int             $min_rental_periods   最短租期;(天、周、月)
- * @property null|Carbon     $registration_date    注册日期
- * @property int             $b_mileage            行驶里程;(公里)
- * @property int             $service_interval     保养周期;(公里)
- * @property null|array      $b_props              车辆信息
- * @property string          $b_note               备注信息
- * @property null|array      $bv_photo             车辆照片；存储照片路径的 JSON 数组
- * @property null|array      $bv_additional_photos 附加照片；存储照片路径的 JSON 数组
- * @property null|BvIsListed $is_listed            上架状态;
- * @property Carbon          $listed_at            上架时间
- *                                                 --
+ * @property int             $bv_id                 预订车辆序号
+ * @property BvType|string   $bv_type               租期类型
+ * @property string          $bv_plate_no           车牌号
+ * @property null|Carbon     $bv_pickup_date        提车日期
+ * @property int             $bv_rent_per_amount    每期租金;(元)
+ * @property int             $bv_deposit_amount     押金;(元)
+ * @property int             $bv_min_rental_periods 最短租期;(天、周、月)
+ * @property null|Carbon     $bv_registration_date  注册日期
+ * @property int             $bv_mileage            行驶里程;(公里)
+ * @property int             $bv_service_interval   保养周期;(公里)
+ * @property null|array      $bv_props              车辆信息
+ * @property string          $bv_note               备注信息
+ * @property null|array      $bv_photo              车辆照片；存储照片路径的 JSON 数组
+ * @property null|array      $bv_additional_photos  附加照片；存储照片路径的 JSON 数组
+ * @property null|BvIsListed $bv_is_listed          上架状态;
+ * @property Carbon          $bv_listed_at          上架时间
+ *                                                  --
  * @property Vehicle         $Vehicle
  */
 class BookingVehicle extends Model
 {
     use ModelTrait;
 
+    public const CREATED_AT = 'bv_created_at';
+    public const UPDATED_AT = 'bv_updated_at';
+    public const UPDATED_BY = 'bv_updated_by';
+
     protected $primaryKey = 'bv_id';
 
     protected $guarded = ['bv_id'];
 
     protected $casts = [
-        'b_props'   => 'array',
-        'b_type'    => BvBType::class,
-        'is_listed' => BvIsListed::class,
+        'bv_props'     => 'array',
+        'bv_type'      => BvType::class,
+        'bv_is_listed' => BvIsListed::class,
     ];
 
     protected $appends = [
-        'b_type_label',
-        'is_listed_label',
+        'bv_type_label',
+        'bv_is_listed_label',
     ];
 
     protected $attributes = [];
 
     public function Vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 'plate_no', 'plate_no')->withDefault()->with('VehicleModel');
+        return $this->belongsTo(Vehicle::class, 'bv_plate_no', 've_plate_no')->withDefault()->with('VehicleModel');
     }
 
     public static function indexQuery(array $search = []): Builder
     {
         return DB::query()
             ->from('booking_vehicles', 'bv')
-            ->leftJoin('vehicles as ve', 'bv.plate_no', '=', 've.plate_no')
-            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.vm_id')
+            ->leftJoin('vehicles as ve', 'bv.bv_plate_no', '=', 've.ve_plate_no')
+            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->select('bv.*', 've.*', 'vm.*')
             ->addSelect(
-                DB::raw(BvBType::toCaseSQL()),
-                DB::raw('(NOW()::date - listed_at::date) AS listed_days_diff'),
+                DB::raw(BvType::toCaseSQL()),
+                DB::raw('(NOW()::date - bv_listed_at::date) AS listed_days_diff'),
             )
         ;
     }
@@ -82,10 +86,10 @@ class BookingVehicle extends Model
 
         $value = DB::query()
             ->from('booking_vehicles', 'bv')
-            ->leftJoin('vehicles as ve', 'bv.plate_no', '=', 've.plate_no')
-            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.vm_id')
-            ->where('bv.is_listed', '=', BvIsListed::LISTED)
-            ->select(DB::raw("CONCAT(ve.plate_no,'-',COALESCE(vm.brand_name,'未知品牌'),'-', COALESCE(vm.model_name,'未知车型')) as text,bv.bv_id as value"))
+            ->leftJoin('vehicles as ve', 'bv.bv_plate_no', '=', 've.ve_plate_no')
+            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
+            ->where('bv.bv_is_listed', '=', BvIsListed::LISTED)
+            ->select(DB::raw("CONCAT(ve.ve_plate_no,'-',COALESCE(vm.vm_brand_name,'未知品牌'),'-', COALESCE(vm.vm_model_name,'未知车型')) as text,bv.bv_id as value"))
             ->get()
         ;
 
@@ -102,17 +106,17 @@ class BookingVehicle extends Model
         return $this->uploadFileArray();
     }
 
-    protected function bTypeLabel(): Attribute
+    protected function bvTypeLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('b_type')?->label
+            get: fn () => $this->getAttribute('bv_type')?->label
         );
     }
 
-    protected function isListedLabel(): Attribute
+    protected function bvIsListedLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('is_listed')?->label
+            get: fn () => $this->getAttribute('bv_is_listed')?->label
         );
     }
 
@@ -123,9 +127,9 @@ class BookingVehicle extends Model
                 if (!$value) {
                     $datetime = \DateTime::createFromFormat('U.u', sprintf('%.6f', microtime(true)));
                     $datetime->setTimezone(new \DateTimeZone(date_default_timezone_get()));  // 转换为目标时区
-                    $contract_number = $datetime->format('ymdHisv');
+                    $sc_no = $datetime->format('ymdHisv'); // todo
 
-                    return 'BK'.$contract_number;
+                    return 'BK'.$sc_no;
                 }
             }
         );

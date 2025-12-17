@@ -6,7 +6,7 @@ use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
-use App\Enum\Vehicle\ViIsCompanyBorne;
+use App\Enum\VehicleInspection\ViIsCompanyBorne;
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleInsurance;
@@ -48,7 +48,7 @@ class VehicleInsuranceController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('ve.plate_no', 'like', '%'.$value.'%');
+                    $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%');
                 });
             },
         ]);
@@ -102,67 +102,68 @@ class VehicleInsuranceController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                've_id' => ['required', 'integer'],
+                'vi_ve_id' => ['required', 'integer'],
                 // 交强险字段
-                'compulsory_plate_no'          => ['nullable', 'string', 'max:50'],
-                'compulsory_policy_number'     => ['nullable', 'string', 'max:50'],
-                'compulsory_start_date'        => ['nullable', 'date'],
-                'compulsory_end_date'          => ['nullable', 'date', 'after:compulsory_start_date'],
-                'compulsory_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
-                'compulsory_insured_company'   => ['nullable', 'string', 'max:255'],
-                'compulsory_org_code'          => ['nullable', 'string', 'max:50'],
-                'compulsory_insurance_company' => ['nullable', 'string', 'max:255'],
+                'vi_compulsory_plate_no'          => ['nullable', 'string', 'max:50'],
+                'vi_compulsory_policy_number'     => ['nullable', 'string', 'max:50'],
+                'vi_compulsory_start_date'        => ['nullable', 'date'],
+                'vi_compulsory_end_date'          => ['nullable', 'date', 'after:compulsory_start_date'],
+                'vi_compulsory_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
+                'vi_compulsory_insured_company'   => ['nullable', 'string', 'max:255'],
+                'vi_compulsory_org_code'          => ['nullable', 'string', 'max:50'],
+                'vi_compulsory_insurance_company' => ['nullable', 'string', 'max:255'],
                 // 承运人责任险字段
-                'carrier_liability_plate_no'          => ['nullable', 'string', 'max:50'],
-                'carrier_liability_policy_number'     => ['nullable', 'string', 'max:50'],
-                'carrier_liability_start_date'        => ['nullable', 'date'],
-                'carrier_liability_end_date'          => ['nullable', 'date', 'after:carrier_liability_start_date'],
-                'carrier_liability_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
-                'carrier_liability_insured_company'   => ['nullable', 'string', 'max:255'],
-                'carrier_liability_org_code'          => ['nullable', 'string', 'max:50'],
-                'carrier_liability_insurance_company' => ['nullable', 'string', 'max:255'],
+                'vi_carrier_liability_plate_no'          => ['nullable', 'string', 'max:50'],
+                'vi_carrier_liability_policy_number'     => ['nullable', 'string', 'max:50'],
+                'vi_carrier_liability_start_date'        => ['nullable', 'date'],
+                'vi_carrier_liability_end_date'          => ['nullable', 'date', 'after:carrier_liability_start_date'],
+                'vi_carrier_liability_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
+                'vi_carrier_liability_insured_company'   => ['nullable', 'string', 'max:255'],
+                'vi_carrier_liability_org_code'          => ['nullable', 'string', 'max:50'],
+                'vi_carrier_liability_insurance_company' => ['nullable', 'string', 'max:255'],
                 // 商业险字段
-                'commercial_plate_no'          => ['nullable', 'string', 'max:50'],
-                'commercial_policy_number'     => ['nullable', 'string', 'max:50'],
-                'commercial_start_date'        => ['nullable', 'date'],
-                'commercial_end_date'          => ['nullable', 'date', 'after:commercial_start_date'],
-                'commercial_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
-                'commercial_insured_company'   => ['nullable', 'string', 'max:255'],
-                'commercial_org_code'          => ['nullable', 'string', 'max:50'],
-                'commercial_insurance_company' => ['nullable', 'string', 'max:255'],
+                'vi_commercial_plate_no'          => ['nullable', 'string', 'max:50'],
+                'vi_commercial_policy_number'     => ['nullable', 'string', 'max:50'],
+                'vi_commercial_start_date'        => ['nullable', 'date'],
+                'vi_commercial_end_date'          => ['nullable', 'date', 'after:commercial_start_date'],
+                'vi_commercial_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
+                'vi_commercial_insured_company'   => ['nullable', 'string', 'max:255'],
+                'vi_commercial_org_code'          => ['nullable', 'string', 'max:50'],
+                'vi_commercial_insurance_company' => ['nullable', 'string', 'max:255'],
 
                 // 其他字段
-                'is_company_borne' => ['sometimes', 'boolean'],
-                'vi_remark'        => ['nullable', 'string'],
+                'vi_is_company_borne' => ['sometimes', 'boolean'],
+                'vi_remark'           => ['nullable', 'string'],
             ]
-            + Uploader::validator_rule_upload_object('compulsory_policy_file')
-            + Uploader::validator_rule_upload_array('compulsory_policy_photos')
-            + Uploader::validator_rule_upload_object('compulsory_policy_addendum_file')
-            + Uploader::validator_rule_upload_object('carrier_liability_policy_file')
-            + Uploader::validator_rule_upload_array('carrier_liability_policy_photos')
-            + Uploader::validator_rule_upload_object('commercial_policy_file')
-            + Uploader::validator_rule_upload_array('commercial_policy_photos')
-            + Uploader::validator_rule_upload_object('commercial_policy_addendum_file'),
+            + Uploader::validator_rule_upload_object('vi_compulsory_policy_file')
+            + Uploader::validator_rule_upload_array('vi_compulsory_policy_photos')
+            + Uploader::validator_rule_upload_object('vi_compulsory_policy_addendum_file')
+            + Uploader::validator_rule_upload_object('vi_carrier_liability_policy_file')
+            + Uploader::validator_rule_upload_array('vi_carrier_liability_policy_photos')
+            + Uploader::validator_rule_upload_object('vi_commercial_policy_file')
+            + Uploader::validator_rule_upload_array('vi_commercial_policy_photos')
+            + Uploader::validator_rule_upload_object('vi_commercial_policy_addendum_file'),
             [],
             trans_property(VehicleInsurance::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$vehicle) {
-                if (!$validator->failed()) {
-                    // ve_id
-                    $ve_id = $request->input('ve_id');
+                if ($validator->failed()) {
+                    return;
+                }
+                // ve_id
+                $ve_id = $request->input('vi_ve_id');
 
-                    /** @var Vehicle $vehicle */
-                    $vehicle = Vehicle::query()->find($ve_id);
-                    if (!$vehicle) {
-                        $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                /** @var Vehicle $vehicle */
+                $vehicle = Vehicle::query()->find($ve_id);
+                if (!$vehicle) {
+                    $validator->errors()->add('vi_ve_id', 'The vehicle does not exist.');
 
-                        return;
-                    }
+                    return;
+                }
 
-                    $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
-                    if (!$pass) {
-                        return;
-                    }
+                $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
+                if (!$pass) {
+                    return;
                 }
             })
         ;
@@ -194,7 +195,8 @@ class VehicleInsuranceController extends Controller
             []
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -215,9 +217,9 @@ class VehicleInsuranceController extends Controller
             $request,
             'vehicle_insurance',
             [
-                'compulsory_policy_file', 'compulsory_policy_photos', 'compulsory_policy_addendum_file',
-                'carrier_liability_policy_file', 'carrier_liability_policy_photos',
-                'commercial_policy_file', 'commercial_policy_photos', 'commercial_policy_addendum_file',
+                'vi_compulsory_policy_file', 'vi_compulsory_policy_photos', 'vi_compulsory_policy_addendum_file',
+                'vi_carrier_liability_policy_file', 'vi_carrier_liability_policy_photos',
+                'vi_commercial_policy_file', 'vi_commercial_policy_photos', 'vi_commercial_policy_addendum_file',
             ],
             $this
         );

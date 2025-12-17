@@ -3,7 +3,7 @@
 namespace App\Models\Vehicle;
 
 use App\Attributes\ColumnDesc;
-use App\Enum\Vehicle\VcVcStatus;
+use App\Enum\Vehicle\VcStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Admin\Admin;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  * @property null|string          $vc_contact_name     联系人
  * @property null                 $vc_contact_mobile
  * @property null|string          $vc_contact_phone    联系电话
- * @property string|VcVcStatus    $vc_status           状态
+ * @property string|VcStatus      $vc_status           状态
  * @property null|string          $vc_note             备注
  * @property null|array<int>      $vc_permitted        用户权限
  *                                                     -
@@ -35,6 +35,10 @@ class VehicleCenter extends Model
 {
     use ModelTrait;
 
+    public const CREATED_AT = 'vc_created_at';
+    public const UPDATED_AT = 'vc_updated_at';
+    public const UPDATED_BY = 'vc_updated_by';
+
     protected $primaryKey = 'vc_id';
 
     protected $guarded = ['vc_id'];
@@ -47,23 +51,23 @@ class VehicleCenter extends Model
     ];
 
     protected $casts = [
-        'vc_status'    => VcVcStatus::class,
+        'vc_status'    => VcStatus::class,
         'vc_permitted' => 'array',
     ];
 
     public function VehicleRepairs(): HasMany
     {
-        return $this->hasMany(VehicleRepair::class, 'vc_id', 'vc_id');
+        return $this->hasMany(VehicleRepair::class, 'vr_vc_id', 'vc_id');
     }
 
     public function VehicleMaintenances(): HasMany
     {
-        return $this->hasMany(VehicleMaintenance::class, 'vc_id', 'vc_id');
+        return $this->hasMany(VehicleMaintenance::class, 'vm_vc_id', 'vc_id');
     }
 
     public function VehicleAccidents(): HasMany
     {
-        return $this->hasMany(VehicleAccident::class, 'vc_id', 'vc_id');
+        return $this->hasMany(VehicleAccident::class, 'va_vc_id', 'vc_id');
     }
 
     public static function options(?\Closure $where = null): array
@@ -76,7 +80,7 @@ class VehicleCenter extends Model
 
         $value = DB::query()
             ->from('vehicle_centers', 'vc')
-            ->where('vc.vc_status', VcVcStatus::ENABLED)
+            ->where('vc.vc_status', VcStatus::ENABLED)
             ->when(!$admin->hasRole(config('setting.super_role.name')), function (Builder $query) use ($admin) {
                 $query->whereRaw('vc_permitted @> ?', [json_encode([$admin->id])]);
             })
@@ -93,8 +97,8 @@ class VehicleCenter extends Model
             ->from('vehicle_centers', 'vc')
             ->select('vc.*')
             ->addSelect(
-                DB::raw(VcVcStatus::toCaseSQL()),
-                DB::raw(VcVcStatus::toColorSQL()),
+                DB::raw(VcStatus::toCaseSQL()),
+                DB::raw(VcStatus::toColorSQL()),
             )
         ;
     }

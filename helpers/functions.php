@@ -168,16 +168,21 @@ function trans_model_suffix($class): string
 
 function get_field_name($class): string
 {
-    $class     = preg_replace('/^.*\\\/', '', $class);
-    $class     = preg_replace('/_.+?$/', '', $class);
-    $fieldName = Str::snake($class);
+    $class_basename = class_basename($class);
 
-    return preg_replace('/_/', '.', $fieldName, 1);
+    $snake  = Str::snake($class_basename);
+    $prefix = strstr($snake, '_', true) ?: $snake;
+
+    $snake = preg_replace('/__.+$/', '', $snake);  // 去掉后缀
+
+    return $prefix.'.'.$snake;
 }
 
 function get_field_short_name($class): string
 {
-    $class = get_field_name($class);
+    $class_basename = class_basename($class);
 
-    return preg_replace('/^[^.]*\./', '', $class);
+    $snake = Str::snake($class_basename);
+
+    return preg_replace('/__.+$/', '', $snake); // 去掉后缀
 }

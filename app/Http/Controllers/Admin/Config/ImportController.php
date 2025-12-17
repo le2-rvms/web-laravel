@@ -48,7 +48,8 @@ class ImportController extends Controller
             ]
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use (&$vehicle) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -59,7 +60,7 @@ class ImportController extends Controller
 
         $input = $validator->validated();
 
-        $model_name     = $input['model_name'];
+        $model_name     = $input['vm_model_name'];
         $model_basename = class_basename($model_name);
 
         $ts       = now()->format('ymdHis');
@@ -154,12 +155,12 @@ class ImportController extends Controller
         // 验证上传文件
         $input = $request->validate(
             [
-                'model_name' => ['required', Rule::in(ImportConfig::keys())],
+                'vm_model_name' => ['required', Rule::in(ImportConfig::keys())],
             ] + Uploader::validator_rule_upload_object('import_file', true)
         );
 
         /** @var ImportTrait $model_name */
-        $model_name = $input['model_name'];
+        $model_name = $input['vm_model_name'];
 
         /** @var UploadedFile $import_file */
         $import_file = $input['import_file'];

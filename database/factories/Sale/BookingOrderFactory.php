@@ -2,10 +2,10 @@
 
 namespace Database\Factories\Sale;
 
-use App\Enum\Booking\BoBoSource;
 use App\Enum\Booking\BoOrderStatus;
 use App\Enum\Booking\BoPaymentStatus;
 use App\Enum\Booking\BoRefundStatus;
+use App\Enum\Booking\BoSource;
 use App\Models\Customer\Customer;
 use App\Models\Sale\BookingOrder;
 use App\Models\Sale\BookingVehicle;
@@ -26,7 +26,7 @@ class BookingOrderFactory extends Factory
 
         return [
             'bo_no'     => 'RBO-'.$this->faker->unique()->bothify('####-######'),
-            'bo_source' => BoBoSource::label_key_random(),
+            'bo_source' => BoSource::label_key_random(),
 
             // 生成并关联客户/车辆
             //            'cu_id'              => function () {
@@ -48,42 +48,42 @@ class BookingOrderFactory extends Factory
             //            'service_interval'   => $this->faker->randomElement([3000, 5000, 10000]),
             //            'min_rental_periods' => $this->faker->numberBetween(1, 12),
 
-            'payment_status' => BoPaymentStatus::label_key_random(),
-            'sc_status'      => BoOrderStatus::label_key_random(),
-            'refund_status'  => BoRefundStatus::label_key_random(),
+            'bo_payment_status' => BoPaymentStatus::label_key_random(),
+            'bo_order_status'   => BoOrderStatus::label_key_random(),
+            'bo_refund_status'  => BoRefundStatus::label_key_random(),
             //            'b_notes'      => $this->faker->optional()->sentence(),
-            'earnest_amount' => $this->faker->numberBetween(500, 1000),
+            'bo_earnest_amount' => $this->faker->numberBetween(500, 1000),
         ];
     }
 
     public function forVehicle(Vehicle $vehicle): self
     {
         return $this->state(fn () => [
-            'plate_no' => $vehicle->plate_no,
+            'bo_plate_no' => $vehicle->ve_plate_no,
         ]);
     }
 
     public function forCustomer(Customer $customer): self
     {
         return $this->state(fn () => [
-            'cu_id' => $customer->getKey(),
+            'bo_cu_id' => $customer->getKey(),
         ]);
     }
 
     public function forBookingVehicle(BookingVehicle $bookingVehicle): self
     {
         return $this->state(fn () => [
-            'b_type'             => $bookingVehicle->b_type->value,
-            'plate_no'           => $bookingVehicle->plate_no,
-            'pickup_date'        => $bookingVehicle->pickup_date,
-            'rent_per_amount'    => $bookingVehicle->rent_per_amount,
-            'deposit_amount'     => $bookingVehicle->deposit_amount,
-            'min_rental_periods' => $bookingVehicle->min_rental_periods,
-            'registration_date'  => $bookingVehicle->registration_date,
-            'b_mileage'          => $bookingVehicle->b_mileage,
-            'service_interval'   => $bookingVehicle->service_interval,
-            'b_props'            => $bookingVehicle->b_props,
-            'b_note'             => $bookingVehicle->b_note,
+            'bo_type'               => $bookingVehicle->bv_type->value,
+            'bo_plate_no'           => $bookingVehicle->bv_plate_no,
+            'bo_pickup_date'        => $bookingVehicle->bv_pickup_date,
+            'bo_rent_per_amount'    => $bookingVehicle->bv_rent_per_amount,
+            'bo_deposit_amount'     => $bookingVehicle->bv_deposit_amount,
+            'bo_min_rental_periods' => $bookingVehicle->bv_min_rental_periods,
+            'bo_registration_date'  => $bookingVehicle->bv_registration_date,
+            'bo_mileage'            => $bookingVehicle->bv_mileage,
+            'bo_service_interval'   => $bookingVehicle->bv_service_interval,
+            'bo_props'              => $bookingVehicle->bv_props,
+            'bo_note'               => $bookingVehicle->bv_note,
         ]);
     }
 }

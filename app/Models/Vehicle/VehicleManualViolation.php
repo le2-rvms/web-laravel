@@ -5,7 +5,7 @@ namespace App\Models\Vehicle;
 use App\Attributes\ClassName;
 use App\Attributes\ColumnDesc;
 use App\Attributes\ColumnType;
-use App\Enum\Vehicle\VmvStatus;
+use App\Enum\VehicleManualViolation\VvStatus;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -19,28 +19,28 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 #[ClassName('手动违章', '记录')]
-#[ColumnDesc('vmv_id')]
-#[ColumnDesc('ve_id')]
-#[ColumnDesc('plate_no', required: true)]
-#[ColumnDesc('vu_id')]
-#[ColumnDesc('violation_datetime', type: ColumnType::DATETIME, required: true)]
-#[ColumnDesc('violation_content')]
-#[ColumnDesc('location', required: true)]
-#[ColumnDesc('fine_amount', required: true)]
-#[ColumnDesc('penalty_points', required: true)]
-#[ColumnDesc('status', required: true, enum_class: VmvStatus::class)]
-#[ColumnDesc('vmv_remark')]
+#[ColumnDesc('vv_id')]
+#[ColumnDesc('vv_ve_id')]
+#[ColumnDesc('vv_plate_no', required: true)]
+#[ColumnDesc('vv_vu_id')]
+#[ColumnDesc('vv_violation_datetime', type: ColumnType::DATETIME, required: true)]
+#[ColumnDesc('vv_violation_content')]
+#[ColumnDesc('vv_location', required: true)]
+#[ColumnDesc('vv_fine_amount', required: true)]
+#[ColumnDesc('vv_penalty_points', required: true)]
+#[ColumnDesc('vv_status', required: true, enum_class: VvStatus::class)]
+#[ColumnDesc('vv_remark')]
 /**
- * @property int           $vmv_id             违章序号
- * @property int           $ve_id              车辆序号；指向车辆表
- * @property null|int      $vu_id              车辆使用时间段序号
- * @property null|Carbon   $violation_datetime 违章发生日时
- * @property null|string   $violation_content  违章内容
- * @property null|string   $location           违章发生地点
- * @property null|float    $fine_amount        违章罚款金额
- * @property null|int      $penalty_points     违章扣分
- * @property int|VmvStatus $status             违章状态；例已处理、未处理
- * @property null|string   $vmv_remark         违章备注
+ * @property int          $vv_id                 违章序号
+ * @property int          $vv_ve_id              车辆序号；指向车辆表
+ * @property null|int     $vv_vu_id              车辆使用时间段序号
+ * @property null|Carbon  $vv_violation_datetime 违章发生日时
+ * @property null|string  $vv_violation_content  违章内容
+ * @property null|string  $vv_location           违章发生地点
+ * @property null|float   $vv_fine_amount        违章罚款金额
+ * @property null|int     $vv_penalty_points     违章扣分
+ * @property int|VvStatus $vv_status             违章状态；例已处理、未处理
+ * @property null|string  $vv_remark             违章备注
  */
 class VehicleManualViolation extends Model
 {
@@ -48,28 +48,32 @@ class VehicleManualViolation extends Model
 
     use ImportTrait;
 
-    protected $primaryKey = 'vmv_id';
+    public const CREATED_AT = 'vv_created_at';
+    public const UPDATED_AT = 'vv_updated_at';
+    public const UPDATED_BY = 'vv_updated_by';
 
-    protected $guarded = ['vmv_id'];
+    protected $primaryKey = 'vv_id';
+
+    protected $guarded = ['vv_id'];
 
     protected $casts = [
-        'status'             => VmvStatus::class,
-        'violation_datetime' => 'datetime:Y-m-d H:i',
+        'vv_status'             => VvStatus::class,
+        'vv_violation_datetime' => 'datetime:Y-m-d H:i',
     ];
 
     protected $appends = [
-        'status_label',
-        'vehicle_usages_label',
+        'vv_status_label',
+        'vv_vehicle_usages_label',
     ];
 
     public function Vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 've_id', 've_id');
+        return $this->belongsTo(Vehicle::class, 'vv_ve_id', 've_id');
     }
 
     public function VehicleUsage(): BelongsTo
     {
-        return $this->BelongsTo(VehicleUsage::class, 'vu_id', 'vu_id');
+        return $this->belongsTo(VehicleUsage::class, 'vv_vu_id', 'vu_id');
     }
 
     public static function indexQuery(array $search = []): Builder
@@ -79,34 +83,34 @@ class VehicleManualViolation extends Model
         $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
-            ->from('vehicle_manual_violations', 'vmv')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vmv.ve_id')
-            ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vmv.vu_id')
-            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vu.sc_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
+            ->from('vehicle_manual_violations', 'vv')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.vv_ve_id')
+            ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vv_vu_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vu.vu_sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
             ->when($ve_id, function (Builder $query) use ($ve_id) {
-                $query->where('vmv.ve_id', '=', $ve_id);
+                $query->where('vv.vv_ve_id', '=', $ve_id);
             })
             ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $query->where('vu.sc_id', '=', $sc_id);
+                $query->where('vu.vu_sc_id', '=', $sc_id);
             })
             ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('sc.cu_id', '=', $cu_id);
+                $query->where('sc.sc_cu_id', '=', $cu_id);
             })
             ->when(
                 null === $ve_id && null === $sc_id && null === $cu_id,
                 function (Builder $query) {
-                    $query->orderByDesc('vmv.vmv_id');
+                    $query->orderByDesc('vv.vv_id');
                 },
                 function (Builder $query) {
-                    $query->orderBy('vmv.vmv_id');
+                    $query->orderBy('vv.vv_id');
                 }
             )
-            ->select('vmv.*', 've.plate_no')
+            ->select('vv.*', 've.ve_plate_no')
             ->addSelect(
-                DB::raw(VmvStatus::toCaseSQL()),
-                DB::raw(VmvStatus::toColorSQL()),
-                DB::raw("to_char(violation_datetime, 'YYYY-MM-DD HH24:MI') as violation_datetime_"),
+                DB::raw(VvStatus::toCaseSQL()),
+                DB::raw(VvStatus::toColorSQL()),
+                DB::raw("to_char(vv_violation_datetime, 'YYYY-MM-DD HH24:MI') as vv_violation_datetime_"),
             )
         ;
     }
@@ -126,7 +130,7 @@ class VehicleManualViolation extends Model
             'fine_amount'        => [VehicleManualViolation::class, 'fine_amount'],
             'penalty_points'     => [VehicleManualViolation::class, 'penalty_points'],
             'status'             => [VehicleManualViolation::class, 'status'],
-            'vmv_remark'         => [VehicleManualViolation::class, 'vmv_remark'],
+            'vv_remark'          => [VehicleManualViolation::class, 'vv_remark'],
         ];
     }
 
@@ -134,7 +138,7 @@ class VehicleManualViolation extends Model
     {
         return function (&$item) {
             $item['ve_id']  = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['status'] = VmvStatus::searchValue($item['status'] ?? null);
+            $item['status'] = VvStatus::searchValue($item['status'] ?? null);
         };
     }
 
@@ -148,8 +152,8 @@ class VehicleManualViolation extends Model
                 'location'           => ['nullable', 'string', 'max:255'],
                 'fine_amount'        => ['nullable', 'numeric'],
                 'penalty_points'     => ['nullable', 'integer'],
-                'status'             => ['required', 'integer', Rule::in(VmvStatus::label_keys())],
-                'vmv_remark'         => ['nullable', 'string'],
+                'status'             => ['required', 'integer', Rule::in(VvStatus::label_keys())],
+                'vv_remark'          => ['nullable', 'string'],
             ];
 
         $validator = Validator::make($item, $rules, [], $fieldAttributes);
@@ -176,17 +180,17 @@ class VehicleManualViolation extends Model
         return [];
     }
 
-    protected function statusLabel(): Attribute
+    protected function vvStatusLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('status')?->label
+            get: fn () => $this->getAttribute('vv_status')?->label
         );
     }
 
-    protected function vehicleUsagesLabel(): Attribute
+    protected function vvVehicleUsagesLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => null === $this->getOriginal('vu_id') ? '未匹配' : '已匹配'
+            get: fn () => null === $this->getOriginal('vv_vu_id') ? '未匹配' : '已匹配'
         );
     }
 }

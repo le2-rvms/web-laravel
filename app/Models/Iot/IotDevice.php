@@ -26,6 +26,10 @@ class IotDevice extends Model
 {
     use ModelTrait;
 
+    public const CREATED_AT = 'd_created_at';
+    public const UPDATED_AT = 'd_updated_at';
+    public const UPDATED_BY = 'd_updated_by';
+
     protected $connection = 'pgsql-iot';
 
     protected $primaryKey = 'd_id';

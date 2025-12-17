@@ -2,9 +2,9 @@
 
 namespace Tests\Http\Controllers\Admin\Booking;
 
-use App\Enum\Booking\BvBType;
 use App\Enum\Booking\BvIsListed;
-use App\Enum\Booking\RbvProps;
+use App\Enum\Booking\BvProps;
+use App\Enum\Booking\BvType;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Admin\Sale\BookingVehicleController;
 use App\Models\Sale\BookingVehicle;
@@ -29,10 +29,10 @@ class BookingVehiclesControllerTest extends TestCase
     {
         parent::setUp();
 
-        Vehicle::query()->whereLike('plate_no', 'TEST-%')->delete();
-        BookingVehicle::query()->whereLike('plate_no', 'TEST-%')->delete();
+        Vehicle::query()->whereLike('ve_plate_no', 'TEST-%')->delete();
+        BookingVehicle::query()->whereLike('bv_plate_no', 'TEST-%')->delete();
 
-        $this->vehicle = Vehicle::factory()->create(['plate_no' => 'TEST-004', 'status_service' => VeStatusService::YES]);
+        $this->vehicle = Vehicle::factory()->create(['ve_plate_no' => 'TEST-004', 've_status_service' => VeStatusService::YES]);
     }
 
     public function testIndexReturnsOk()
@@ -60,17 +60,17 @@ class BookingVehiclesControllerTest extends TestCase
     public function testStoreCreatesRecord()
     {
         $payload = [
-            'b_type'             => BvBType::WEEKLY_RENT,
-            'plate_no'           => $this->vehicle->plate_no,
-            'pickup_date'        => now()->toDateString(),
-            'rent_per_amount'    => 1000,
-            'deposit_amount'     => 5000,
-            'min_rental_periods' => 2,
-            'registration_date'  => now()->toDateString(),
-            'b_mileage'          => 0,
-            'service_interval'   => 0,
-            'b_props'            => $this->faker->optional()->randomElements(array_keys(RbvProps::kv), $this->faker->numberBetween(0, sizeof(RbvProps::kv))),
-            'b_note'             => 'note here',
+            'bv_type'               => BvType::WEEKLY_RENT,
+            'bv_plate_no'           => $this->vehicle->ve_plate_no,
+            'bv_pickup_date'        => now()->toDateString(),
+            'bv_rent_per_amount'    => 1000,
+            'bv_deposit_amount'     => 5000,
+            'bv_min_rental_periods' => 2,
+            'bv_registration_date'  => now()->toDateString(),
+            'bv_mileage'            => 0,
+            'bv_service_interval'   => 0,
+            'bv_props'              => $this->faker->optional()->randomElements(array_keys(BvProps::kv), $this->faker->numberBetween(0, sizeof(BvProps::kv))),
+            'bv_note'               => 'note here',
         ];
 
         $res = $this->postJson(
@@ -86,8 +86,8 @@ class BookingVehiclesControllerTest extends TestCase
         // 断言数据库已存在对应记录（通过 Eloquent 查询，避免直接依赖表名）
         $this->assertTrue(
             BookingVehicle::query()
-                ->where('plate_no', $this->vehicle->plate_no)
-                ->where('rent_per_amount', 1000)
+                ->where('bv_plate_no', $this->vehicle->ve_plate_no)
+                ->where('bv_rent_per_amount', 1000)
                 ->exists()
         );
     }
@@ -99,14 +99,14 @@ class BookingVehiclesControllerTest extends TestCase
             action(
                 [BookingVehicleController::class, 'store'],
                 [
-                    'b_type' => BvBType::WEEKLY_RENT,
+                    'bv_type' => BvType::WEEKLY_RENT,
                     // 故意缺失其他必填项
                 ]
             )
         );
 
         $res->assertStatus(422)
-            ->assertJsonValidationErrors(['plate_no', 'pickup_date', 'rent_per_amount', 'deposit_amount', 'min_rental_periods', 'registration_date'])
+            ->assertJsonValidationErrors(['ve_plate_no', 'bv_pickup_date', 'bv_rent_per_amount', 'bv_deposit_amount', 'bv_min_rental_periods', 'bv_registration_date'])
         ;
     }
 
@@ -116,17 +116,17 @@ class BookingVehiclesControllerTest extends TestCase
 
         // 更新时，控制器里对 b_type / plate_no 使用了 excludeIf，因此它们非必传
         $payload = [
-            'plate_no'           => $this->vehicle->plate_no,
-            'b_type'             => BvBType::WEEKLY_RENT,
-            'pickup_date'        => now()->toDateString(),
-            'rent_per_amount'    => 2000,
-            'deposit_amount'     => 3000,
-            'min_rental_periods' => 4,
-            'registration_date'  => now()->toDateString(),
-            'b_mileage'          => 12345,
-            'service_interval'   => 6000,
-            'b_props'            => $this->faker->optional()->randomElements(array_keys(RbvProps::kv), $this->faker->numberBetween(0, sizeof(RbvProps::kv))),
-            'b_note'             => 'updated note',
+            'bv_plate_no'           => $this->vehicle->ve_plate_no,
+            'bv_type'               => BvType::WEEKLY_RENT,
+            'bv_pickup_date'        => now()->toDateString(),
+            'bv_rent_per_amount'    => 2000,
+            'bv_deposit_amount'     => 3000,
+            'bv_min_rental_periods' => 4,
+            'bv_registration_date'  => now()->toDateString(),
+            'bv_mileage'            => 12345,
+            'bv_service_interval'   => 6000,
+            'bv_props'              => $this->faker->optional()->randomElements(array_keys(BvProps::kv), $this->faker->numberBetween(0, sizeof(BvProps::kv))),
+            'bv_note'               => 'updated note',
         ];
 
         $res = $this->putJson(
@@ -136,11 +136,11 @@ class BookingVehiclesControllerTest extends TestCase
         $res->assertOk()->assertJsonStructure(['data']);
 
         $bookingVehicle->refresh();
-        $this->assertSame(2000, (int) $bookingVehicle->rent_per_amount);
-        $this->assertSame(3000, (int) $bookingVehicle->deposit_amount);
-        $this->assertSame(4, (int) $bookingVehicle->min_rental_periods);
-        $this->assertSame(12345, (int) $bookingVehicle->b_mileage);
-        $this->assertSame(6000, (int) $bookingVehicle->service_interval);
+        $this->assertSame(2000, (int) $bookingVehicle->bv_rent_per_amount);
+        $this->assertSame(3000, (int) $bookingVehicle->bv_deposit_amount);
+        $this->assertSame(4, (int) $bookingVehicle->bv_min_rental_periods);
+        $this->assertSame(12345, (int) $bookingVehicle->bv_mileage);
+        $this->assertSame(6000, (int) $bookingVehicle->bv_service_interval);
     }
 
     public function testDestroyDeletesRecord()
@@ -173,9 +173,9 @@ class BookingVehiclesControllerTest extends TestCase
         $res->assertOk()->assertJsonStructure(
             [
                 'data' => [
-                    'b_type',
-                    'pickup_date',
-                    'registration_date',
+                    'bv_type',
+                    'bv_pickup_date',
+                    'bv_registration_date',
                 ],
             ]
         );
@@ -192,15 +192,15 @@ class BookingVehiclesControllerTest extends TestCase
         $res = $this->putJson(
             action([BookingVehicleController::class, 'status'], [$bookingVehicle]),
             [
-                'is_listed' => $valid,
+                'bv_is_listed' => $valid,
             ]
         );
 
         $res->assertOk()->assertJsonStructure(['data']);
 
         $bookingVehicle->refresh();
-        $actual = $bookingVehicle->is_listed->value;
-        $this->assertSame($valid, $actual, 'is_listed 未被正确更新');
+        $actual = $bookingVehicle->bv_is_listed->value;
+        $this->assertSame($valid, $actual, 'bv_is_listed 未被正确更新');
     }
 
     #[Test]
@@ -211,12 +211,12 @@ class BookingVehiclesControllerTest extends TestCase
         $res = $this->putJson(
             action([BookingVehicleController::class, 'status'], [$bookingVehicle]),
             [
-                // 故意不传 is_listed
+                // 故意不传 bv_is_listed
             ]
         );
 
         $res->assertStatus(422)
-            ->assertJsonValidationErrors(['is_listed'])
+            ->assertJsonValidationErrors(['bv_is_listed'])
         ;
     }
 
@@ -231,12 +231,12 @@ class BookingVehiclesControllerTest extends TestCase
         $res = $this->putJson(
             action([BookingVehicleController::class, 'status'], [$bookingVehicle]),
             [
-                'is_listed' => $invalid,
+                'bv_is_listed' => $invalid,
             ]
         );
 
         $res->assertStatus(422)
-            ->assertJsonValidationErrors(['is_listed'])
+            ->assertJsonValidationErrors(['bv_is_listed'])
         ;
     }
 }

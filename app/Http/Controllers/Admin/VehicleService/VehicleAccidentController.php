@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Admin\VehicleService;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Vehicle\VaClaimStatus;
-use App\Enum\Vehicle\VaManagedVehicle;
-use App\Enum\Vehicle\VaPickupStatus;
-use App\Enum\Vehicle\VaRepairStatus;
-use App\Enum\Vehicle\VaSettlementMethod;
-use App\Enum\Vehicle\VaSettlementStatus;
-use App\Enum\Vehicle\VcVcStatus;
+use App\Enum\Vehicle\VcStatus;
 use App\Enum\Vehicle\VeStatusService;
+use App\Enum\VehicleAccident\VaClaimStatus;
+use App\Enum\VehicleAccident\VaManagedVehicle;
+use App\Enum\VehicleAccident\VaPickupStatus;
+use App\Enum\VehicleAccident\VaRepairStatus;
+use App\Enum\VehicleAccident\VaSettlementMethod;
+use App\Enum\VehicleAccident\VaSettlementStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Customer\Customer;
 use App\Models\Sale\SaleContract;
@@ -63,10 +63,10 @@ class VehicleAccidentController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.plate_no', 'like', '%'.$value.'%')
-                            ->orWhere('va.accident_location', 'like', '%'.$value.'%')
-                            ->orWhere('va.description', 'like', '%'.$value.'%')
-                            ->orWhere('cu.contact_name', 'like', '%'.$value.'%')
+                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')
+                            ->orWhere('va.va_accident_location', 'like', '%'.$value.'%')
+                            ->orWhere('va.va_description', 'like', '%'.$value.'%')
+                            ->orWhere('cu.cu_contact_name', 'like', '%'.$value.'%')
                         ;
                     });
                 },
@@ -88,10 +88,10 @@ class VehicleAccidentController extends Controller
         );
 
         $vehicleAccident = new VehicleAccident([
-            'accident_dt'    => now(),
-            'factory_in_dt'  => now(),
-            'factory_out_dt' => now(),
-            'accident_info'  => [],
+            'va_accident_dt'    => now(),
+            'va_factory_in_dt'  => now(),
+            'va_factory_out_dt' => now(),
+            'va_accident_info'  => [],
         ]);
 
         return $this->response()->withData($vehicleAccident)->respond();
@@ -132,66 +132,67 @@ class VehicleAccidentController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                've_id'                         => ['bail', 'required', 'integer'],
-                'sc_id'                         => ['bail', 'nullable', 'integer'],
-                'accident_location'             => ['bail', 'nullable', 'string', 'max:255'],
-                'accident_dt'                   => ['bail', 'required', 'date'],
-                'responsible_party'             => ['bail', 'nullable', 'string', 'max:255'],
-                'claim_status'                  => ['bail', 'nullable', 'string', Rule::in(VaClaimStatus::label_keys())],
-                'self_amount'                   => ['bail', 'nullable', 'numeric'],
-                'third_party_amount'            => ['bail', 'nullable', 'numeric'],
-                'insurance_company'             => ['bail', 'nullable', 'string', 'max:100'],
-                'va_description'                => ['bail', 'nullable', 'string'],
-                'factory_in_dt'                 => ['bail', 'nullable', 'date'],
-                'vc_id'                         => ['bail', 'required', 'integer', Rule::exists(VehicleCenter::class)->where('vc_status', VcVcStatus::ENABLED)],
-                'repair_content'                => ['bail', 'nullable', 'string'],
-                'repair_status'                 => ['bail', 'nullable', 'string', Rule::in(VaRepairStatus::label_keys())],
-                'factory_out_dt'                => ['bail', 'nullable', 'date'],
-                'settlement_status'             => ['bail', 'nullable', 'string', Rule::in(VaSettlementStatus::label_keys())],
-                'pickup_status'                 => ['bail', 'nullable', 'string', Rule::in(VaPickupStatus::label_keys())],
-                'settlement_method'             => ['bail', 'nullable', 'string', Rule::in(VaSettlementMethod::label_keys())],
-                'managed_vehicle'               => ['bail', 'nullable', 'string', Rule::in(VaManagedVehicle::label_keys())],
-                'va_remark'                     => ['bail', 'nullable', 'string'],
-                'additional_photos'             => ['bail', 'nullable', 'array'],
-                'accident_info'                 => ['bail', 'nullable', 'array'],
-                'accident_info.*.description'   => ['bail', 'nullable', 'string'],
-                'accident_info.*.part_name'     => ['bail', 'nullable', 'string', 'max:255'],
-                'accident_info.*.part_cost'     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'accident_info.*.part_quantity' => ['bail', 'nullable', 'integer', 'min:1'],
+                'va_ve_id'                         => ['bail', 'required', 'integer'],
+                'va_sc_id'                         => ['bail', 'nullable', 'integer'],
+                'va_accident_location'             => ['bail', 'nullable', 'string', 'max:255'],
+                'va_accident_dt'                   => ['bail', 'required', 'date'],
+                'va_responsible_party'             => ['bail', 'nullable', 'string', 'max:255'],
+                'va_claim_status'                  => ['bail', 'nullable', 'string', Rule::in(VaClaimStatus::label_keys())],
+                'va_self_amount'                   => ['bail', 'nullable', 'numeric'],
+                'va_third_party_amount'            => ['bail', 'nullable', 'numeric'],
+                'va_insurance_company'             => ['bail', 'nullable', 'string', 'max:100'],
+                'va_description'                   => ['bail', 'nullable', 'string'],
+                'va_factory_in_dt'                 => ['bail', 'nullable', 'date'],
+                'va_vc_id'                         => ['bail', 'required', 'integer', Rule::exists(VehicleCenter::class, 'vc_id')->where('vc_status', VcStatus::ENABLED)],
+                'va_repair_content'                => ['bail', 'nullable', 'string'],
+                'va_repair_status'                 => ['bail', 'nullable', 'string', Rule::in(VaRepairStatus::label_keys())],
+                'va_factory_out_dt'                => ['bail', 'nullable', 'date'],
+                'va_settlement_status'             => ['bail', 'nullable', 'string', Rule::in(VaSettlementStatus::label_keys())],
+                'va_pickup_status'                 => ['bail', 'nullable', 'string', Rule::in(VaPickupStatus::label_keys())],
+                'va_settlement_method'             => ['bail', 'nullable', 'string', Rule::in(VaSettlementMethod::label_keys())],
+                'va_managed_vehicle'               => ['bail', 'nullable', 'string', Rule::in(VaManagedVehicle::label_keys())],
+                'va_remark'                        => ['bail', 'nullable', 'string'],
+                'va_additional_photos'             => ['bail', 'nullable', 'array'],
+                'va_accident_info'                 => ['bail', 'nullable', 'array'],
+                'va_accident_info.*.description'   => ['bail', 'nullable', 'string'],
+                'va_accident_info.*.part_name'     => ['bail', 'nullable', 'string', 'max:255'],
+                'va_accident_info.*.part_cost'     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'va_accident_info.*.part_quantity' => ['bail', 'nullable', 'integer', 'min:1'],
             ]
-            + Uploader::validator_rule_upload_array('additional_photos')
-            + Uploader::validator_rule_upload_array('accident_info.*.info_photos'),
+            + Uploader::validator_rule_upload_array('va_additional_photos')
+            + Uploader::validator_rule_upload_array('va_accident_info.*.info_photos'),
             [],
             trans_property(VehicleAccident::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$vehicle) {
-                if (!$validator->failed()) {
-                    // ve_id
-                    $ve_id = $request->input('ve_id');
+                if ($validator->failed()) {
+                    return;
+                }
+                // ve_id
+                $ve_id = $request->input('va_ve_id');
 
-                    /** @var Vehicle $vehicle */
-                    $vehicle = Vehicle::query()->find($ve_id);
-                    if (!$vehicle) {
-                        $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                /** @var Vehicle $vehicle */
+                $vehicle = Vehicle::query()->find($ve_id);
+                if (!$vehicle) {
+                    $validator->errors()->add('va_ve_id', 'The vehicle does not exist.');
+
+                    return;
+                }
+
+                $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
+                if (!$pass) {
+                    return;
+                }
+
+                $sc_id = $request->input('va_sc_id');
+
+                if ($sc_id) {
+                    /** @var SaleContract $saleContract */
+                    $saleContract = SaleContract::query()->find($sc_id);
+                    if (!$saleContract) {
+                        $validator->errors()->add('va_sc_id', 'The sale_contract does not exist.');
 
                         return;
-                    }
-
-                    $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
-                    if (!$pass) {
-                        return;
-                    }
-
-                    $sc_id = $request->input('sc_id');
-
-                    if ($sc_id) {
-                        /** @var SaleContract $saleContract */
-                        $saleContract = SaleContract::query()->find($sc_id);
-                        if (!$saleContract) {
-                            $validator->errors()->add('sc_id', 'The sale_contract does not exist.');
-
-                            return;
-                        }
                     }
                 }
             })
@@ -222,7 +223,8 @@ class VehicleAccidentController extends Controller
             []
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -239,7 +241,7 @@ class VehicleAccidentController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
-        return Uploader::upload($request, 'vehicle_accident', ['additional_photos', 'info_photos'], $this);
+        return Uploader::upload($request, 'vehicle_accident', ['va_additional_photos', 'info_photos'], $this);
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
@@ -248,7 +250,7 @@ class VehicleAccidentController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                've_id' => ['bail', 'required', 'integer'],
+                'va_ve_id' => ['bail', 'required', 'integer'],
             ]
         );
 
@@ -261,7 +263,7 @@ class VehicleAccidentController extends Controller
         $this->response()->withExtras(
             SaleContract::options(
                 where: function (Builder $builder) use ($input) {
-                    $builder->where('sc.ve_id', '=', $input['ve_id']);
+                    $builder->where('sc.sc_ve_id', '=', $input['ve_id']);
                 }
             )
         );

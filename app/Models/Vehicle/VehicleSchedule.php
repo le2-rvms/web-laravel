@@ -20,26 +20,26 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 #[ClassName('车辆年检', '记录')]
-#[ColumnDesc('inspection_type', required: true, enum_class: VsInspectionType::class)]
-#[ColumnDesc('inspector', required: true)]
-#[ColumnDesc('inspection_date', required: true)]
-#[ColumnDesc('inspection_amount', required: true)]
-#[ColumnDesc('next_inspection_date', required: true)]
+#[ColumnDesc('vs_inspection_type', required: true, enum_class: VsInspectionType::class)]
+#[ColumnDesc('vs_inspector', required: true)]
+#[ColumnDesc('vs_inspection_date', required: true)]
+#[ColumnDesc('vs_inspection_amount', required: true)]
+#[ColumnDesc('vs_next_inspection_date', required: true)]
 #[ColumnDesc('vs_remark')]
 /**
- * @property int                     $vs_id                      年检记录序号
- * @property string|VsInspectionType $inspection_type            年检类型
- * @property int                     $ve_id                      车辆序号
- * @property string                  $inspector                  年检处理人
- * @property Carbon                  $inspection_date            年检日期
- * @property float                   $inspection_amount          年检金额
- * @property Carbon|string           $next_inspection_date       下次年检日期
- * @property null|mixed              $additional_photos          附加照片;存储照片路径的JSON数组
- * @property null|string             $vs_remark                  年检备注
- * @property null|string             $vehicle_last_date          最后一次车辆年检时间
- * @property null|string             $gas_cylinder_last_date     最后一次气罐年检时间
- * @property null|string             $certificate_last_date      最后一次车证年检时间
- * @property null|string             $business_license_last_date 最后一次营业执照年检时间
+ * @property int                     $vs_id                         年检记录序号
+ * @property string|VsInspectionType $vs_inspection_type            年检类型
+ * @property int                     $vs_ve_id                      车辆序号
+ * @property string                  $vs_inspector                  年检处理人
+ * @property Carbon                  $vs_inspection_date            年检日期
+ * @property float                   $vs_inspection_amount          年检金额
+ * @property Carbon|string           $vs_next_inspection_date       下次年检日期
+ * @property null|mixed              $vs_additional_photos          附加照片;存储照片路径的JSON数组
+ * @property null|string             $vs_remark                     年检备注
+ * @property null|string             $vs_vehicle_last_date          最后一次车辆年检时间
+ * @property null|string             $vs_gas_cylinder_last_date     最后一次气罐年检时间
+ * @property null|string             $vs_certificate_last_date      最后一次车证年检时间
+ * @property null|string             $vs_business_license_last_date 最后一次营业执照年检时间
  * @property Vehicle                 $Vehicle
  */
 class VehicleSchedule extends Model
@@ -48,6 +48,10 @@ class VehicleSchedule extends Model
 
     use ImportTrait;
 
+    public const CREATED_AT = 'vs_created_at';
+    public const UPDATED_AT = 'vs_updated_at';
+    public const UPDATED_BY = 'vs_updated_by';
+
     protected $primaryKey = 'vs_id';
 
     protected $guarded = ['vs_id'];
@@ -55,19 +59,19 @@ class VehicleSchedule extends Model
     protected $attributes = [];
 
     protected $casts = [
-        'inspection_date'      => 'date:Y-m-d',
-        'next_inspection_date' => 'date:Y-m-d',
-        'maintenance_amount'   => 'decimal:2',
-        'inspection_type'      => VsInspectionType::class,
+        'vs_inspection_date'      => 'date:Y-m-d',
+        'vs_next_inspection_date' => 'date:Y-m-d',
+        'vs_maintenance_amount'   => 'decimal:2',
+        'vs_inspection_type'      => VsInspectionType::class,
     ];
 
     protected $appends = [
-        'inspection_type_label',
+        'vs_inspection_type_label',
     ];
 
     public function Vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 've_id', 've_id')->with('VehicleModel');
+        return $this->belongsTo(Vehicle::class, 'vs_ve_id', 've_id')->with('VehicleModel');
     }
 
     public static function indexQuery(array $search = []): Builder
@@ -80,27 +84,27 @@ class VehicleSchedule extends Model
                 return $query->joinSub(
                     // 直接在 joinSub 中定义子查询
                     DB::table('vehicle_schedules')
-                        ->select('ve_id', 'inspection_type', DB::raw('MAX(next_inspection_date) as max_next_inspection_date'))
-                        ->groupBy('ve_id', 'inspection_type'),
+                        ->select('vs_ve_id', 'vs_inspection_type', DB::raw('MAX(vs_next_inspection_date) as max_vs_next_inspection_date'))
+                        ->groupBy('vs_ve_id', 'vs_inspection_type'),
                     'p2',
                     function ($join) {
-                        $join->on('vs.ve_id', '=', 'p2.ve_id')
-                            ->on('vs.inspection_type', '=', 'p2.inspection_type')
-                            ->on('vs.next_inspection_date', '=', 'p2.max_next_inspection_date')
+                        $join->on('vs.vs_ve_id', '=', 'p2.vs_ve_id')
+                            ->on('vs.vs_inspection_type', '=', 'p2.vs_inspection_type')
+                            ->on('vs.vs_next_inspection_date', '=', 'p2.max_vs_next_inspection_date')
                         ;
                     }
                 );
             })
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vs.ve_id')
-            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.vm_id')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vs.vs_ve_id')
+            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->when($ve_id, function (Builder $query) use ($ve_id) {
-                $query->where('vs.ve_id', '=', $ve_id);
+                $query->where('vs.vs_ve_id', '=', $ve_id);
             })
             ->when(
                 null === $ve_id,
                 function (Builder $query) {
                     $query->whereRaw(
-                        'EXTRACT(EPOCH FROM now() - vs.next_inspection_date) / 86400.0 <= ?',
+                        'EXTRACT(EPOCH FROM now() - vs.vs_next_inspection_date) / 86400.0 <= ?',
                         [Configuration::fetch('risk.vs_interval_day.less')]
                     );
                 },
@@ -108,18 +112,18 @@ class VehicleSchedule extends Model
             ->when(
                 null === $ve_id,
                 function (Builder $query) {
-                    $query->orderByDesc('vs.next_inspection_date');
+                    $query->orderByDesc('vs.vs_next_inspection_date');
                 },
                 function (Builder $query) {
                     $query->orderBy('vs.vs_id');
                 }
             )
-            ->select('vs.*', 've.plate_no', 'vm.brand_name', 'vm.model_name')
+            ->select('vs.*', 've.ve_plate_no', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
                 DB::raw(VsInspectionType::toCaseSQL()),
             )
             ->when(null === $ve_id, function (Builder $query) {
-                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vs.next_inspection_date) / 86400.0 AS INTEGER) as vs_interval_day'));
+                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vs.vs_next_inspection_date) / 86400.0 AS INTEGER) as vs_interval_day'));
             })
         ;
     }
@@ -185,22 +189,22 @@ class VehicleSchedule extends Model
     {
         $subSql = "
 SELECT
-  ve_id,
-  MAX(inspection_date) FILTER (WHERE inspection_type = 'vehicle')       AS vehicle_last_date,
-  MAX(inspection_date) FILTER (WHERE inspection_type = 'gas_cylinder')  AS gas_cylinder_last_date,
-  MAX(inspection_date) FILTER (WHERE inspection_type = 'certificate')   AS certificate_last_date,
-  MAX(inspection_date) FILTER (WHERE inspection_type = 'business_license')   AS business_license_last_date
+  vs_ve_id,
+  MAX(vs_inspection_date) FILTER (WHERE vs_inspection_type = 'vehicle')       AS vs_vehicle_last_date,
+  MAX(vs_inspection_date) FILTER (WHERE vs_inspection_type = 'gas_cylinder')  AS vs_gas_cylinder_last_date,
+  MAX(vs_inspection_date) FILTER (WHERE vs_inspection_type = 'certificate')   AS vs_certificate_last_date,
+  MAX(vs_inspection_date) FILTER (WHERE vs_inspection_type = 'business_license')   AS vs_business_license_last_date
 FROM vehicle_schedules
-GROUP BY ve_id
+GROUP BY vs_ve_id
 ";
 
         return DB::query()
             ->from('vehicles', 've')
-            ->leftJoin('vehicle_models as vm', 've.vm_id', '=', 'vm.vm_id')
-            ->leftJoinSub($subSql, 'vs', 'vs.ve_id', '=', 've.ve_id')
-            ->select('ve.*', 'vm.brand_name', 'vm.model_name', 'vs.vehicle_last_date', 'vs.gas_cylinder_last_date', 'vs.certificate_last_date', 'vs.business_license_last_date')
+            ->leftJoin('vehicle_models as vm', 've.ve_vm_id', '=', 'vm.vm_id')
+            ->leftJoinSub($subSql, 'vs', 'vs.vs_ve_id', '=', 've.ve_id')
+            ->select('ve.*', 'vm.vm_brand_name', 'vm.vm_model_name', 'vs.vs_vehicle_last_date', 'vs.vs_gas_cylinder_last_date', 'vs.vs_certificate_last_date', 'vs.vs_business_license_last_date')
             ->orderBy('ve.ve_id', 'desc')
-            ->where('ve.status_service', '=', VeStatusService::YES)
+            ->where('ve.ve_status_service', '=', VeStatusService::YES)
         ;
     }
 
@@ -209,7 +213,7 @@ GROUP BY ve_id
         return [
             'Vehicle.ve_id'                              => fn ($item) => $item->ve_id,
             'Vehicle.plate_no'                           => fn ($item) => $item->plate_no,
-            'VehicleModel.brand_model'                   => fn ($item) => $item->brand_name.'-'.$item->model_name,
+            'VehicleModel.brand_model'                   => fn ($item) => $item->vm_brand_name.'-'.$item->vm_model_name,
             'Vehicle.ve_license_owner'                   => fn ($item) => $item->ve_license_owner,
             'Vehicle.ve_license_vin_code'                => fn ($item) => $item->ve_license_vin_code,
             'Vehicle.ve_license_engine_no'               => fn ($item) => $item->ve_license_engine_no,
@@ -220,14 +224,14 @@ GROUP BY ve_id
         ];
     }
 
-    protected function inspectionTypeLabel(): Attribute
+    protected function vsInspectionTypeLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('inspection_type')?->label
+            get: fn () => $this->getAttribute('vs_inspection_type')?->label
         );
     }
 
-    protected function additionalPhotos(): Attribute
+    protected function vsAdditionalPhotos(): Attribute
     {
         return $this->uploadFileArray();
     }

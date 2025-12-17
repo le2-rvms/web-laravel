@@ -27,7 +27,7 @@ class VehicleViolationUsagesIdUpdate extends Command
             $batchSize = 1000;
 
             foreach ([
-                ['vmv_id', VehicleManualViolation::query()],
+                ['vv_id', VehicleManualViolation::query()],
                 ['vv_id', VehicleViolation::query()],
             ] as $class) {
                 [$pk,$query] = $class;
@@ -57,13 +57,13 @@ class VehicleViolationUsagesIdUpdate extends Command
                     // 查询当前批次涉及的所有 VehicleUsage 记录
                     $usages = DB::query()
                         ->from('vehicle_usages', 'vu')
-                        ->leftJoin('vehicle_inspections as vi1', 'vi1.vi_id', '=', 'vu.start_vi_id')
-                        ->leftJoin('vehicle_inspections as vi2', 'vi2.vi_id', '=', 'vu.end_vi_id')
-                        ->select('vu.*', 'vi1.inspection_datetime as vu_start_dt', 'vi2.inspection_datetime as vu_end_dt')
-                        ->whereIn('vu.ve_id', $vehicleIds)
-                        ->whereNotNull('vu.end_vi_id')
-                        ->orderBy('vu.ve_id')
-                        ->orderBy('vi1.inspection_datetime')
+                        ->leftJoin('vehicle_inspections as vi1', 'vi1.vi_id', '=', 'vu.vu_start_vi_id')
+                        ->leftJoin('vehicle_inspections as vi2', 'vi2.vi_id', '=', 'vu.vu_end_vi_id')
+                        ->select('vu.*', 'vi1.vi_inspection_datetime as vu_start_dt', 'vi2.vi_inspection_datetime as vu_end_dt')
+                        ->whereIn('vu.vu_ve_id', $vehicleIds)
+                        ->whereNotNull('vu.vu_end_vi_id')
+                        ->orderBy('vu.vu_ve_id')
+                        ->orderBy('vi1.vi_inspection_datetime')
                         ->get()
                     ;
 
@@ -77,8 +77,8 @@ class VehicleViolationUsagesIdUpdate extends Command
 
                     foreach ($violations as $violation) {
                         $pk_id              = $violation->{$pk};
-                        $ve_id              = $violation->ve_id;
-                        $violation_datetime = $violation->violation_datetime;
+                        $ve_id              = $violation->vv_ve_id;
+                        $violation_datetime = $violation->vv_violation_datetime;
 
                         // 更新最后处理的 ID
                         if ($lastId < $pk_id) {

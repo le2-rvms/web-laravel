@@ -13,13 +13,13 @@ class VehicleScheduleFactory extends Factory
     public function definition(): array
     {
         return [
-            'inspection_type'      => VsInspectionType::label_key_random(),
-            'inspector'            => $this->faker->name(),
-            'inspection_date'      => fake_current_period_d(),
-            'inspection_amount'    => $this->faker->randomFloat(2, 50, 5000),
-            'next_inspection_date' => fake_current_period_d(modify: '+3 month'),
-            'additional_photos'    => fake_many_photos(),
-            'vs_remark'            => null,
+            'vs_inspection_type'      => VsInspectionType::label_key_random(),
+            'vs_inspector'            => $this->faker->name(),
+            'vs_inspection_date'      => fake_current_period_d(),
+            'vs_inspection_amount'    => $this->faker->randomFloat(2, 50, 5000),
+            'vs_next_inspection_date' => fake_current_period_d(modify: '+3 month'),
+            'vs_additional_photos'    => fake_many_photos(),
+            'vs_remark'               => null,
         ];
     }
 }

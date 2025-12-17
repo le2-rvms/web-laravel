@@ -3,15 +3,15 @@
 namespace App\Console\Commands\Dev;
 
 use App\Enum\Admin\AdmUserType;
-use App\Enum\Customer\CuCuType;
-use App\Enum\Payment\RpPtId;
-use App\Enum\Sale\ScRentalType;
-use App\Enum\Sale\ScScStatus;
-use App\Enum\Vehicle\VcVcStatus;
+use App\Enum\Customer\CuType;
+use App\Enum\Payment\PPtId;
+use App\Enum\SaleContract\ScRentalType;
+use App\Enum\SaleContract\ScStatus;
+use App\Enum\Vehicle\VcStatus;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
-use App\Enum\Vehicle\ViInspectionType;
+use App\Enum\VehicleInspection\ViInspectionType;
 use App\Http\Controllers\Admin\Sale\SaleContractController;
 use App\Models\Admin\Admin;
 use App\Models\Customer\Customer;
@@ -22,7 +22,7 @@ use App\Models\Payment\PaymentAccount;
 use App\Models\Payment\PaymentInout;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleSettlement;
-use App\Models\Sale\VehicleReplacement;
+use App\Models\Sale\VehicleTmp;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleAccident;
 use App\Models\Vehicle\VehicleCenter;
@@ -74,7 +74,7 @@ class MockDataGenerate extends Command
             VehicleRepair::query()->delete();
             VehicleUsage::query()->delete();
             VehicleInspection::query()->delete();
-            VehicleReplacement::query()->delete();
+            VehicleTmp::query()->delete();
             VehicleCenter::query()->delete();
             VehicleAccident::query()->delete();
             VehicleViolation::query()->delete();
@@ -86,11 +86,11 @@ class MockDataGenerate extends Command
             SaleContract::query()->delete();
             VehiclePreparation::query()->delete();
 
-            CustomerIndividual::query()->whereRaw("cu_id not in (select cu_id from customers where contact_name like '演示%')")->delete();
+            CustomerIndividual::query()->whereRaw("cui_cu_id not in (select cu_id from customers where cu_contact_name like '演示%')")->delete();
             CustomerCompany::query()->delete();
-            Customer::query()->whereNotLike('contact_name', '演示%')->delete();
+            Customer::query()->whereNotLike('cu_contact_name', '演示%')->delete();
 
-            //            Vehicle::query()->update(['status_service' => VeStatusService::YES, 'status_rental' => VeStatusRental::LISTED, 'status_dispatch' => VeStatusDispatch::NOT_DISPATCHED]);
+            //            Vehicle::query()->update(['ve_status_service' => VeStatusService::YES, 've_status_rental' => VeStatusRental::LISTED, 've_status_dispatch' => VeStatusDispatch::NOT_DISPATCHED]);
 
             Admin::query()->where('user_type', '=', AdmUserType::COMMON)->delete();
             DB::table(config('permission.table_names.model_has_roles'))->whereRaw('model_id not in (select id from admins)')->delete();
@@ -110,7 +110,7 @@ class MockDataGenerate extends Command
             /** @var Collection $customers */
             $customers = Customer::factory()->count(20)->create();
             foreach ($customers as $customer) {
-                if (CuCuType::INDIVIDUAL === $customer->cu_type) {
+                if (CuType::INDIVIDUAL === $customer->cu_type) {
                     CustomerIndividual::factory()->for($customer)->create();
                 }
             }
@@ -119,7 +119,7 @@ class MockDataGenerate extends Command
         $Vehicles  = Vehicle::query()->get();
         $customers = Customer::query()->get();
 
-        $vehicleCenters = VehicleCenter::query()->where('vc_status', '=', VcVcStatus::ENABLED)->get();
+        $vehicleCenters = VehicleCenter::query()->where('vc_status', '=', VcStatus::ENABLED)->get();
 
         for ($month = $month_form; $month <= $month_to; ++$month) {
             config(['setting.gen.month.current' => $month]);
@@ -147,53 +147,53 @@ class MockDataGenerate extends Command
                     /** @var SaleContract $saleContract */
                     $saleContract = SaleContract::factory()->for($Vehicle)->for($customer)->create();
 
-                    if (ScRentalType::LONG_TERM === $saleContract->rental_type->value) {
+                    if (ScRentalType::LONG_TERM === $saleContract->sc_rental_type->value) {
                         $payments = SaleContractController::callPaymentsOption($saleContract->toArray());
                         foreach ($payments as $payment) {
                             $saleContract->Payments()->create($payment);
                         }
-                    } elseif (ScRentalType::SHORT_TERM === $saleContract->rental_type->value) {
-                        if (in_array($saleContract->sc_status->value, ScScStatus::getSignAndAfter)) {
-                            $types = RpPtId::getFeeTypes(ScRentalType::SHORT_TERM);
+                    } elseif (ScRentalType::SHORT_TERM === $saleContract->sc_rental_type->value) {
+                        if (in_array($saleContract->sc_status->value, ScStatus::getSignAndAfter)) {
+                            $types = PPtId::getFeeTypes(ScRentalType::SHORT_TERM);
                             foreach ($types as $type) {
                                 if (fake()->boolean(75)) {
-                                    Payment::factory()->for($saleContract)->create(['pt_id' => $type]);
+                                    Payment::factory()->for($saleContract)->create(['p_pt_id' => $type]);
                                 }
                             }
                         }
                     }
 
                     switch ($saleContract->sc_status) {
-                        case ScScStatus::PENDING:
-                            $Vehicle->updateStatus(status_service: VeStatusService::YES, status_rental: VeStatusRental::RESERVED, status_dispatch: VeStatusDispatch::NOT_DISPATCHED);
+                        case ScStatus::PENDING:
+                            $Vehicle->updateStatus(ve_status_service: VeStatusService::YES, ve_status_rental: VeStatusRental::RESERVED, ve_status_dispatch: VeStatusDispatch::NOT_DISPATCHED);
 
                             break;
 
-                        case ScScStatus::CANCELLED:
-                            $Vehicle->updateStatus(status_service: VeStatusService::YES, status_rental: VeStatusRental::LISTED, status_dispatch: VeStatusDispatch::NOT_DISPATCHED);
+                        case ScStatus::CANCELLED:
+                            $Vehicle->updateStatus(ve_status_service: VeStatusService::YES, ve_status_rental: VeStatusRental::LISTED, ve_status_dispatch: VeStatusDispatch::NOT_DISPATCHED);
 
                             break;
 
-                        case ScScStatus::SIGNED:
-                            $Vehicle->updateStatus(status_service: VeStatusService::YES, status_rental: VeStatusRental::RENTED, status_dispatch: VeStatusDispatch::DISPATCHED);
+                        case ScStatus::SIGNED:
+                            $Vehicle->updateStatus(ve_status_service: VeStatusService::YES, ve_status_rental: VeStatusRental::RENTED, ve_status_dispatch: VeStatusDispatch::DISPATCHED);
 
                             break;
 
-                        case ScScStatus::COMPLETED:
-                        case ScScStatus::EARLY_TERMINATION:
-                            $Vehicle->updateStatus(status_service: VeStatusService::YES, status_rental: VeStatusRental::PENDING, status_dispatch: VeStatusDispatch::NOT_DISPATCHED);
+                        case ScStatus::COMPLETED:
+                        case ScStatus::EARLY_TERMINATION:
+                            $Vehicle->updateStatus(ve_status_service: VeStatusService::YES, ve_status_rental: VeStatusRental::PENDING, ve_status_dispatch: VeStatusDispatch::NOT_DISPATCHED);
 
                             break;
                     }
 
-                    if (ScScStatus::PENDING === $saleContract->sc_status) {
-                        VehicleReplacement::factory()->for($saleContract)->for($Vehicle, 'CurrentVehicle')->for($Vehicles->random(), 'NewVehicle')->create();
+                    if (ScStatus::PENDING === $saleContract->sc_status) {
+                        VehicleTmp::factory()->for($saleContract)->for($Vehicle, 'CurrentVehicle')->for($Vehicles->random(), 'NewVehicle')->create();
                     }
 
-                    if (in_array($saleContract->sc_status, [ScScStatus::SIGNED, ScScStatus::COMPLETED, ScScStatus::EARLY_TERMINATION])) {
+                    if (in_array($saleContract->sc_status, [ScStatus::SIGNED, ScStatus::COMPLETED, ScStatus::EARLY_TERMINATION])) {
                         for ($groupSize = 0; $groupSize < 2; ++$groupSize) {
-                            $vehicleInspection1 = VehicleInspection::factory()->for($Vehicle)->for($saleContract)->create(['inspection_type' => ViInspectionType::SC_DISPATCH]);
-                            $vehicleInspection2 = VehicleInspection::factory()->for($Vehicle)->for($saleContract)->create(['inspection_type' => ViInspectionType::SC_RETURN]);
+                            $vehicleInspection1 = VehicleInspection::factory()->for($Vehicle)->for($saleContract)->create(['vi_inspection_type' => ViInspectionType::SC_DISPATCH]);
+                            $vehicleInspection2 = VehicleInspection::factory()->for($Vehicle)->for($saleContract)->create(['vi_inspection_type' => ViInspectionType::SC_RETURN]);
 
                             $VehicleUsage = VehicleUsage::factory()->for($saleContract)->for($Vehicle)->for($vehicleInspection1, 'VehicleInspectionStart')->for($vehicleInspection2, 'VehicleInspectionEnd')->create();
                         }
@@ -205,7 +205,7 @@ class MockDataGenerate extends Command
                         VehicleViolation::factory()->for($Vehicle)->for($VehicleUsage)->create();
                     }
 
-                    if (in_array($saleContract->sc_status, [ScScStatus::COMPLETED, ScScStatus::EARLY_TERMINATION])) {
+                    if (in_array($saleContract->sc_status, [ScStatus::COMPLETED, ScStatus::EARLY_TERMINATION])) {
                         SaleSettlement::factory()->for($saleContract)->create();
                     }
 

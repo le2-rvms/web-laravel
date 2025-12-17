@@ -39,13 +39,15 @@ class GpsDataController extends Controller
             trans_property(IotDeviceBinding::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($request) {
-                if (!$validator->failed()) {
-                    $start = Carbon::parse($request->input('db_start_at'));
-                    $end   = Carbon::parse($request->input('db_end_at'));
+                if ($validator->failed()) {
+                    return;
+                }
 
-                    if ($end->gt($start->copy()->addDays(3))) {
-                        $validator->errors()->add('db_end_at', '开始与结束的时间间隔不能超过 3 天。');
-                    }
+                $start = Carbon::parse($request->input('db_start_at'));
+                $end   = Carbon::parse($request->input('db_end_at'));
+
+                if ($end->gt($start->copy()->addDays(3))) {
+                    $validator->errors()->add('db_end_at', '开始与结束的时间间隔不能超过 3 天。');
                 }
             })
         ;

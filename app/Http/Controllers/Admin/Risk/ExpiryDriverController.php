@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin\Risk;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Customer\CuCuType;
-use App\Enum\Customer\CuiCuiGender;
+use App\Enum\Customer\CuiGender;
+use App\Enum\Customer\CuType;
 use App\Http\Controllers\Controller;
 use App\Services\PaginateService;
 use Carbon\Carbon;
@@ -33,8 +33,8 @@ class ExpiryDriverController extends Controller
         $query = DB::query()
             ->from('customer_individuals', 'cui')
             ->leftJoin('customers as cu', function (JoinClause $join) {
-                $join->on('cui.cu_id', '=', 'cu.cu_id')
-                    ->where('cu.cu_type', '=', CuCuType::INDIVIDUAL)
+                $join->on('cui.cui_cu_id', '=', 'cu.cu_id')
+                    ->where('cu.cu_type', '=', CuType::INDIVIDUAL)
                 ;
             })
 //            ->where('cu.cu_type', CuCustomerType::INDIVIDUAL)
@@ -45,8 +45,8 @@ class ExpiryDriverController extends Controller
 //            })
             ->select('cu.*', 'cui.*')
             ->addSelect(
-                DB::raw(CuCuType::toCaseSQL()),
-                DB::raw(CuiCuiGender::toCaseSQL()),
+                DB::raw(CuType::toCaseSQL()),
+                DB::raw(CuiGender::toCaseSQL()),
             )
         ;
 

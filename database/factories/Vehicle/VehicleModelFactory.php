@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Vehicle;
 
-use App\Enum\Vehicle\VmVmStatus;
+use App\Enum\VehicleModel\VmStatus;
 use App\Models\Vehicle\VehicleModel;
 use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,9 +21,9 @@ class VehicleModelFactory extends Factory
         $data = $this->shiftShuffleFromPools();
 
         return [
-            'brand_name' => $data['brand_name'],
-            'model_name' => $data['model_name'],
-            'vm_status'  => VmVmStatus::label_key_random(),
+            'vm_brand_name' => $data['vm_brand_name'],
+            'vm_model_name' => $data['vm_model_name'],
+            'vm_status'     => VmStatus::label_key_random(),
         ];
     }
 }

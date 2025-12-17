@@ -3,8 +3,8 @@
 namespace App\Models\Payment;
 
 use App\Attributes\ClassName;
-use App\Enum\Payment\IoIoType;
-use App\Enum\Payment\RpPayStatus;
+use App\Enum\Payment\IoType;
+use App\Enum\Payment\PPayStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Customer\Customer;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -17,14 +17,14 @@ use Illuminate\Support\Facades\DB;
 
 #[ClassName('账户流水')]
 /**
- * @property int            $io_id           流水序号
- * @property mixed          $io_type         流水类型
- * @property int            $cu_id           客户序号
- * @property int            $pa_id           收付款账号序号
- * @property Carbon         $occur_datetime  发生时间
- * @property float          $occur_amount    发生金额
- * @property float          $account_balance 收款账户当前余额
- * @property null|int       $rp_id           租车收支序号
+ * @property int            $io_id              流水序号
+ * @property mixed          $io_type            流水类型
+ * @property int            $io_cu_id           客户序号
+ * @property int            $io_pa_id           收付款账号序号
+ * @property Carbon         $io_occur_datetime  发生时间
+ * @property float          $io_occur_amount    发生金额
+ * @property float          $io_account_balance 收款账户当前余额
+ * @property null|int       $io_p_id            租车收支序号
  * @property Customer       $Customer
  * @property PaymentAccount $PaymentAccount
  * @property Payment        $Payment
@@ -33,6 +33,10 @@ class PaymentInout extends Model
 {
     use ModelTrait;
 
+    public const CREATED_AT = 'io_created_at';
+    public const UPDATED_AT = 'io_updated_at';
+    public const UPDATED_BY = 'io_updated_by';
+
     protected $primaryKey = 'io_id';
 
     protected $guarded = ['io_id'];
@@ -40,8 +44,8 @@ class PaymentInout extends Model
     protected $attributes = [];
 
     protected $casts = [
-        'occur_datetime' => 'datetime:Y-m-d H:i:s',
-        'io_type'        => IoIoType::class,
+        'io_occur_datetime' => 'datetime:Y-m-d H:i:s',
+        'io_type'           => IoType::class,
     ];
 
     protected $appends = [
@@ -50,38 +54,38 @@ class PaymentInout extends Model
 
     public function Customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class, 'cu_id', 'cu_id');
+        return $this->belongsTo(Customer::class, 'io_cu_id', 'cu_id');
     }
 
     public function PaymentAccount(): BelongsTo
     {
-        return $this->belongsTo(PaymentAccount::class, 'pa_id', 'pa_id');
+        return $this->belongsTo(PaymentAccount::class, 'io_pa_id', 'pa_id');
     }
 
     public function Payment(): BelongsTo
     {
-        return $this->belongsTo(Payment::class, 'rp_id', 'rp_id');
+        return $this->belongsTo(Payment::class, 'io_p_id', 'p_id');
     }
 
     public static function indexQuery(array $search = []): Builder
     {
         return DB::query()
             ->from('payment_inouts', 'io')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'io.cu_id')
-            ->leftJoin('payment_accounts as pa', 'pa.pa_id', '=', 'io.pa_id')
-            ->leftJoin('payments as rp', 'rp.rp_id', '=', 'io.rp_id')
-            ->leftJoin('payment_types as pt', 'pt.pt_id', '=', 'rp.pt_id')
-            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'rp.sc_id')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.ve_id')
-            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.vm_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'io.io_cu_id')
+            ->leftJoin('payment_accounts as pa', 'pa.pa_id', '=', 'io.io_pa_id')
+            ->leftJoin('payments as p', 'p.p_id', '=', 'io.io_p_id')
+            ->leftJoin('payment_types as pt', 'pt.pt_id', '=', 'p.p_pt_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'p.p_sc_id')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
+            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->orderByDesc('io.io_id')
-            ->select('pa.pa_name', 'pt.pt_name', 'io.occur_amount', 'io.account_balance', 'rp.should_pay_date', 'rp.should_pay_amount', 'cu.contact_name', 'sc.contract_number', 've.plate_no', 'rp.rp_remark')
+            ->select('pa.pa_name', 'pt.pt_name', 'io.io_occur_amount', 'io.io_account_balance', 'p.p_should_pay_date', 'p.p_should_pay_amount', 'cu.cu_contact_name', 'sc.sc_no', 've.ve_plate_no', 'p.p_remark')
             ->addSelect(
-                DB::raw(IoIoType::toCaseSQL()),
-                DB::raw(RpPayStatus::toCaseSQL()),
-                DB::raw(RpPayStatus::toColorSQL()),
-                DB::raw(" CONCAT(COALESCE(vm.brand_name,'未知品牌'),'-',COALESCE(vm.model_name,'未知车型')) AS brand_full_name"),
-                DB::raw("to_char(io.occur_datetime, 'YYYY-MM-DD HH24:MI:SS') as occur_datetime_"),
+                DB::raw(IoType::toCaseSQL()),
+                DB::raw(PPayStatus::toCaseSQL()),
+                DB::raw(PPayStatus::toColorSQL()),
+                DB::raw(" CONCAT(COALESCE(vm.vm_brand_name,'未知品牌'),'-',COALESCE(vm.vm_model_name,'未知车型')) AS vm_brand_full_name"),
+                DB::raw("to_char(io.io_occur_datetime, 'YYYY-MM-DD HH24:MI:SS') as io_occur_datetime_"),
             )
         ;
     }
@@ -91,17 +95,17 @@ class PaymentInout extends Model
         return [
             'Inout.pa_name'                => fn ($item) => $item->pa_name,
             'Inout.io_type'                => fn ($item) => $item->io_type_label,
-            'Customer.contact_name'        => fn ($item) => $item->_contact_name,
+            'Customer.cu_contact_name'     => fn ($item) => $item->_contact_name,
             'PaymentType.pt_name'          => fn ($item) => $item->_pt_name,
             'Inout.occur_datetime'         => fn ($item) => $item->occur_datetime_,
             'Inout.occur_amount'           => fn ($item) => $item->occur_amount,
             'Inout.account_balance'        => fn ($item) => $item->account_balance,
-            'Payment.should_pay_date'      => fn ($item) => $item->_should_pay_date,
-            'Payment.should_pay_amount'    => fn ($item) => $item->_should_pay_amount,
-            'SaleContract.contract_number' => fn ($item) => $item->_contract_number,
+            'Payment.p_should_pay_date'    => fn ($item) => $item->_should_pay_date,
+            'Payment.p_should_pay_amount'  => fn ($item) => $item->_should_pay_amount,
+            'SaleContract.sc_no'           => fn ($item) => $item->_sc_no,
             'Vehicle.plate_no'             => fn ($item) => $item->_plate_no,
             'VehicleModel.brand_full_name' => fn ($item) => $item->_brand_full_name,
-            'Payment.rp_remark'            => fn ($item) => $item->rp_remark,
+            'Payment.p_remark'             => fn ($item) => $item->p_remark,
         ];
     }
 
@@ -110,8 +114,8 @@ class PaymentInout extends Model
         return [
             preg_replace('/^.*\\\/', '', get_called_class()).'Options' => (function () use ($Payments) {
                 $value = [];
-                foreach ($Payments as $key => $rp) {
-                    $value[] = ['text' => $rp->rp_remark, 'value' => $key];
+                foreach ($Payments as $key => $p) {
+                    $value[] = ['text' => $p->p_remark, 'value' => $key];
                 }
 
                 return $value;

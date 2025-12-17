@@ -3,9 +3,9 @@
 namespace App\Models\One;
 
 use App\Attributes\ClassName;
-use App\Enum\One\OaOaIsSyncRentalContract;
-use App\Enum\One\OaOaProvince;
-use App\Enum\One\OaOaType;
+use App\Enum\One\OaIsSyncRentalContract;
+use App\Enum\One\OaProvince;
+use App\Enum\One\OaType;
 use App\Models\_\ModelTrait;
 use App\Models\Vehicle\Vehicle;
 use GuzzleHttp\Cookie\FileCookieJar;
@@ -22,19 +22,23 @@ use Illuminate\Support\Facades\Storage;
 
 #[ClassName('122账号信息')]
 /**
- * @property int                           $oa_id                      122账号序号
- * @property OaOaType|string               $oa_type                    账号类型；个人、公司
- * @property string                        $oa_name                    账号名称
- * @property null|string                   $oa_province
- * @property null|string                   $cookie_string              cookie信息
- * @property null|Carbon                   $cookie_refresh_at          cookie更新时间
- * @property bool|OaOaIsSyncRentalContract $oa_is_sync_rental_contract 是否同步租赁合同
- *                                                                     -
- * @property null|Collection|Vehicle[]     $Vehicles
+ * @property int                         $oa_id                      122账号序号
+ * @property OaType|string               $oa_type                    账号类型；个人、公司
+ * @property string                      $oa_name                    账号名称
+ * @property null|string                 $oa_province
+ * @property null|string                 $oa_cookie_string           cookie信息
+ * @property null|Carbon                 $oa_cookie_refresh_at       cookie更新时间
+ * @property bool|OaIsSyncRentalContract $oa_is_sync_rental_contract 是否同步租赁合同
+ *                                                                   -
+ * @property null|Collection|Vehicle[]   $Vehicles
  */
 class OneAccount extends Model
 {
     use ModelTrait;
+
+    public const CREATED_AT = 'oa_created_at';
+    public const UPDATED_AT = 'oa_updated_at';
+    public const UPDATED_BY = 'oa_updated_by';
 
     protected $primaryKey = 'oa_id';
 
@@ -46,9 +50,9 @@ class OneAccount extends Model
     ];
 
     protected $casts = [
-        'cookie_refresh_at'       => 'datetime:Y-m-d H:i:s',
-        'oa_type'                 => OaOaType::class,
-        'is_sync_rental_contract' => OaOaIsSyncRentalContract::class,
+        'oa_cookie_refresh_at'       => 'datetime:Y-m-d H:i:s',
+        'oa_type'                    => OaType::class,
+        'oa_is_sync_rental_contract' => OaIsSyncRentalContract::class,
     ];
 
     private static ?Filesystem $disk = null;
@@ -86,7 +90,7 @@ class OneAccount extends Model
             'userpub'         => $domain,
         ];
 
-        foreach (explode(';', $this->cookie_string) as $cookie) {
+        foreach (explode(';', $this->oa_cookie_string) as $cookie) {
             [$name, $value] = array_map('trim', explode('=', $cookie, 2) + [null, null]);
             if ($name && $value) {
                 $cookieJar->setCookie(new SetCookie([
@@ -121,8 +125,8 @@ class OneAccount extends Model
             ->from('one_accounts', 'oa')
             ->select('oa.*')
             ->addSelect(
-                DB::raw(OaOaType::toCaseSQL()),
-                DB::raw("to_char(cookie_refresh_at, 'YYYY-MM-DD HH24:MI:SS') as cookie_refresh_at_"),
+                DB::raw(OaType::toCaseSQL()),
+                DB::raw("to_char(oa_cookie_refresh_at, 'YYYY-MM-DD HH24:MI:SS') as oa_cookie_refresh_at_"),
             )
         ;
     }
@@ -137,12 +141,12 @@ class OneAccount extends Model
             ->get()
             ->map(function (self $account) {
                 return [
-                    'text'               => $account->oa_name,
-                    'value'              => $account->oa_id,
-                    'oa_type_label'      => $account->oa_type_label,
-                    'oa_province'        => $account->oa_province,
-                    'oa_province_label'  => $account->oa_province_value['name'] ?? null,
-                    'cookie_refresh_at_' => $account->cookie_refresh_at,
+                    'text'                  => $account->oa_name,
+                    'value'                 => $account->oa_id,
+                    'oa_type_label'         => $account->oa_type_label,
+                    'oa_province'           => $account->oa_province,
+                    'oa_province_label'     => $account->oa_province_value['name'] ?? null,
+                    'oa_cookie_refresh_at_' => $account->oa_cookie_refresh_at,
                 ];
             })
         ;
@@ -150,9 +154,9 @@ class OneAccount extends Model
         return [$key => $value];
     }
 
-    public function Vehicles(): HasMany
+    public function oaVehicles(): HasMany
     {
-        return $this->hasMany(Vehicle::class, 'oa_id', 'oa_id');
+        return $this->hasMany(Vehicle::class, 've_oa_id', 'oa_id');
     }
 
     protected function oaTypeLabel(): Attribute
@@ -165,7 +169,7 @@ class OneAccount extends Model
     protected function oaProvinceValue(): Attribute
     {
         return Attribute::make(
-            get : fn () => OaOaProvince::columnValues($this->getAttribute('oa_province')),
+            get : fn () => OaProvince::columnValues($this->getAttribute('oa_province')),
         );
     }
 }

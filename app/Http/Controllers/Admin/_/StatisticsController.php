@@ -31,15 +31,16 @@ class StatisticsController extends Controller
             ],
             [],
         )->after(function (\Illuminate\Validation\Validator $validator) {
-            if (!$validator->failed()) {
-                // 获取当前的数据
-                $data = $validator->getData();
+            if ($validator->failed()) {
+                return;
+            }
+            // 获取当前的数据
+            $data = $validator->getData();
 
-                if (!isset($data['dimension'])) {
-                    $data['dimension'] = Dimension::MONTH;
+            if (!isset($data['dimension'])) {
+                $data['dimension'] = Dimension::MONTH;
 
-                    $validator->setData($data);
-                }
+                $validator->setData($data);
             }
         });
 
@@ -120,7 +121,7 @@ class StatisticsController extends Controller
             ],
             [
                 'Payment::read',
-                "SELECT to_char(should_pay_date,'YYYY-MM') AS period,COUNT(1) AS count,SUM(CASE WHEN rp.should_pay_amount> 0 THEN rp.should_pay_amount ELSE 0 END) AS sum_amount,SUM(CASE WHEN rp.should_pay_amount< 0 THEN abs(rp.should_pay_amount) ELSE 0 END) AS sum_amount_refund,2=2 FROM payments rp WHERE rp.is_valid='1' and 1=1 GROUP BY 1 order by 1",
+                "SELECT to_char(p_should_pay_date,'YYYY-MM') AS period,COUNT(1) AS count,SUM(CASE WHEN p.p_should_pay_amount> 0 THEN p.p_should_pay_amount ELSE 0 END) AS sum_amount,SUM(CASE WHEN p.p_should_pay_amount< 0 THEN abs(p.p_should_pay_amount) ELSE 0 END) AS sum_amount_refund,2=2 FROM payments p WHERE p.p_is_valid='1' and 1=1 GROUP BY 1 order by 1",
                 function ($sql_value, &$result) {
                     $result[] = [
                         'categories' => array_column($sql_value, 'period'),
@@ -134,7 +135,7 @@ class StatisticsController extends Controller
             ],
             [
                 'Payment::read',
-                "SELECT to_char(actual_pay_date,'YYYY-MM') AS period,COUNT(1) AS count,SUM(CASE WHEN rp.actual_pay_amount> 0 THEN rp.actual_pay_amount ELSE 0 END) AS sum_amount,SUM(CASE WHEN rp.actual_pay_amount< 0 THEN abs(rp.actual_pay_amount) ELSE 0 END) AS sum_amount_refund FROM payments rp WHERE rp.is_valid='1' and 1=1 GROUP BY 1 order by 1",
+                "SELECT to_char(p_actual_pay_date,'YYYY-MM') AS period,COUNT(1) AS count,SUM(CASE WHEN p.p_actual_pay_amount> 0 THEN p.p_actual_pay_amount ELSE 0 END) AS sum_amount,SUM(CASE WHEN p.p_actual_pay_amount< 0 THEN abs(p.p_actual_pay_amount) ELSE 0 END) AS sum_amount_refund FROM payments p WHERE p.p_is_valid='1' and 1=1 GROUP BY 1 order by 1",
                 function ($sql_value, &$result) {
                     $result[] = [
                         'categories' => array_column($sql_value, 'period'),
@@ -148,7 +149,7 @@ class StatisticsController extends Controller
             ],
             [
                 'VehicleInspection::read',
-                "SELECT to_char(inspection_datetime, 'YYYY-MM') as period,count(1) as count from vehicle_inspections where 1=1 GROUP BY 1 order by 1",
+                "SELECT to_char(vi_inspection_datetime, 'YYYY-MM') as period,count(1) as count from vehicle_inspections where 1=1 GROUP BY 1 order by 1",
                 function ($sql_value, &$result) {
                     $result[] = [
                         'categories' => array_column($sql_value, 'period'),

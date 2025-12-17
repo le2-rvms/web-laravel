@@ -36,12 +36,12 @@ class IotDeviceBinding extends Model
 
     public function Device(): BelongsTo
     {
-        return $this->BelongsTo(IotDevice::class, 'd_id');
+        return $this->belongsTo(IotDevice::class, 'd_id');
     }
 
     public function Vehicle(): BelongsTo
     {
-        return $this->BelongsTo(Vehicle::class, 've_id', 've_id');
+        return $this->belongsTo(Vehicle::class, 've_id', 've_id');
     }
 
     public static function options(?\Closure $where = null): array

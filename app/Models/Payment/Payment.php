@@ -5,11 +5,11 @@ namespace App\Models\Payment;
 use App\Attributes\ClassName;
 use App\Attributes\ColumnDesc;
 use App\Attributes\ColumnType;
-use App\Enum\Payment\RpIsValid;
-use App\Enum\Payment\RpPayStatus;
-use App\Enum\Payment\RpPtId;
-use App\Enum\Payment\RpShouldPayDate_DDD;
-use App\Enum\Sale\ScScStatus;
+use App\Enum\Payment\PIsValid;
+use App\Enum\Payment\PPayStatus;
+use App\Enum\Payment\PPtId;
+use App\Enum\Payment\PShouldPayDate_DDD;
+use App\Enum\SaleContract\ScStatus;
 use App\Exceptions\ClientException;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
@@ -29,42 +29,42 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 #[ClassName('财务', '记录')]
-#[ColumnDesc('rp_id', required: true, )]
-#[ColumnDesc('sc_id', required: true, )]
-#[ColumnDesc('pt_id', required: true, enum_class: RpPtId::class)]
-#[ColumnDesc('should_pay_date', required: true, type: ColumnType::DATE)]
-#[ColumnDesc('should_pay_amount', required: true, )]
-#[ColumnDesc('pay_status', required: true, enum_class: RpPayStatus::class)]
-#[ColumnDesc('actual_pay_date', type: ColumnType::DATE)]
-#[ColumnDesc('actual_pay_amount')]
-#[ColumnDesc('pa_id')]
-#[ColumnDesc('rp_remark')]
-#[ColumnDesc('is_valid', required: true, enum_class: RpIsValid::class)]
-#[ColumnDesc('vr_id')]
-#[ColumnDesc('vm_id')]
-#[ColumnDesc('vi_id')]
+#[ColumnDesc('p_id', required: true, )]
+#[ColumnDesc('p_sc_id', required: true, )]
+#[ColumnDesc('p_pt_id', required: true, enum_class: PPtId::class)]
+#[ColumnDesc('p_should_pay_date', required: true, type: ColumnType::DATE)]
+#[ColumnDesc('p_should_pay_amount', required: true, )]
+#[ColumnDesc('p_pay_status', required: true, enum_class: PPayStatus::class)]
+#[ColumnDesc('p_actual_pay_date', type: ColumnType::DATE)]
+#[ColumnDesc('p_actual_pay_amount')]
+#[ColumnDesc('p_pa_id')]
+#[ColumnDesc('p_remark')]
+#[ColumnDesc('p_is_valid', required: true, enum_class: PIsValid::class)]
+#[ColumnDesc('p_vr_id')]
+#[ColumnDesc('p_vm_id')]
+#[ColumnDesc('p_vi_id')]
 /**
- * @property int                $rp_id             财务记录序号
- * @property int                $sc_id             租车合同序号
- * @property int                $pt_id             付款类型序号；引用payment_types表
- * @property Carbon|string      $should_pay_date   应收/应付日期
- * @property string             $day_of_week_name  应收/应付星期
- * @property float              $should_pay_amount 应收/付金额
- * @property RpPayStatus|string $pay_status        付款状态；例如已支付、未支付、失败等
- * @property null|Carbon        $actual_pay_date   实际收付日期
- * @property null|float         $actual_pay_amount 实际收付金额
- * @property null|int           $pa_id             支付账户序号
- * @property null|string        $rp_remark         财务备注
- * @property int|RpIsValid      $is_valid          是否有效
- * @property null               $vr_id             车辆维修序号
- * @property null               $vm_id             车辆维修序号
- * @property null               $vi_id             车辆检查序号
- * @property array|mixed        $period            ;start_d 、end_d
- * @property SaleContract       $SaleContract
- * @property PaymentAccount     $PaymentAccount
- * @property PaymentType        $PaymentType
- * @property null|string        $pay_status_label  支付状态-中文
- * @property null|string        $is_valid_label    有效状态-中文
+ * @property int               $p_id                财务记录序号
+ * @property int               $p_sc_id             租车合同序号
+ * @property int               $p_pt_id             付款类型序号；引用payment_types表
+ * @property Carbon|string     $p_should_pay_date   应收/应付日期
+ * @property string            $p_day_of_week_name  应收/应付星期
+ * @property float             $p_should_pay_amount 应收/付金额
+ * @property PPayStatus|string $p_pay_status        付款状态；例如已支付、未支付、失败等
+ * @property null|Carbon       $p_actual_pay_date   实际收付日期
+ * @property null|float        $p_actual_pay_amount 实际收付金额
+ * @property null|int          $p_pa_id             支付账户序号
+ * @property null|string       $p_remark            财务备注
+ * @property int|PIsValid      $p_is_valid          是否有效
+ * @property null              $p_vr_id             车辆维修序号
+ * @property null              $p_vm_id             车辆维修序号
+ * @property null              $p_vi_id             车辆检查序号
+ * @property array|mixed       $p_period            ;start_d 、end_d
+ * @property SaleContract      $SaleContract
+ * @property PaymentAccount    $PaymentAccount
+ * @property PaymentType       $PaymentType
+ * @property null|string       $p_pay_status_label  支付状态-中文
+ * @property null|string       $p_is_valid_label    有效状态-中文
  */
 class Payment extends Model
 {
@@ -72,57 +72,61 @@ class Payment extends Model
 
     use ImportTrait;
 
-    protected $primaryKey = 'rp_id';
+    public const CREATED_AT = 'p_created_at';
+    public const UPDATED_AT = 'p_updated_at';
+    public const UPDATED_BY = 'p_updated_by';
 
-    protected $guarded = ['rp_id'];
+    protected $primaryKey = 'p_id';
+
+    protected $guarded = ['p_id'];
 
     protected $attributes = [
-        'pay_status' => RpPayStatus::UNPAID,
-        'is_valid'   => RpIsValid::VALID,
+        'p_pay_status' => PPayStatus::UNPAID,
+        'p_is_valid'   => PIsValid::VALID,
     ];
 
     protected $casts = [
-        'pay_status'        => RpPayStatus::class,
-        'should_pay_amount' => 'decimal:2',
-        'actual_pay_amount' => 'decimal:2',
-        'is_valid'          => RpIsValid::class,
-        //        'pt_id'             => RpPtId::class, // !!! 因为是外键，所以不能做转换。
+        'p_pay_status'        => PPayStatus::class,
+        'p_should_pay_amount' => 'decimal:2',
+        'p_actual_pay_amount' => 'decimal:2',
+        'p_is_valid'          => PIsValid::class,
+        //        'p_pt_id'             => RpPtId::class, // !!! 因为是外键，所以不能做转换。
     ];
 
     protected $appends = [
-        'day_of_week_name',
-        'pay_status_label',
-        'is_valid_label',
+        'p_day_of_week_name',
+        'p_pay_status_label',
+        'p_is_valid_label',
     ];
 
     public function SaleContract(): BelongsTo
     {
-        return $this->belongsTo(SaleContract::class, 'sc_id', 'sc_id');
+        return $this->belongsTo(SaleContract::class, 'p_sc_id', 'sc_id');
     }
 
     public function PaymentType(): BelongsTo
     {
-        return $this->belongsTo(PaymentType::class, 'pt_id', 'pt_id');
+        return $this->belongsTo(PaymentType::class, 'p_pt_id', 'pt_id');
     }
 
     public function PaymentAccount(): BelongsTo
     {
-        return $this->belongsTo(PaymentAccount::class, 'pa_id', 'pa_id');
+        return $this->belongsTo(PaymentAccount::class, 'p_pa_id', 'pa_id');
     }
 
     public function VehicleRepair(): BelongsTo
     {
-        return $this->belongsTo(VehicleRepair::class, 'vr_id', 'vr_id');
+        return $this->belongsTo(VehicleRepair::class, 'p_vr_id', 'vr_id');
     }
 
     public function VehicleMaintenance(): BelongsTo
     {
-        return $this->belongsTo(VehicleMaintenance::class, 'vm_id', 'vm_id');
+        return $this->belongsTo(VehicleMaintenance::class, 'p_vm_id', 'vm_id');
     }
 
     public function VehicleInspection(): BelongsTo
     {
-        return $this->belongsTo(VehicleInspection::class, 'vi_id', 'vi_id');
+        return $this->belongsTo(VehicleInspection::class, 'p_vi_id', 'vi_id');
     }
 
     public static function indexQuery(array $search = []): Builder
@@ -131,40 +135,40 @@ class Payment extends Model
         $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
-            ->from('payments', 'rp')
-            ->leftJoin('payment_accounts as pa', 'pa.pa_id', '=', 'rp.pa_id')
-            ->leftJoin('payment_types as pt', 'pt.pt_id', '=', 'rp.pt_id')
-            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'rp.sc_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.ve_id')
-            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.vm_id')
+            ->from('payments', 'p')
+            ->leftJoin('payment_accounts as pa', 'pa.pa_id', '=', 'p.p_pa_id')
+            ->leftJoin('payment_types as pt', 'pt.pt_id', '=', 'p.p_pt_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'p.p_sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
+            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $query->where('rp.sc_id', '=', $sc_id);
+                $query->where('p.p_sc_id', '=', $sc_id);
             })
             ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('sc.cu_id', '=', $cu_id);
+                $query->where('sc.sc_cu_id', '=', $cu_id);
             })
             ->when(
                 null === $sc_id && null === $cu_id,
                 function (Builder $query) {
-                    $query->orderByDesc('rp.sc_id')->orderby('rp.rp_id');
+                    $query->orderByDesc('p.p_sc_id')->orderby('p.p_id');
                 },
                 function (Builder $query) {
-                    $query->orderBy('rp.sc_id')->orderby('rp.should_pay_date')->orderby('rp.rp_id');
+                    $query->orderBy('p.p_sc_id')->orderby('p.p_should_pay_date')->orderby('p.p_id');
                 }
             )
             ->select('*')
             ->addSelect(
-                DB::raw(ScScStatus::toCaseSQL()),
-                DB::raw(RpPayStatus::toCaseSQL()),
-                DB::raw(RpPayStatus::toColorSQL()),
-                DB::raw(RpIsValid::toCaseSQL()),
-                DB::raw(RpShouldPayDate_DDD::toCaseSQL(true, 'rp.should_pay_date')),
+                DB::raw(ScStatus::toCaseSQL()),
+                DB::raw(PPayStatus::toCaseSQL()),
+                DB::raw(PPayStatus::toColorSQL()),
+                DB::raw(PIsValid::toCaseSQL()),
+                DB::raw(PShouldPayDate_DDD::toCaseSQL(true, 'p.p_should_pay_date')),
                 DB::raw((function () {
                     return sprintf(
-                        "(rp.is_valid in ('%s') and  sc.sc_status in ('%s')) as can_pay",
-                        join("','", [RpIsValid::VALID]),
-                        join("','", [ScScStatus::PENDING, ScScStatus::SIGNED, ScScStatus::COMPLETED, ScScStatus::EARLY_TERMINATION])
+                        "(p.p_is_valid in ('%s') and  sc.sc_status in ('%s')) as can_pay",
+                        join("','", [PIsValid::VALID]),
+                        join("','", [ScStatus::PENDING, ScStatus::SIGNED, ScStatus::COMPLETED, ScStatus::EARLY_TERMINATION])
                     );
                 })())
             )
@@ -174,19 +178,19 @@ class Payment extends Model
     public static function indexColumns(): array
     {
         return [
-            'SaleContract.contract_number' => fn ($item) => $item->contract_number,
+            'SaleContract.sc_no'           => fn ($item) => $item->sc_no,
             'Vehicle.plate_no'             => fn ($item) => $item->plate_no,
-            'VehicleModel.brand_model'     => fn ($item) => $item->brand_name.'-'.$item->model_name,
-            'Customer.contact_name'        => fn ($item) => $item->contact_name,
+            'VehicleModel.brand_model'     => fn ($item) => $item->vm_brand_name.'-'.$item->vm_model_name,
+            'Customer.cu_contact_name'     => fn ($item) => $item->cu_contact_name,
             'PaymentType.pt_name'          => fn ($item) => $item->pt_name,
-            'Payment.should_pay_date'      => fn ($item) => $item->should_pay_date,
-            'Payment.should_pay_amount'    => fn ($item) => $item->should_pay_amount,
-            'Payment.actual_pay_date'      => fn ($item) => $item->actual_pay_date,
-            'Payment.actual_pay_amount'    => fn ($item) => $item->actual_pay_amount,
+            'Payment.p_should_pay_date'    => fn ($item) => $item->p_should_pay_date,
+            'Payment.p_should_pay_amount'  => fn ($item) => $item->p_should_pay_amount,
+            'Payment.p_actual_pay_date'    => fn ($item) => $item->p_actual_pay_date,
+            'Payment.p_actual_pay_amount'  => fn ($item) => $item->p_actual_pay_amount,
             'Payment.pay_status_label'     => fn ($item) => $item->pay_status_label,
             'Payment.is_valid_label'       => fn ($item) => $item->is_valid_label,
             'SaleContract.sc_status_label' => fn ($item) => $item->sc_status_label,
-            'Payment.rp_remark'            => fn ($item) => $item->rp_remark,
+            'Payment.p_remark'             => fn ($item) => $item->p_remark,
         ];
     }
 
@@ -194,17 +198,17 @@ class Payment extends Model
     {
         $accounts_receivable_amount = $actual_received_amount = $pending_receivable_amount = $pending_receivable_size = $less_receivable_amount = '0';
         foreach ($list as $key => $value) {
-            if (RpIsValid::VALID == $value->is_valid) {
-                $accounts_receivable_amount = bcadd($accounts_receivable_amount, $value->should_pay_amount, 2); // 应收
+            if (PIsValid::VALID == $value->p_is_valid) {
+                $accounts_receivable_amount = bcadd($accounts_receivable_amount, $value->p_should_pay_amount, 2); // 应收
             }
-            if (RpPayStatus::PAID == $value->pay_status) {
-                $actual_received_amount = bcadd($actual_received_amount, $value->actual_pay_amount, 2); // 实收
+            if (PPayStatus::PAID == $value->p_pay_status) {
+                $actual_received_amount = bcadd($actual_received_amount, $value->p_actual_pay_amount, 2); // 实收
 
-                $less_receivable_amount = bcadd($less_receivable_amount, bcsub($value->should_pay_amount, $value->actual_pay_amount, 2), 2); // 减免
+                $less_receivable_amount = bcadd($less_receivable_amount, bcsub($value->p_should_pay_amount, $value->p_actual_pay_amount, 2), 2); // 减免
             }
 
-            if (RpIsValid::VALID == $value->is_valid && RpPayStatus::UNPAID == $value->pay_status) {
-                $pending_receivable_amount = bcadd($pending_receivable_amount, $value->should_pay_amount, 2); // 待收
+            if (PIsValid::VALID == $value->p_is_valid && PPayStatus::UNPAID == $value->p_pay_status) {
+                $pending_receivable_amount = bcadd($pending_receivable_amount, $value->p_should_pay_amount, 2); // 待收
                 ++$pending_receivable_size; // 待收笔数
             }
         }
@@ -218,7 +222,7 @@ class Payment extends Model
             preg_replace('/^.*\\\/', '', get_called_class()).'Options' => (function () use ($Payments) {
                 $value = [];
                 foreach ($Payments as $key => $rp) {
-                    $value[] = ['text' => $rp->rp_remark, 'value' => $key];
+                    $value[] = ['text' => $rp->p_remark, 'value' => $key];
                 }
 
                 return $value;
@@ -230,45 +234,45 @@ class Payment extends Model
     public static function importColumns(): array
     {
         return [
-            'contract_number'   => [SaleContract::class, 'contract_number'],
-            'pt_id'             => [Payment::class, 'pt_id'],
-            'should_pay_date'   => [Payment::class, 'should_pay_date'],
-            'should_pay_amount' => [Payment::class, 'should_pay_amount'],
-            'pay_status'        => [Payment::class, 'pay_status'],
-            'actual_pay_date'   => [Payment::class, 'actual_pay_date'],
-            'actual_pay_amount' => [Payment::class, 'actual_pay_amount'],
-            'pa_id'             => [Payment::class, 'pa_id'],
-            'rp_remark'         => [Payment::class, 'rp_remark'],
-            'vr_id'             => [Payment::class, 'vr_id'],
-            'vm_id'             => [Payment::class, 'vm_id'],
-            'vi_id'             => [Payment::class, 'vi_id'],
+            'sc_no'               => [SaleContract::class, 'sc_no'],
+            'p_pt_id'             => [Payment::class, 'p_pt_id'],
+            'p_should_pay_date'   => [Payment::class, 'p_should_pay_date'],
+            'p_should_pay_amount' => [Payment::class, 'p_should_pay_amount'],
+            'p_pay_status'        => [Payment::class, 'p_pay_status'],
+            'p_actual_pay_date'   => [Payment::class, 'p_actual_pay_date'],
+            'p_actual_pay_amount' => [Payment::class, 'p_actual_pay_amount'],
+            'p_pa_id'             => [Payment::class, 'p_pa_id'],
+            'p_remark'            => [Payment::class, 'p_remark'],
+            'p_vr_id'             => [Payment::class, 'p_vr_id'],
+            'p_vm_id'             => [Payment::class, 'p_vm_id'],
+            'p_vi_id'             => [Payment::class, 'p_vi_id'],
         ];
     }
 
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['sc_id']      = SaleContract::contractNumberKv($item['contract_number'] ?? null);
-            $item['pay_status'] = RpPayStatus::searchValue($item['pay_status'] ?? null);
-            $item['pt_id']      = RpPtId::searchValue($item['pt_id'] ?? null);
+            $item['p_sc_id']      = SaleContract::contractNumberKv($item['sc_no'] ?? null);
+            $item['p_pay_status'] = PPayStatus::searchValue($item['p_pay_status'] ?? null);
+            $item['p_pt_id']      = PPtId::searchValue($item['p_pt_id'] ?? null);
 
-            static::$fields['contract_number'][] = $item['contract_number'] ?? null;
-            static::$fields['pa_id'][]           = $item['pa_id'] ?? null;
+            static::$fields['sc_no'][]   = $item['sc_no'] ?? null;
+            static::$fields['p_pa_id'][] = $item['p_pa_id'] ?? null;
         };
     }
 
     public static function importValidatorRule(array $item, array $fieldAttributes): void
     {
         $rules = [
-            'sc_id'             => ['bail', 'required', 'integer'],
-            'pt_id'             => ['bail', 'required', Rule::in(RpPtId::label_keys())],
-            'should_pay_date'   => ['bail', 'required', 'date'],
-            'should_pay_amount' => ['bail', 'required', 'numeric'],
-            'pay_status'        => ['bail', 'required', Rule::in(RpPayStatus::label_keys())],
-            'actual_pay_date'   => ['bail', Rule::requiredIf(RpPayStatus::PAID === $item['pay_status']), 'nullable', 'date'],
-            'actual_pay_amount' => ['bail', Rule::requiredIf(RpPayStatus::PAID === $item['pay_status']), 'nullable', 'numeric'],
-            'pa_id'             => ['bail', 'required'],
-            'rp_remark'         => ['bail', 'nullable', 'string'],
+            'p_sc_id'             => ['bail', 'required', 'integer'],
+            'p_pt_id'             => ['bail', 'required', Rule::in(PPtId::label_keys())],
+            'p_should_pay_date'   => ['bail', 'required', 'date'],
+            'p_should_pay_amount' => ['bail', 'required', 'numeric'],
+            'p_pay_status'        => ['bail', 'required', Rule::in(PPayStatus::label_keys())],
+            'p_actual_pay_date'   => ['bail', Rule::requiredIf(PPayStatus::PAID === $item['p_pay_status']), 'nullable', 'date'],
+            'p_actual_pay_amount' => ['bail', Rule::requiredIf(PPayStatus::PAID === $item['p_pay_status']), 'nullable', 'numeric'],
+            'p_pa_id'             => ['bail', 'required'],
+            'p_remark'            => ['bail', 'nullable', 'string'],
         ];
 
         $validator = Validator::make($item, $rules, [], $fieldAttributes);
@@ -281,14 +285,14 @@ class Payment extends Model
     public static function importAfterValidatorDo(): \Closure
     {
         return function () {
-            // contract_number
-            $missing = array_diff(static::$fields['contract_number'], SaleContract::query()->pluck('contract_number')->toArray());
+            // sc_no
+            $missing = array_diff(static::$fields['sc_no'], SaleContract::query()->pluck('sc_no')->toArray());
             if (count($missing) > 0) {
                 throw new ClientException('以下合同编号不存在：'.join(',', $missing));
             }
 
-            // pa_id
-            $missing = array_diff(static::$fields['pa_id'], PaymentAccount::query()->pluck('pa_id')->toArray());
+            // p_pa_id
+            $missing = array_diff(static::$fields['p_pa_id'], PaymentAccount::query()->pluck('p_pa_id')->toArray());
             if (count($missing) > 0) {
                 throw new ClientException('以下支付账户序号不存在：'.join(',', $missing));
             }
@@ -307,24 +311,24 @@ class Payment extends Model
         return [];
     }
 
-    protected function dayOfWeekName(): Attribute
+    protected function pDayOfWeekName(): Attribute
     {
         return Attribute::make(
-            get: fn () => Carbon::parse($this->getAttribute('should_pay_date'))->isoFormat('dddd')
+            get: fn () => Carbon::parse($this->getAttribute('p_should_pay_date'))->isoFormat('dddd')
         );
     }
 
-    protected function payStatusLabel(): Attribute
+    protected function pPayStatusLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('pay_status')?->label,
+            get: fn () => $this->getAttribute('p_pay_status')?->label,
         );
     }
 
-    protected function isValidLabel(): Attribute
+    protected function pIsValidLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('is_valid')?->label,
+            get: fn () => $this->getAttribute('p_is_valid')?->label,
         );
     }
 }

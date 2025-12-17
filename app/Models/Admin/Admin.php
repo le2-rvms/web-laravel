@@ -44,6 +44,8 @@ class Admin extends Authenticatable
 
     use ModelTrait;
 
+    public const UPDATED_BY = 'updated_by';
+
     protected $table = 'admins';
 
     protected $attributes = [];
@@ -110,17 +112,17 @@ class Admin extends Authenticatable
 
     public function VehicleManagers(): HasMany
     {
-        return $this->hasMany(Vehicle::class, 'vehicle_manager', 'id');
+        return $this->hasMany(Vehicle::class, 've_vehicle_manager', 'id');
     }
 
     public function SalesManagers(): HasMany
     {
-        return $this->hasMany(Vehicle::class, 'vehicle_manager', 'id');
+        return $this->hasMany(Vehicle::class, 've_vehicle_manager', 'id');
     }
 
     public function DriverManagers(): HasMany
     {
-        return $this->hasMany(Vehicle::class, 'vehicle_manager', 'id');
+        return $this->hasMany(Vehicle::class, 've_vehicle_manager', 'id');
     }
 
     protected function casts(): array

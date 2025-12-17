@@ -9,7 +9,7 @@ use App\Enum\Vehicle\VePendingStatusRental;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
-use App\Enum\Vehicle\VeVeType;
+use App\Enum\Vehicle\VeType;
 use App\Exceptions\ClientException;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
@@ -28,9 +28,9 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 
 #[ClassName('车辆', '信息')]
-#[ColumnDesc('plate_no', required: true, unique: true)]
-#[ColumnDesc('ve_type', required: false, enum_class: VeVeType::class)]
-#[ColumnDesc('vm_id', required: true, desc: '通过[车型信息管理]添加的序号，文本格式')]
+#[ColumnDesc('ve_plate_no', required: true, unique: true)]
+#[ColumnDesc('ve_type', required: false, enum_class: VeType::class)]
+#[ColumnDesc('ve_vm_id', required: true, desc: '通过[车型信息管理]添加的序号，文本格式')]
 #[ColumnDesc('ve_license_owner')]
 #[ColumnDesc('ve_license_address')]
 #[ColumnDesc('ve_license_usage')]
@@ -49,17 +49,17 @@ use Illuminate\Validation\Validator;
 #[ColumnDesc('ve_oa_id')]
 /**
  * @property int                          $ve_id                       车辆序号
- * @property string                       $plate_no                    车牌号
- * @property string|VeVeType              $ve_type                     车辆类型
- * @property null|int                     $vm_id                       车型序号；表示车辆属于哪种车型
- * @property mixed|VeStatusService        $status_service              运营状态
- * @property string|VeStatusRental        $status_rental               租赁状态；
- * @property string|VePendingStatusRental $pending_status_rental       待租赁状态；
- * @property mixed|VeStatusDispatch       $status_dispatch             是否发车；例如未发车或已发车
- * @property mixed                        $status_accident__           ；出险状态；例如无出险或发生事故 //todo
- * @property mixed                        $status_maintenance__        ；保养状态；例如无需保养、保养中
- * @property null|mixed                   $ve_license_face_photo       行驶证照片
- * @property null|mixed                   $ve_license_back_photo       行驶证背面照片
+ * @property string                       $ve_plate_no                 车牌号
+ * @property string|VeType                $ve_type                     车辆类型
+ * @property null|int                     $ve_vm_id                    车型序号；表示车辆属于哪种车型
+ * @property string|VeStatusService       $ve_status_service           运营状态
+ * @property string|VeStatusRental        $ve_status_rental            租赁状态；
+ * @property string|VePendingStatusRental $ve_pending_status_rental    待租赁状态；
+ * @property string|VeStatusDispatch      $ve_status_dispatch          是否发车；例如未发车或已发车
+ * @property mixed                        $ve_status_accident__        ；出险状态；例如无出险或发生事故 //todo
+ * @property mixed                        $ve_status_maintenance__     ；保养状态；例如无需保养、保养中
+ * @property null|array                   $ve_license_face_photo       行驶证照片
+ * @property null|array                   $ve_license_back_photo       行驶证背面照片
  * @property null|string                  $ve_license_owner            车辆所有人
  * @property null|string                  $ve_license_address          车辆所有人住所
  * @property null|string                  $ve_license_usage            车辆使用性质；例如私用、公用等
@@ -72,7 +72,7 @@ use Illuminate\Validation\Validator;
  * @property null|int                     $ve_mileage                  车辆当前总行驶公里数
  * @property null|string                  $ve_color                    车辆颜色
  * @property null|int                     $ve_oa_id                    查违章账号序号
- * @property null|string                  $vehicle_manager             负责车管
+ * @property null|string                  $ve_vehicle_manager          负责车管
  * @property null|int                     $ve_team_id                  所属车队
  * @property null|string                  $ve_cert_no                  车证号
  * @property null|array<string>           $ve_cert_photo               车证照片
@@ -84,12 +84,12 @@ use Illuminate\Validation\Validator;
  * @property Admin                        $VehicleManager
  * @property null|OneAccount              $ViolationAccount
  *                                                                     -
- * @property string|VeVeType              $ve_type_label               车辆类型-中文
- * @property null|string                  $vehicle_brand_model_name    车牌品牌车型
- * @property null|string                  $status_service_label        运营状态-中文
- * @property null|string                  $status_repair_label         维修状态-中文
- * @property null|string                  $status_rental_label         租车状态-中文
- * @property null|string                  $status_dispatch_label       是否发车状态-中文
+ * @property string|VeType                $ve_type_label               车辆类型-中文
+ * @property null|string                  $ve_vehicle_brand_model_name 车牌品牌车型
+ * @property null|string                  $ve_status_service_label     运营状态-中文
+ * @property null|string                  $ve_status_repair_label      维修状态-中文
+ * @property null|string                  $ve_status_rental_label      租车状态-中文
+ * @property null|string                  $ve_status_dispatch_label    是否发车状态-中文
  */
 class Vehicle extends Model
 {
@@ -97,67 +97,71 @@ class Vehicle extends Model
 
     use ImportTrait;
 
+    public const CREATED_AT = 've_created_at';
+    public const UPDATED_AT = 've_updated_at';
+    public const UPDATED_BY = 've_updated_by';
+
     protected $primaryKey = 've_id';
 
     protected $guarded = ['ve_id'];
 
     protected $appends = [
         've_type_label',
-        'vehicle_brand_model_name',
-        'status_service_label',
-        'status_repair_label',
-        'status_rental_label',
-        'status_dispatch_label',
+        've_vehicle_brand_model_name',
+        've_status_service_label',
+        've_status_repair_label',
+        've_status_rental_label',
+        've_status_dispatch_label',
     ];
 
     protected $attributes = [
-        'status_service'  => VeStatusService::YES,
-        'status_rental'   => VeStatusRental::PENDING,
-        'status_dispatch' => VeStatusDispatch::NOT_DISPATCHED,
+        've_status_service'  => VeStatusService::YES,
+        've_status_rental'   => VeStatusRental::PENDING,
+        've_status_dispatch' => VeStatusDispatch::NOT_DISPATCHED,
     ];
 
     protected $casts = [
-        've_type'         => VeVeType::class,
-        'status_service'  => VeStatusService::class,
-        'status_rental'   => VeStatusRental::class,
-        'status_dispatch' => VeStatusDispatch::class,
-        've_team_id'      => 'integer',
-        'oa_id'           => 'integer',
+        've_type'            => VeType::class,
+        've_status_service'  => VeStatusService::class,
+        've_status_rental'   => VeStatusRental::class,
+        've_status_dispatch' => VeStatusDispatch::class,
+        've_team_id'         => 'integer',
+        've_oa_id'           => 'integer',
     ];
 
     public function VehicleModel(): BelongsTo
     {
-        return $this->belongsTo(VehicleModel::class, 'vm_id', 'vm_id');
+        return $this->belongsTo(VehicleModel::class, 've_vm_id', 'vm_id');
     }
 
     public function VehicleUsages(): HasMany
     {
-        return $this->hasMany(VehicleUsage::class, 've_id', 've_id');
+        return $this->hasMany(VehicleUsage::class, 'vu_ve_id', 've_id');
     }
 
     public function VehiclePreparations(): HasMany
     {
-        return $this->hasMany(VehiclePreparation::class, 've_id', 've_id');
+        return $this->hasMany(VehiclePreparation::class, 'vp_ve_id', 've_id');
     }
 
     public function VehicleRepairs(): HasMany
     {
-        return $this->hasMany(VehicleRepair::class, 've_id', 've_id');
+        return $this->hasMany(VehicleRepair::class, 'vr_ve_id', 've_id');
     }
 
     public function VehicleMaintenances(): HasMany
     {
-        return $this->hasMany(VehicleMaintenance::class, 've_id', 've_id');
+        return $this->hasMany(VehicleMaintenance::class, 'vm_ve_id', 've_id');
     }
 
     public function VehicleInsurances(): HasMany
     {
-        return $this->hasMany(VehicleInsurance::class, 've_id', 've_id');
+        return $this->hasMany(VehicleInsurance::class, 'vi_ve_id', 've_id');
     }
 
     public function VehicleManager(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'vehicle_manager', 'id');
+        return $this->belongsTo(Admin::class, 've_vehicle_manager', 'id');
     }
 
     public function Team(): BelongsTo
@@ -167,28 +171,28 @@ class Vehicle extends Model
 
     public function ViolationAccount(): BelongsTo
     {
-        return $this->belongsTo(OneAccount::class, 'oa_id', 've_oa_id');
+        return $this->belongsTo(OneAccount::class, 've_oa_id', 'oa_id');
     }
 
     public function scopeOnService(Builder $query): void
     {
-        $query->where('status_service', VeStatusService::YES);
+        $query->where('ve_status_service', VeStatusService::YES);
     }
 
     public function updateStatus(
-        ?string $status_service = null,
-        ?string $status_rental = null,
-        ?string $status_dispatch = null,
+        ?string $ve_status_service = null,
+        ?string $ve_status_rental = null,
+        ?string $ve_status_dispatch = null,
     ): bool {
         $update = [];
-        if ($status_service) {
-            $update['status_service'] = $status_service;
+        if ($ve_status_service) {
+            $update['ve_status_service'] = $ve_status_service;
         }
-        if ($status_rental) {
-            $update['status_rental'] = $status_rental;
+        if ($ve_status_rental) {
+            $update['ve_status_rental'] = $ve_status_rental;
         }
-        if ($status_dispatch) {
-            $update['status_dispatch'] = $status_dispatch;
+        if ($ve_status_dispatch) {
+            $update['ve_status_dispatch'] = $ve_status_dispatch;
         }
 
         return $this->update($update);
@@ -202,11 +206,11 @@ class Vehicle extends Model
         $value = DB::query()
             ->from('vehicles', 've')
             ->leftJoin('vehicle_models as vm', function ($join) {
-                $join->on('vm.vm_id', '=', 've.vm_id');
+                $join->on('vm.vm_id', '=', 've.ve_vm_id');
             })
-            ->where('ve.status_service', VeStatusService::YES)
+            ->where('ve.ve_status_service', VeStatusService::YES)
             ->where($where)
-            ->select(DB::raw("CONCAT(ve.plate_no,'-',COALESCE(vm.brand_name,'未知品牌'),'-', COALESCE(vm.model_name,'未知车型')) as text,ve.ve_id as value"))
+            ->select(DB::raw("CONCAT(ve.ve_plate_no,'-',COALESCE(vm.vm_brand_name,'未知品牌'),'-', COALESCE(vm.vm_model_name,'未知车型')) as text,ve.ve_id as value"))
             ->get()
         ;
 
@@ -221,10 +225,10 @@ class Vehicle extends Model
         $value = DB::query()
             ->from('vehicles', 've')
             ->leftJoin('vehicle_models as vm', function ($join) {
-                $join->on('vm.vm_id', '=', 've.vm_id');
+                $join->on('vm.vm_id', '=', 've.ve_vm_id');
             })
-            ->where('ve.status_service', VeStatusService::YES)
-            ->select(DB::raw("CONCAT(ve.plate_no,'-',COALESCE(vm.brand_name,'未知品牌'),'-', COALESCE(vm.model_name,'未知车型')) as text,ve.plate_no as value"))
+            ->where('ve.ve_status_service', VeStatusService::YES)
+            ->select(DB::raw("CONCAT(ve.ve_plate_no,'-',COALESCE(vm.vm_brand_name,'未知品牌'),'-', COALESCE(vm.vm_model_name,'未知车型')) as text,ve.ve_plate_no as value"))
             ->get()
         ;
 
@@ -233,28 +237,28 @@ class Vehicle extends Model
 
     public function check_status(int $statusService, array $statusRentals, array $statusDispatches, Validator $validator): bool
     {
-        if ($statusService !== $this->status_service->value) {
+        if ($statusService !== $this->ve_status_service->value) {
             $validator->errors()->add(
                 $key     = 've_id',
-                $message = '车辆:'.$this->plate_no.'的运营状态不应该为：'.$this->status_service->label
+                $message = '车辆:'.$this->ve_plate_no.'的运营状态不应该为：'.$this->ve_status_service->label
             );
 
             return false;
         }
 
-        if ($statusRentals && !in_array($this->status_rental->value, $statusRentals)) {
+        if ($statusRentals && !in_array($this->ve_status_rental->value, $statusRentals)) {
             $validator->errors()->add(
                 $key     = 've_id',
-                $message = '车辆:'.$this->plate_no.'的租车状态不应该为：'.$this->status_rental->label
+                $message = '车辆:'.$this->ve_plate_no.'的租车状态不应该为：'.$this->ve_status_rental->label
             );
 
             return false;
         }
 
-        if ($statusDispatches && !in_array($this->status_dispatch->value, $statusDispatches)) {
+        if ($statusDispatches && !in_array($this->ve_status_dispatch->value, $statusDispatches)) {
             $validator->errors()->add(
                 $key     = 've_id',
-                $message = '车辆:'.$this->plate_no.'的发车状态为：'.$this->status_dispatch->label
+                $message = '车辆:'.$this->ve_plate_no.'的发车状态为：'.$this->ve_status_dispatch->label
             );
 
             return false;
@@ -267,11 +271,11 @@ class Vehicle extends Model
     {
         return DB::query()
             ->from('vehicles', 've')
-            ->leftJoin('vehicle_models as vm', 've.vm_id', '=', 'vm.vm_id')
-            ->leftJoin('admins as adm', 've.vehicle_manager', '=', 'adm.id')
+            ->leftJoin('vehicle_models as vm', 've.ve_vm_id', '=', 'vm.vm_id')
+            ->leftJoin('admins as adm', 've.ve_vehicle_manager', '=', 'adm.id')
             ->leftJoin('admin_teams as at', 've.ve_team_id', '=', 'at.at_id')
             ->leftJoin('one_accounts as oa', 've.ve_oa_id', '=', 'oa.oa_id')
-            ->select('ve.*', 'vm.brand_name', 'vm.model_name', 'adm.name as vehicle_manager_name', 'at.at_name as ve_team_name', 'oa.oa_name')
+            ->select('ve.*', 'vm.*', 'adm.name as vehicle_manager_name', 'at.at_name as ve_team_name', 'oa.oa_name')
             ->addSelect(
                 DB::raw(VeStatusService::toCaseSQL()),
                 DB::raw(VeStatusService::toColorSQL()),
@@ -285,14 +289,14 @@ class Vehicle extends Model
     {
         return [
             'Vehicle.ve_id'                    => fn ($item) => $item->ve_id,
-            'Vehicle.plate_no'                 => fn ($item) => $item->plate_no,
+            'Vehicle.ve_plate_no'              => fn ($item) => $item->ve_plate_no,
             'Vehicle.ve_type'                  => fn ($item) => $item->ve_type,
-            'VehicleModel.brand_model'         => fn ($item) => $item->brand_name.'-'.$item->model_name,
+            'VehicleModel.ve_brand_model'      => fn ($item) => $item->ve_brand_name.'-'.$item->ve_model_name,
             'Vehicle.ve_license_owner'         => fn ($item) => $item->ve_license_owner,
             'Vehicle.ve_license_usage'         => fn ($item) => $item->ve_license_usage,
             'Vehicle.ve_license_type'          => fn ($item) => $item->ve_license_type,
             'Vehicle.ve_license_purchase_date' => fn ($item) => $item->ve_license_purchase_date,
-            'Vehicle.status_service'           => fn ($item) => $item->status_service_label,
+            'Vehicle.ve_status_service'        => fn ($item) => $item->ve_status_service_label,
             'AdminTeam.at_name'                => fn ($item) => $item->ve_team_name,
             'OneAccount.oa_name'               => fn ($item) => $item->oa_name,
         ];
@@ -305,8 +309,8 @@ class Vehicle extends Model
         if (null === $kv) {
             $kv = DB::query()
                 ->from('vehicles')
-                ->select('ve_id', 'plate_no')
-                ->pluck('ve_id', 'plate_no')
+                ->select('ve_id', 've_plate_no')
+                ->pluck('ve_id', 've_plate_no')
                 ->toArray()
             ;
         }
@@ -321,9 +325,9 @@ class Vehicle extends Model
     public static function importColumns(): array
     {
         return [
-            'plate_no'                    => [Vehicle::class, 'plate_no'],
+            've_plate_no'                 => [Vehicle::class, 've_plate_no'],
             've_type'                     => [Vehicle::class, 've_type'],
-            'vm_id'                       => [Vehicle::class, 'vm_id'],
+            've_vm_id'                    => [Vehicle::class, 've_vm_id'],
             've_license_owner'            => [Vehicle::class, 've_license_owner'],
             've_license_address'          => [Vehicle::class, 've_license_address'],
             've_license_usage'            => [Vehicle::class, 've_license_usage'],
@@ -346,10 +350,10 @@ class Vehicle extends Model
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['ve_type']                = VeVeType::searchValue($item['ve_type']);
-            static::$fields['plate_no'][]   = $item['plate_no'];
-            static::$fields['vm_id'][]      = $item['vm_id'];
-            static::$fields['ve_team_id'][] = $item['ve_team_id']; // todo
+            $item['ve_type']                 = VeType::searchValue($item['ve_type']);
+            static::$fields['ve_plate_no'][] = $item['ve_plate_no'];
+            static::$fields['ve_vm_id'][]    = $item['ve_vm_id'];
+            static::$fields['ve_team_id'][]  = $item['ve_team_id']; // todo
         };
     }
 
@@ -357,7 +361,7 @@ class Vehicle extends Model
     {
         $rules = [
             'plate_no'                    => ['required', 'string', 'max:64'],
-            've_type'                     => ['nullable', 'string', Rule::in(VeVeType::label_keys())],
+            've_type'                     => ['nullable', 'string', Rule::in(VeType::label_keys())],
             'vm_id'                       => ['nullable', 'integer'],
             've_license_owner'            => ['nullable', 'string', 'max:100'],
             've_license_address'          => ['nullable', 'string', 'max:255'],
@@ -370,7 +374,7 @@ class Vehicle extends Model
             've_license_valid_until_date' => ['nullable', 'date', 'after:ve_license_purchase_date'],
             've_mileage'                  => ['nullable', 'integer'],
             've_color'                    => ['nullable', 'string', 'max:30'],
-            've_team_id'                  => ['nullable', 'integer', Rule::exists(AdminTeam::class)],
+            've_team_id'                  => ['nullable', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
             've_cert_no'                  => ['nullable', 'string', 'max:50'],
             've_cert_valid_to'            => ['nullable', 'date'],
             've_remark'                   => ['nullable', 'string', 'max:255'],
@@ -388,7 +392,7 @@ class Vehicle extends Model
     {
         return function () {
             // plate_no
-            $plate_no = Vehicle::query()->whereIn('plate_no', static::$fields['plate_no'])->pluck('plate_no')->toArray();
+            $plate_no = Vehicle::query()->whereIn('ve_plate_no', static::$fields['ve_plate_no'])->pluck('ve_plate_no')->toArray();
             if (count($plate_no) > 0) {
                 throw new ClientException('以下车牌号已经存在：'.join(',', $plate_no));
             }
@@ -407,42 +411,42 @@ class Vehicle extends Model
         };
     }
 
-    protected function vehicleBrandModelName(): Attribute
+    protected function veVehicleBrandModelName(): Attribute
     {
         return Attribute::make(
             get: fn () => join(' | ', [
-                $this->plate_no,
-                $this->VehicleModel?->brand_name ?? '未知品牌',
-                $this->VehicleModel?->model_name ?? '未知车型',
+                $this->ve_plate_no,
+                $this->VehicleModel?->vm_brand_name ?? '未知品牌',
+                $this->VehicleModel?->vm_model_name ?? '未知车型',
             ])
         );
     }
 
-    protected function statusRentalLabel(): Attribute
+    protected function veStatusRentalLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('status_rental')?->label
+            get: fn () => $this->getAttribute('ve_status_rental')?->label
         );
     }
 
-    protected function statusDispatchLabel(): Attribute
+    protected function veStatusDispatchLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('status_dispatch')?->label
+            get: fn () => $this->getAttribute('ve_status_dispatch')?->label
         );
     }
 
-    protected function statusServiceLabel(): Attribute
+    protected function veStatusServiceLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('status_service')?->label
+            get: fn () => $this->getAttribute('ve_status_service')?->label
         );
     }
 
-    protected function statusRepairLabel(): Attribute
+    protected function veStatusRepairLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('status_repair')?->label
+            get: fn () => $this->getAttribute('ve_status_repair')?->label
         );
     }
 

@@ -49,7 +49,7 @@ class VehicleScheduleController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('ve.plate_no', 'like', '%'.$value.'%');
+                    $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%');
                 });
             },
         ]);
@@ -66,8 +66,8 @@ class VehicleScheduleController extends Controller
         );
 
         $vehicleSchedule = new VehicleSchedule([
-            'inspection_date'      => now(),
-            'next_inspection_date' => now()->addYear(),
+            'vs_inspection_date'      => now(),
+            'vs_next_inspection_date' => now()->addYear(),
         ]);
 
         return $this->response()->withData($vehicleSchedule)->respond();
@@ -104,35 +104,36 @@ class VehicleScheduleController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'inspection_type'      => ['required', 'string', Rule::in(VsInspectionType::label_keys())],
-                've_id'                => ['required', 'integer'],
-                'inspector'            => ['required', 'string', 'max:255'],
-                'inspection_date'      => ['required', 'date'],
-                'next_inspection_date' => ['required', 'date', 'after:inspection_date'],
-                'inspection_amount'    => ['required', 'decimal:0,2', 'gte:0'],
-                'vs_remark'            => ['nullable', 'string'],
+                'vs_inspection_type'      => ['required', 'string', Rule::in(VsInspectionType::label_keys())],
+                'vs_ve_id'                => ['required', 'integer'],
+                'vs_inspector'            => ['required', 'string', 'max:255'],
+                'vs_inspection_date'      => ['required', 'date'],
+                'vs_next_inspection_date' => ['required', 'date', 'after:inspection_date'],
+                'vs_inspection_amount'    => ['required', 'decimal:0,2', 'gte:0'],
+                'vs_remark'               => ['nullable', 'string'],
             ]
-            + Uploader::validator_rule_upload_array('additional_photos'),
+            + Uploader::validator_rule_upload_array('vs_additional_photos'),
             [],
             trans_property(VehicleSchedule::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$vehicle) {
-                if (!$validator->failed()) {
-                    // ve_id
-                    $ve_id = $request->input('ve_id');
+                if ($validator->failed()) {
+                    return;
+                }
+                // ve_id
+                $ve_id = $request->input('vs_ve_id');
 
-                    /** @var Vehicle $vehicle */
-                    $vehicle = Vehicle::query()->find($ve_id);
-                    if (!$vehicle) {
-                        $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                /** @var Vehicle $vehicle */
+                $vehicle = Vehicle::query()->find($ve_id);
+                if (!$vehicle) {
+                    $validator->errors()->add('vs_ve_id', 'The vehicle does not exist.');
 
-                        return;
-                    }
+                    return;
+                }
 
-                    $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
-                    if (!$pass) {
-                        return;
-                    }
+                $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
+                if (!$pass) {
+                    return;
                 }
             })
         ;
@@ -162,7 +163,8 @@ class VehicleScheduleController extends Controller
             []
         )
             ->after(function (\Illuminate\Validation\Validator $validator) {
-                if (!$validator->failed()) {
+                if ($validator->failed()) {
+                    return;
                 }
             })
         ;
@@ -179,7 +181,7 @@ class VehicleScheduleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
-        return Uploader::upload($request, 'vehicle_schedule', ['additional_photos'], $this);
+        return Uploader::upload($request, 'vehicle_schedule', ['vs_additional_photos'], $this);
     }
 
     #[PermissionAction(PermissionAction::READ)]

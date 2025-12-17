@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Admin\Config;
 
-use App\Enum\Vehicle\VcVcStatus;
+use App\Enum\Vehicle\VcStatus;
 use App\Http\Controllers\Admin\VehicleService\VehicleCenterController;
 use App\Models\Admin\Admin;
 use App\Models\Vehicle\VehicleCenter;
@@ -105,12 +105,12 @@ class VehicleCenterControllerTest extends TestCase
     {
         $vsc = VehicleCenter::factory()->create([
             'vc_name'   => 'TEST-旧名字',
-            'vc_status' => VcVcStatus::ENABLED,
+            'vc_status' => VcStatus::ENABLED,
         ]);
 
         $payload = VehicleCenter::factory()->raw([
             'vc_name'   => 'TEST-新名字',
-            'vc_status' => VcVcStatus::ENABLED,
+            'vc_status' => VcStatus::ENABLED,
         ]);
 
         $res = $this->putJson(action([VehicleCenterController::class, 'update'], $vsc->getKey()), $payload);
@@ -138,11 +138,11 @@ class VehicleCenterControllerTest extends TestCase
 
     public function testStoreValidationErrors(): void
     {
-        // 缺少必填：vc_name/vc_address/contact_name/vc_status
+        // 缺少必填：vc_name/vc_address/vc_contact_name/vc_status
         $payload = [
             // 'vc_name' => '缺失',
             // 'vc_address' => 110100,
-            // 'contact_name' => '张三',
+            // 'vc_contact_name' => '张三',
             // 'vc_status' => VscStatus::ENABLED,
         ];
 
@@ -150,7 +150,7 @@ class VehicleCenterControllerTest extends TestCase
 
         $res->assertStatus(422);
         $res->assertJsonStructure([
-            'errors' => ['vc_name', 'vc_address', 'contact_name', 'vc_status'],
+            'errors' => ['vc_name', 'vc_address', 'vc_contact_name', 'vc_status'],
         ]);
     }
 

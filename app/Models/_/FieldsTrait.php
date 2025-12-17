@@ -2,7 +2,7 @@
 
 namespace App\Models\_;
 
-use App\Enum\Sale\DtDtTypeMacroChars;
+use App\Enum\Sale\DtTypeMacroChars;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
@@ -115,8 +115,8 @@ trait FieldsTrait
             ARRAY_FILTER_USE_BOTH
         );
 
-        $open  = DtDtTypeMacroChars::Opening->value;
-        $close = DtDtTypeMacroChars::Closing->value;
+        $open  = DtTypeMacroChars::Opening->value;
+        $close = DtTypeMacroChars::Closing->value;
 
         if ($this->fieldsFullMode) {
             $shortNameLang = trans_model($model);

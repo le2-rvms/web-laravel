@@ -30,26 +30,27 @@ class AuthController extends Controller
                 'phone' => ['required', 'digits:11', Rule::exists(Customer::class, 'contact_phone')],
             ]
         )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey, &$cacheIpKey) {
-            if (!$validator->failed()) {
-                // 客户端ip限制
-                $ip = $request->ip();
+            if ($validator->failed()) {
+                return;
+            }
+            // 客户端ip限制
+            $ip = $request->ip();
 
-                $cacheIpKey = 'customer_verification_ip:'.$ip;
-                $attempts   = Cache::get($cacheIpKey, 0);
+            $cacheIpKey = 'customer_verification_ip:'.$ip;
+            $attempts   = Cache::get($cacheIpKey, 0);
 
-                if ($attempts > 3) {
-                    $validator->errors()->add('email', '你已操作超过限制次数，请联系客服。');
+            if ($attempts > 3) {
+                $validator->errors()->add('email', '你已操作超过限制次数，请联系客服。');
 
-                    return;
-                }
+                return;
+            }
 
-                // 限制每分钟只能请求一次验证码
-                $cacheKey = 'customer_verification_code:'.$request->input('phone');
-                if (Cache::has($cacheKey)) {
-                    $validator->errors()->add('email', '请求过于频繁，请稍后再试');
+            // 限制每分钟只能请求一次验证码
+            $cacheKey = 'customer_verification_code:'.$request->input('phone');
+            if (Cache::has($cacheKey)) {
+                $validator->errors()->add('email', '请求过于频繁，请稍后再试');
 
-                    return;
-                }
+                return;
             }
         });
 
@@ -79,14 +80,15 @@ class AuthController extends Controller
                 'code'  => ['required', 'digits:4'],
             ]
         )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey) {
-            if (!$validator->failed()) {
-                $cacheKey = 'customer_verification_code:'.$request->input('phone');
+            if ($validator->failed()) {
+                return;
+            }
+            $cacheKey = 'customer_verification_code:'.$request->input('phone');
 
-                $cachedCode = Cache::get($cacheKey);
+            $cachedCode = Cache::get($cacheKey);
 
-                if ($cachedCode != $request->input('code')) {
-                    $validator->errors()->add('code', '验证码不正确');
-                }
+            if ($cachedCode != $request->input('code')) {
+                $validator->errors()->add('code', '验证码不正确');
             }
         });
 
@@ -120,7 +122,7 @@ class AuthController extends Controller
     public function mock(Request $request): Response
     {
         /** @var Customer $customer */
-        $customer = Customer::query()->whereLike('contact_name', '演示%')->inRandomOrder()->firstOrFail();
+        $customer = Customer::query()->whereLike('cu_contact_name', '演示%')->inRandomOrder()->firstOrFail();
 
         $token = Str::random(32);
 

@@ -5,12 +5,12 @@ namespace App\Models\Vehicle;
 use App\Attributes\ClassName;
 use App\Attributes\ColumnDesc;
 use App\Attributes\ColumnType;
-use App\Enum\Vehicle\VaClaimStatus;
-use App\Enum\Vehicle\VaManagedVehicle;
-use App\Enum\Vehicle\VaPickupStatus;
-use App\Enum\Vehicle\VaRepairStatus;
-use App\Enum\Vehicle\VaSettlementMethod;
-use App\Enum\Vehicle\VaSettlementStatus;
+use App\Enum\VehicleAccident\VaClaimStatus;
+use App\Enum\VehicleAccident\VaManagedVehicle;
+use App\Enum\VehicleAccident\VaPickupStatus;
+use App\Enum\VehicleAccident\VaRepairStatus;
+use App\Enum\VehicleAccident\VaSettlementMethod;
+use App\Enum\VehicleAccident\VaSettlementStatus;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use App\Models\Customer\Customer;
@@ -27,52 +27,52 @@ use Illuminate\Validation\ValidationException;
 
 #[ClassName('出险', '记录')]
 #[ColumnDesc('va_id')]
-#[ColumnDesc('ve_id')]
-#[ColumnDesc('plate_no', required: true)]
-#[ColumnDesc('sc_id')]
-#[ColumnDesc('accident_location')]
-#[ColumnDesc('accident_dt', type: ColumnType::DATETIME, required: true)]
-#[ColumnDesc('responsible_party')]
-#[ColumnDesc('claim_status', enum_class: VaClaimStatus::class)]
-#[ColumnDesc('self_amount')]
-#[ColumnDesc('third_party_amount')]
-#[ColumnDesc('insurance_company')]
+#[ColumnDesc('va_ve_id')]
+#[ColumnDesc('va_plate_no', required: true)]
+#[ColumnDesc('va_sc_id')]
+#[ColumnDesc('va_accident_location')]
+#[ColumnDesc('va_accident_dt', type: ColumnType::DATETIME, required: true)]
+#[ColumnDesc('va_responsible_party')]
+#[ColumnDesc('va_claim_status', enum_class: VaClaimStatus::class)]
+#[ColumnDesc('va_self_amount')]
+#[ColumnDesc('va_third_party_amount')]
+#[ColumnDesc('va_insurance_company')]
 #[ColumnDesc('va_description')]
-#[ColumnDesc('factory_in_dt', type: ColumnType::DATETIME)]
-#[ColumnDesc('repair_content')]
-#[ColumnDesc('repair_status', enum_class: VaRepairStatus::class)]
-#[ColumnDesc('factory_out_dt', type: ColumnType::DATETIME)]
-#[ColumnDesc('settlement_status', enum_class: VaSettlementStatus::class)]
-#[ColumnDesc('pickup_status', enum_class: VaPickupStatus::class)]
-#[ColumnDesc('settlement_method', enum_class: VaSettlementMethod::class)]
-#[ColumnDesc('managed_vehicle', enum_class: VaManagedVehicle::class)]
+#[ColumnDesc('va_factory_in_dt', type: ColumnType::DATETIME)]
+#[ColumnDesc('va_repair_content')]
+#[ColumnDesc('va_repair_status', enum_class: VaRepairStatus::class)]
+#[ColumnDesc('va_factory_out_dt', type: ColumnType::DATETIME)]
+#[ColumnDesc('va_settlement_status', enum_class: VaSettlementStatus::class)]
+#[ColumnDesc('va_pickup_status', enum_class: VaPickupStatus::class)]
+#[ColumnDesc('va_settlement_method', enum_class: VaSettlementMethod::class)]
+#[ColumnDesc('va_managed_vehicle', enum_class: VaManagedVehicle::class)]
 #[ColumnDesc('va_remark')]
-#[ColumnDesc('additional_photos')]
-#[ColumnDesc('accident_info')]
+#[ColumnDesc('va_additional_photos')]
+#[ColumnDesc('va_accident_info')]
 /**
- * @property int                            $va_id              出险序号
- * @property int                            $ve_id              车辆序号
- * @property null|int                       $sc_id              租车合同序号
- * @property int                            $vc_id              修理厂序号
- * @property null|string                    $accident_location  事故地点
- * @property Carbon                         $accident_dt        出险日时
- * @property null|string                    $responsible_party  责任方
- * @property null|string|VaClaimStatus      $claim_status       理赔状态
- * @property null|float                     $self_amount        己方金额(元)
- * @property null|float                     $third_party_amount 第三方金额(元)
- * @property null|string                    $insurance_company  保险公司
- * @property null|string                    $va_description     详细描述
- * @property null|Carbon                    $factory_in_dt      进厂日时
- * @property null|string                    $repair_content     维修内容
- * @property null|string|VaRepairStatus     $repair_status      维修状态
- * @property null|Carbon                    $factory_out_dt     出厂日时
- * @property null|string|VaSettlementStatus $settlement_status  结算状态
- * @property null|string|VaPickupStatus     $pickup_status      提车状态
- * @property null|string|VaSettlementMethod $settlement_method  结算方式
- * @property null|string|VaManagedVehicle   $managed_vehicle    代管车辆
- * @property null|string                    $va_remark          出险备注
- * @property null|mixed                     $additional_photos  附加照片
- * @property null|array                     $accident_info      车辆出险照片以及描述
+ * @property int                            $va_id                 出险序号
+ * @property int                            $va_ve_id              车辆序号
+ * @property null|int                       $va_sc_id              租车合同序号
+ * @property int                            $va_vc_id              修理厂序号
+ * @property null|string                    $va_accident_location  事故地点
+ * @property Carbon                         $va_accident_dt        出险日时
+ * @property null|string                    $va_responsible_party  责任方
+ * @property null|string|VaClaimStatus      $va_claim_status       理赔状态
+ * @property null|float                     $va_self_amount        己方金额(元)
+ * @property null|float                     $va_third_party_amount 第三方金额(元)
+ * @property null|string                    $va_insurance_company  保险公司
+ * @property null|string                    $va_description        详细描述
+ * @property null|Carbon                    $va_factory_in_dt      进厂日时
+ * @property null|string                    $va_repair_content     维修内容
+ * @property null|string|VaRepairStatus     $va_repair_status      维修状态
+ * @property null|Carbon                    $va_factory_out_dt     出厂日时
+ * @property null|string|VaSettlementStatus $va_settlement_status  结算状态
+ * @property null|string|VaPickupStatus     $va_pickup_status      提车状态
+ * @property null|string|VaSettlementMethod $va_settlement_method  结算方式
+ * @property null|string|VaManagedVehicle   $va_managed_vehicle    代管车辆
+ * @property null|string                    $va_remark             出险备注
+ * @property null|mixed                     $va_additional_photos  附加照片
+ * @property null|array                     $va_accident_info      车辆出险照片以及描述
  * @property Vehicle                        $Vehicle
  * @property Customer                       $Customer
  * @property VehicleCenter                  $VehicleCenter
@@ -83,6 +83,10 @@ class VehicleAccident extends Model
 
     use ImportTrait;
 
+    public const CREATED_AT = 'va_created_at';
+    public const UPDATED_AT = 'va_updated_at';
+    public const UPDATED_BY = 'va_updated_by';
+
     protected $primaryKey = 'va_id';
 
     protected $guarded = ['va_id'];
@@ -90,67 +94,67 @@ class VehicleAccident extends Model
     protected $attributes = [];
 
     protected $casts = [
-        'accident_dt'        => 'datetime:Y-m-d H:i',
-        'factory_in_dt'      => 'datetime:Y-m-d H:i',
-        'factory_out_dt'     => 'datetime:Y-m-d H:i',
-        'self_amount'        => 'decimal:2',
-        'third_party_amount' => 'decimal:2',
-        'claim_status'       => VaClaimStatus::class,
-        'repair_status'      => VaRepairStatus::class,
-        'settlement_status'  => VaSettlementStatus::class,
-        'pickup_status'      => VaPickupStatus::class,
-        'settlement_method'  => VaSettlementMethod::class,
-        'managed_vehicle'    => VaManagedVehicle::class,
+        'va_accident_dt'        => 'datetime:Y-m-d H:i',
+        'va_factory_in_dt'      => 'datetime:Y-m-d H:i',
+        'va_factory_out_dt'     => 'datetime:Y-m-d H:i',
+        'va_self_amount'        => 'decimal:2',
+        'va_third_party_amount' => 'decimal:2',
+        'va_claim_status'       => VaClaimStatus::class,
+        'va_repair_status'      => VaRepairStatus::class,
+        'va_settlement_status'  => VaSettlementStatus::class,
+        'va_pickup_status'      => VaPickupStatus::class,
+        'va_settlement_method'  => VaSettlementMethod::class,
+        'va_managed_vehicle'    => VaManagedVehicle::class,
     ];
 
     protected $appends = [
-        'claim_status_label',
-        'repair_status_label',
-        'settlement_status_label',
-        'pickup_status_label',
-        'settlement_method_label',
-        'managed_vehicle_label',
+        'va_claim_status_label',
+        'va_repair_status_label',
+        'va_settlement_status_label',
+        'va_pickup_status_label',
+        'va_settlement_method_label',
+        'va_managed_vehicle_label',
     ];
 
     public function Vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 've_id', 've_id');
+        return $this->belongsTo(Vehicle::class, 'va_ve_id', 've_id');
     }
 
     public function SaleContract(): BelongsTo
     {
-        return $this->belongsTo(SaleContract::class, 'sc_id', 'sc_id');
+        return $this->belongsTo(SaleContract::class, 'va_sc_id', 'sc_id');
     }
 
     public function VehicleCenter(): BelongsTo
     {
-        return $this->belongsTo(VehicleCenter::class, 'vc_id', 'vc_id');
+        return $this->belongsTo(VehicleCenter::class, 'va_vc_id', 'vc_id');
     }
 
     public static function indexQuery(array $search = []): Builder
     {
-        $ve_id = $search['ve_id'] ?? null;
-        $sc_id = $search['sc_id'] ?? null;
-        $vc_id = $search['vc_id'] ?? null;
+        $va_ve_id = $search['va_ve_id'] ?? null;
+        $va_sc_id = $search['va_sc_id'] ?? null;
+        $va_vc_id = $search['va_vc_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_accidents', 'va')
-            ->leftJoin('vehicle_centers as vc', 'vc.vc_id', '=', 'va.vc_id')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'va.ve_id')
-            ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.vm_id')
-            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'va.sc_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
-            ->when($ve_id, function (Builder $query) use ($ve_id) {
-                $query->where('va.ve_id', '=', $ve_id);
+            ->leftJoin('vehicle_centers as vc', 'vc.vc_id', '=', 'va.va_vc_id')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'va.va_ve_id')
+            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'va.va_sc_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
+            ->when($va_ve_id, function (Builder $query) use ($va_ve_id) {
+                $query->where('va.va_ve_id', '=', $va_ve_id);
             })
-            ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $query->where('va.sc_id', '=', $sc_id);
+            ->when($va_sc_id, function (Builder $query) use ($va_sc_id) {
+                $query->where('va.va_sc_id', '=', $va_sc_id);
             })
-            ->when($vc_id, function (Builder $query) use ($vc_id) {
-                $query->where('va.vc_id', '=', $vc_id);
+            ->when($va_vc_id, function (Builder $query) use ($va_vc_id) {
+                $query->where('va.va_vc_id', '=', $va_vc_id);
             })
             ->when(
-                null === $ve_id && null === $sc_id,
+                null === $va_ve_id && null === $va_sc_id,
                 function (Builder $query) {
                     $query->orderByDesc('va.va_id');
                 },
@@ -158,7 +162,7 @@ class VehicleAccident extends Model
                     $query->orderBy('va.va_id');
                 }
             )
-            ->select('va.*', 'vc.vc_name', 've.plate_no', 'cu.contact_name', 'cu.contact_phone', '_vm.brand_name', '_vm.model_name')
+            ->select('va.*', 'vc.vc_name', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
                 DB::raw(VaClaimStatus::toCaseSQL()),
                 DB::raw(VaRepairStatus::toCaseSQL()),
@@ -166,10 +170,10 @@ class VehicleAccident extends Model
                 DB::raw(VaPickupStatus::toCaseSQL()),
                 DB::raw(VaSettlementMethod::toCaseSQL()),
                 DB::raw(VaManagedVehicle::toCaseSQL()),
-                DB::raw('EXTRACT(EPOCH FROM factory_in_dt - factory_out_dt) / 86400.0 as va_interval_day'),
-                DB::raw("to_char(accident_dt, 'YYYY-MM-DD HH24:MI') as accident_dt_"),
-                DB::raw("to_char(factory_in_dt, 'YYYY-MM-DD HH24:MI') as factory_in_dt_"),
-                DB::raw("to_char(factory_out_dt, 'YYYY-MM-DD HH24:MI') as factory_out_dt_"),
+                DB::raw('EXTRACT(EPOCH FROM va_factory_in_dt - va_factory_out_dt) / 86400.0 as va_interval_day'),
+                DB::raw("to_char(va_accident_dt, 'YYYY-MM-DD HH24:MI') as va_accident_dt_"),
+                DB::raw("to_char(va_factory_in_dt, 'YYYY-MM-DD HH24:MI') as va_factory_in_dt_"),
+                DB::raw("to_char(va_factory_out_dt, 'YYYY-MM-DD HH24:MI') as va_factory_out_dt_"),
             )
         ;
     }
@@ -178,7 +182,7 @@ class VehicleAccident extends Model
     {
         return [
             'Vehicle.plate_no'                   => fn ($item) => $item->plate_no,
-            'Customer.contact_name'              => fn ($item) => $item->contact_name,
+            'Customer.cu_contact_name'           => fn ($item) => $item->cu_contact_name,
             'VehicleAccident.accident_location'  => fn ($item) => $item->accident_location,
             'VehicleAccident.accident_dt'        => fn ($item) => $item->accident_dt_,
             'VehicleAccident.responsible_party'  => fn ($item) => $item->responsible_party,
@@ -289,54 +293,54 @@ class VehicleAccident extends Model
         return [];
     }
 
-    protected function claimStatusLabel(): Attribute
+    protected function vaClaimStatusLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('claim_status')?->label
+            get: fn () => $this->getAttribute('va_claim_status')?->label
         );
     }
 
-    protected function repairStatusLabel(): Attribute
+    protected function vaRepairStatusLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('repair_status')?->label
+            get: fn () => $this->getAttribute('va_repair_status')?->label
         );
     }
 
-    protected function settlementStatusLabel(): Attribute
+    protected function vaSettlementStatusLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('settlement_status')?->label
+            get: fn () => $this->getAttribute('va_settlement_status')?->label
         );
     }
 
-    protected function pickupStatusLabel(): Attribute
+    protected function vaPickupStatusLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('pickup_status')?->label
+            get: fn () => $this->getAttribute('va_pickup_status')?->label
         );
     }
 
-    protected function settlementMethodLabel(): Attribute
+    protected function vaSettlementMethodLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('settlement_method')?->label
+            get: fn () => $this->getAttribute('va_settlement_method')?->label
         );
     }
 
-    protected function managedVehicleLabel(): Attribute
+    protected function vaManagedVehicleLabel(): Attribute
     {
         return Attribute::make(
-            get : fn () => $this->getAttribute('managed_vehicle')?->label
+            get : fn () => $this->getAttribute('va_managed_vehicle')?->label
         );
     }
 
-    protected function additionalPhotos(): Attribute
+    protected function vaAdditionalPhotos(): Attribute
     {
         return $this->uploadFileArray();
     }
 
-    protected function accidentInfo(): Attribute
+    protected function vaAccidentInfo(): Attribute
     {
         return $this->arrayInfo();
     }

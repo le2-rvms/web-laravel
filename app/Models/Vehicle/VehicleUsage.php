@@ -3,9 +3,9 @@
 namespace App\Models\Vehicle;
 
 use App\Attributes\ClassName;
-use App\Enum\Sale\ScPaymentDayType;
-use App\Enum\Sale\ScRentalType;
-use App\Enum\Sale\ScScStatus;
+use App\Enum\SaleContract\ScPaymentPeriod;
+use App\Enum\SaleContract\ScRentalType;
+use App\Enum\SaleContract\ScStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Sale\SaleContract;
 use Illuminate\Database\Eloquent\Model;
@@ -27,29 +27,33 @@ class VehicleUsage extends Model
 {
     use ModelTrait;
 
+    public const CREATED_AT = 'vu_created_at';
+    public const UPDATED_AT = 'vu_updated_at';
+    public const UPDATED_BY = 'vu_updated_by';
+
     protected $primaryKey = 'vu_id';
 
     protected $guarded = ['vu_id'];
 
     public function SaleContract(): BelongsTo
     {
-        return $this->belongsTo(SaleContract::class, 'sc_id', 'sc_id');
+        return $this->belongsTo(SaleContract::class, 'vu_sc_id', 'sc_id');
     }
 
     // 定义与原始车辆的关系
     public function Vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 've_id', 've_id');
+        return $this->belongsTo(Vehicle::class, 'vu_ve_id', 've_id');
     }
 
     public function VehicleInspectionStart(): BelongsTo
     {
-        return $this->belongsTo(VehicleInspection::class, 'start_vi_id', 'vi_id');
+        return $this->belongsTo(VehicleInspection::class, 'vu_start_vi_id', 'vi_id');
     }
 
     public function VehicleInspectionEnd(): BelongsTo
     {
-        return $this->belongsTo(VehicleInspection::class, 'end_vi_id', 'vi_id');
+        return $this->belongsTo(VehicleInspection::class, 'vu_end_vi_id', 'vi_id');
     }
 
     public static function indexQuery(array $search = []): Builder
@@ -60,19 +64,19 @@ class VehicleUsage extends Model
 
         return DB::query()
             ->from('vehicle_usages', 'vu')
-            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vu.sc_id')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vu.ve_id')
-            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.cu_id')
-            ->leftJoin('vehicle_inspections as vi1', 'vi1.vi_id', '=', 'vu.start_vi_id')
-            ->leftJoin('vehicle_inspections as vi2', 'vi2.vi_id', '=', 'vu.end_vi_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vu.vu_sc_id')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vu.vu_ve_id')
+            ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
+            ->leftJoin('vehicle_inspections as vi1', 'vi1.vi_id', '=', 'vu.vu_start_vi_id')
+            ->leftJoin('vehicle_inspections as vi2', 'vi2.vi_id', '=', 'vu.vu_end_vi_id')
             ->when($ve_id, function (Builder $query) use ($ve_id) {
-                $query->where('vu.ve_id', '=', $ve_id);
+                $query->where('vu.vu_ve_id', '=', $ve_id);
             })
             ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $query->where('vu.sc_id', '=', $sc_id);
+                $query->where('vu.vu_sc_id', '=', $sc_id);
             })
             ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('sc.cu_id', '=', $cu_id);
+                $query->where('sc.sc_cu_id', '=', $cu_id);
             })
             ->when(
                 null === $ve_id && null === $sc_id && null === $cu_id,
@@ -86,11 +90,11 @@ class VehicleUsage extends Model
             ->select('vu.*', 'sc.*', 've.*', 'cu.*')
             ->addSelect(
                 DB::raw(ScRentalType::toCaseSQL()),
-                DB::raw(ScPaymentDayType::toCaseSQL()),
-                DB::raw(ScScStatus::toCaseSQL()),
-                DB::raw('EXTRACT(EPOCH FROM vi1.inspection_datetime - vi2.inspection_datetime) / 86400.0 as vu_interval_day'),
-                DB::raw("to_char(vi1.inspection_datetime, 'YYYY-MM-DD HH24:MI:SS') as start_inspection_datetime_"),
-                DB::raw("to_char(vi2.inspection_datetime, 'YYYY-MM-DD HH24:MI:SS') as end_inspection_datetime_"),
+                DB::raw(ScPaymentPeriod::toCaseSQL()),
+                DB::raw(ScStatus::toCaseSQL()),
+                DB::raw('EXTRACT(EPOCH FROM vi1.vi_inspection_datetime - vi2.vi_inspection_datetime) / 86400.0 as vu_vi_interval_day'),
+                DB::raw("to_char(vi1.vi_inspection_datetime, 'YYYY-MM-DD HH24:MI:SS') as vi_start_inspection_datetime_"),
+                DB::raw("to_char(vi2.vi_inspection_datetime, 'YYYY-MM-DD HH24:MI:SS') as vi_end_inspection_datetime_"),
             )
         ;
     }
