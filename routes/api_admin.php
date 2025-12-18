@@ -153,7 +153,7 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     Route::get('sale-contracts/payments-option', [SaleContractController::class, 'paymentsOption']);
     Route::get('sale-contracts/{sale_contract}/doc', [SaleContractController::class, 'doc']);
-    Route::get('sale-contract-tpls/{sale_contract_tpl}/generate', [SaleContractController::class, 'generate']);
+    Route::get('sale-contracts/generate/{sale_contract_tpl}', [SaleContractController::class, 'generate']);
     Route::post('sale-contracts/upload', [SaleContractController::class, 'upload']);
     Route::resource('sale-contracts', SaleContractController::class);
 
@@ -162,8 +162,8 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     Route::apiSingleton('sale-contracts.cancel', SaleContractCancelController::class);
 
-    Route::post('vehicle-change/upload', [VehicleTmpController::class, 'upload']);
-    Route::resource('vehicle-change', VehicleTmpController::class);
+    Route::post('vehicle-tmp/upload', [VehicleTmpController::class, 'upload']);
+    Route::resource('vehicle-tmp', VehicleTmpController::class);
 
     Route::post('sale-settlement/upload', [SaleSettlementController::class, 'upload']);
     Route::get('sale-settlement/{sale_settlement}/doc', [SaleSettlementController::class, 'doc']);

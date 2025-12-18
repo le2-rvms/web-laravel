@@ -140,42 +140,42 @@ class PaginateService
             switch ($keyType) {
                 case null:
                 case 'eq':
-                    $this->builder->where($keyAs.'.'.$keyField, '=', $value);
+                    $this->builder->where($keyAs.'.'.$_keyName, '=', $value);
 
                     break;
 
                 case 'in':
-                    $this->builder->whereIn($keyAs.'.'.$keyField, $value);
+                    $this->builder->whereIn($keyAs.'.'.$_keyName, $value);
 
                     break;
 
                 case 'nin':
-                    $this->builder->whereNotIn($keyAs.'.'.$keyField, $value);
+                    $this->builder->whereNotIn($keyAs.'.'.$_keyName, $value);
 
                     break;
 
                 case 'like':
-                    $this->builder->where($keyAs.'.'.$keyField, 'like', "%{$value}%");
+                    $this->builder->where($keyAs.'.'.$_keyName, 'like', "%{$value}%");
 
                     break;
 
                 case 'gt': // greater than
-                    $this->builder->where($keyAs.'.'.$keyField, '>', $value);
+                    $this->builder->where($keyAs.'.'.$_keyName, '>', $value);
 
                     break;
 
                 case 'lt': // less than
-                    $this->builder->where($keyAs.'.'.$keyField, '<', $value);
+                    $this->builder->where($keyAs.'.'.$_keyName, '<', $value);
 
                     break;
 
                 case 'gte': // greater than or equal to
-                    $this->builder->where($keyAs.'.'.$keyField, '>=', $value);
+                    $this->builder->where($keyAs.'.'.$_keyName, '>=', $value);
 
                     break;
 
                 case 'lte': // less than or equal to
-                    $this->builder->where($keyAs.'.'.$keyField, '<=', $value);
+                    $this->builder->where($keyAs.'.'.$_keyName, '<=', $value);
 
                     break;
 
@@ -191,7 +191,7 @@ class PaginateService
                 case 'between_date':
                     $value_array = json_decode($value, true) ?? explode(',', $value); // 小程序过来的格式是["2025-11-24","2025-11-24"];web 过来的格式是 "2025-11-24","2025-11-24"
                     if ($value_array && is_array($value_array) && count($value_array)) {
-                        $this->builder->whereBetween($keyAs.'.'.$keyField, [$value_array[0], $value_array[1].' 23:59:59']);
+                        $this->builder->whereBetween($keyAs.'.'.$_keyName, [$value_array[0], $value_array[1].' 23:59:59']);
                     }
 
                     break;

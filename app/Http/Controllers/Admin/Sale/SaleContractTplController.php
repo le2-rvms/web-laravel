@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\SaleContract\ScPaymentDay_Month;
-use App\Enum\SaleContract\ScPaymentDay_Week;
-use App\Enum\SaleContract\ScPaymentPeriod;
-use App\Enum\SaleContract\ScRentalType;
 use App\Enum\SaleContract\ScRentalType_Short;
+use App\Enum\SaleContract\SctPaymentDay_Month;
+use App\Enum\SaleContract\SctPaymentDay_Week;
+use App\Enum\SaleContract\SctPaymentPeriod;
+use App\Enum\SaleContract\SctRentalType;
 use App\Enum\SaleContract\SctStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Sale\SaleContractTpl;
@@ -53,7 +53,7 @@ class SaleContractTplController extends Controller
                 $builder->where(function (Builder $builder) use ($value) {
                     $builder
                         ->where('sct.sct_name', 'like', '%'.$value.'%')
-                        ->orWhere('sct.sc_remark', 'like', '%'.$value.'%')
+                        ->orWhere('sct.sct_remark', 'like', '%'.$value.'%')
                     ;
                 });
             },
@@ -105,37 +105,37 @@ class SaleContractTplController extends Controller
     {
         $input1 = $request->validate(
             [
-                'sc_rental_type'    => ['bail', 'required', Rule::in(ScRentalType::label_keys())],
-                'sc_payment_period' => ['bail', 'nullable', 'string', Rule::in(ScPaymentPeriod::label_keys())],
+                'sct_rental_type'    => ['bail', 'required', Rule::in(SctRentalType::label_keys())],
+                'sct_payment_period' => ['bail', 'nullable', 'string', Rule::in(SctPaymentPeriod::label_keys())],
             ],
             [],
             trans_property(SaleContractTpl::class)
         );
 
-        $is_long_term = ScRentalType::LONG_TERM === $input1['sc_rental_type'];
+        $is_long_term = SctRentalType::LONG_TERM === $input1['sct_rental_type'];
 
         $validator = Validator::make(
             $request->all(),
             [
-                'sct_name'                           => ['bail', 'required', 'max:255'],
-                'sc_no_prefix'                       => ['bail', 'nullable', 'string', 'max:50'],
-                'sc_free_days'                       => ['bail', 'nullable', 'int:4'],
-                'sc_installments'                    => ['bail', 'nullable', 'integer', 'min:1'],
-                'sc_deposit_amount'                  => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'sc_management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'sc_rent_amount'                     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'sc_insurance_base_fee_amount'       => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
-                'sc_insurance_additional_fee_amount' => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
-                'sc_other_fee_amount'                => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
-                'sc_payment_day'                     => ['bail', 'nullable', 'integer', new PaymentDayCheck($input1['sc_payment_period'])],
-                'sc_cus_1'                           => ['bail', 'nullable', 'max:255'],
-                'sc_cus_2'                           => ['bail', 'nullable', 'max:255'],
-                'sc_cus_3'                           => ['bail', 'nullable', 'max:255'],
-                'sc_discount_plan'                   => ['bail', 'nullable', 'max:255'],
-                'sc_remark'                          => ['bail', 'nullable', 'max:255'],
+                'sct_name'                            => ['bail', 'required', 'max:255'],
+                'sct_no_prefix'                       => ['bail', 'nullable', 'string', 'max:50'],
+                'sct_free_days'                       => ['bail', 'nullable', 'int:4'],
+                'sct_installments'                    => ['bail', 'nullable', 'integer', 'min:1'],
+                'sct_deposit_amount'                  => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sct_management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sct_rent_amount'                     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sct_insurance_base_fee_amount'       => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
+                'sct_insurance_additional_fee_amount' => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
+                'sct_other_fee_amount'                => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
+                'sct_payment_day'                     => ['bail', 'nullable', 'integer', new PaymentDayCheck($input1['sct_payment_period'])],
+                'sct_cus_1'                           => ['bail', 'nullable', 'max:255'],
+                'sct_cus_2'                           => ['bail', 'nullable', 'max:255'],
+                'sct_cus_3'                           => ['bail', 'nullable', 'max:255'],
+                'sct_discount_plan'                   => ['bail', 'nullable', 'max:255'],
+                'sct_remark'                          => ['bail', 'nullable', 'max:255'],
             ]
-            + Uploader::validator_rule_upload_array('sc_additional_photos')
-            + Uploader::validator_rule_upload_object('sc_additional_file'),
+            + Uploader::validator_rule_upload_array('sct_additional_photos')
+            + Uploader::validator_rule_upload_object('sct_additional_file'),
             [],
             trans_property(SaleContractTpl::class)
         )
@@ -210,8 +210,8 @@ class SaleContractTplController extends Controller
             $request,
             'sale_contract_tpl',
             [
-                'sc_additional_photos',
-                'sc_additional_file',
+                'sct_additional_photos',
+                'sct_additional_file',
             ],
             $this
         );
@@ -220,11 +220,12 @@ class SaleContractTplController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            ScRentalType::options(),
-            ScRentalType_Short::options(),
-            ScPaymentPeriod::options(),
-            ScPaymentDay_Month::options(),
-            ScPaymentDay_Week::options(),
+            SctStatus::options(),
+            SctRentalType::options(),
+            //            ScRentalType_Short::options(),
+            SctPaymentPeriod::options(),
+            SctPaymentDay_Month::options(),
+            SctPaymentDay_Week::options(),
         );
     }
 }

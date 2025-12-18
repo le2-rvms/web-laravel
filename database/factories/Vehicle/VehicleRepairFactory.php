@@ -28,9 +28,9 @@ class VehicleRepairFactory extends Factory
         return [
             'vr_entry_datetime'     => fake_current_period_dt(),
             'vr_mileage'            => $this->faker->optional()->numberBetween(1000, 300000),
-            'vr_repair_cost'        => $data['repair_cost'],
+            'vr_repair_cost'        => $data['vr_repair_cost'],
             'vr_delay_days'         => $this->faker->optional()->numberBetween(0, 30),
-            'vr_repair_content'     => $data['repair_content'],
+            'vr_repair_content'     => $data['vr_repair_content'],
             'vr_departure_datetime' => fake_current_period_dt(),
             'vr_repair_status'      => VrRepairStatus::label_key_random(),
             'vr_settlement_status'  => VrSettlementStatus::label_key_random(),

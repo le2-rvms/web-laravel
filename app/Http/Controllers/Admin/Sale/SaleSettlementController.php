@@ -216,7 +216,25 @@ class SaleSettlementController extends Controller
     public function edit(SaleSettlement $saleSettlement): Response
     {
         $this->options();
+
+        $saleContract = $saleSettlement->SaleContract;
+
+        $saleContract->load('Customer', 'Vehicle', 'Payments');
+
         $this->response()->withExtras(
+            ['saleContract' => $saleContract],
+            VehicleTmp::kvList(sc_id: $saleContract->sc_id),
+            VehicleInspection::kvList(sc_id: $saleContract->sc_id),
+            Payment::kvList(sc_id: $saleContract->sc_id),
+            Payment::kvStat(),
+            SaleSettlement::kvList(sc_id: $saleContract->sc_id),
+            VehicleUsage::kvList(sc_id: $saleContract->sc_id),
+            VehicleRepair::kvList(sc_id: $saleContract->sc_id),
+            VehicleRepair::kvStat(),
+            VehicleViolation::kvList(sc_id: $saleContract->sc_id),
+            VehicleViolation::kvStat(),
+            VehicleManualViolation::kvList(sc_id: $saleContract->sc_id),
+            VehicleManualViolation::kvStat(),
         );
 
         return $this->response()->withData($saleSettlement)->respond();
@@ -228,33 +246,33 @@ class SaleSettlementController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'sc_id'                      => ['required', 'integer'],
-                'deposit_amount'             => ['nullable', 'numeric'],
-                'received_deposit'           => ['nullable', 'numeric'],
-                'early_return_penalty'       => ['nullable', 'numeric'],
-                'overdue_inspection_penalty' => ['nullable', 'numeric'],
-                'overdue_rent'               => ['nullable', 'numeric'],
-                'overdue_penalty'            => ['nullable', 'numeric'],
-                'accident_depreciation_fee'  => ['nullable', 'numeric'],
-                'insurance_surcharge'        => ['nullable', 'numeric'],
-                'violation_withholding_fee'  => ['nullable', 'numeric'],
-                'violation_penalty'          => ['nullable', 'numeric'],
-                'repair_fee'                 => ['nullable', 'numeric'],
-                'insurance_deductible'       => ['nullable', 'numeric'],
-                'forced_collection_fee'      => ['nullable', 'numeric'],
-                'other_deductions'           => ['nullable', 'numeric'],
-                'other_deductions_remark'    => ['nullable', 'string'],
-                'refund_amount'              => ['nullable', 'numeric'],
-                'refund_details'             => ['nullable', 'string'],
-                'settlement_amount'          => ['nullable', 'numeric'],
-                'deposit_return_amount'      => ['nullable', 'numeric'],
-                'deposit_return_date'        => ['nullable', 'date'],
-                'return_datetime'            => ['required', 'date'],
-                'delete_option'              => ['required', Rule::in(SsDeleteOption::label_keys())],
-                'ss_remark'                  => ['nullable', 'string'],
-                'processed_by'               => ['bail', 'nullable', 'integer', Rule::exists(Admin::class, 'id')],
+                'ss_sc_id'                      => ['required', 'integer'],
+                'ss_deposit_amount'             => ['nullable', 'numeric'],
+                'ss_received_deposit'           => ['nullable', 'numeric'],
+                'ss_early_return_penalty'       => ['nullable', 'numeric'],
+                'ss_overdue_inspection_penalty' => ['nullable', 'numeric'],
+                'ss_overdue_rent'               => ['nullable', 'numeric'],
+                'ss_overdue_penalty'            => ['nullable', 'numeric'],
+                'ss_accident_depreciation_fee'  => ['nullable', 'numeric'],
+                'ss_insurance_surcharge'        => ['nullable', 'numeric'],
+                'ss_violation_withholding_fee'  => ['nullable', 'numeric'],
+                'ss_violation_penalty'          => ['nullable', 'numeric'],
+                'ss_repair_fee'                 => ['nullable', 'numeric'],
+                'ss_insurance_deductible'       => ['nullable', 'numeric'],
+                'ss_forced_collection_fee'      => ['nullable', 'numeric'],
+                'ss_other_deductions'           => ['nullable', 'numeric'],
+                'ss_other_deductions_remark'    => ['nullable', 'string'],
+                'ss_refund_amount'              => ['nullable', 'numeric'],
+                'ss_refund_details'             => ['nullable', 'string'],
+                'ss_settlement_amount'          => ['nullable', 'numeric'],
+                'ss_deposit_return_amount'      => ['nullable', 'numeric'],
+                'ss_deposit_return_date'        => ['nullable', 'date'],
+                'ss_return_datetime'            => ['required', 'date'],
+                'ss_delete_option'              => ['required', Rule::in(SsDeleteOption::label_keys())],
+                'ss_remark'                     => ['nullable', 'string'],
+                'ss_processed_by'               => ['bail', 'nullable', 'integer', Rule::exists(Admin::class, 'id')],
             ]
-            + Uploader::validator_rule_upload_array('additional_photos'),
+            + Uploader::validator_rule_upload_array('ss_additional_photos'),
             [],
             trans_property(SaleSettlement::class)
         )->after(function ($validator) use ($request, &$saleSettlement, &$saleContract) {
@@ -269,7 +287,7 @@ class SaleSettlementController extends Controller
             }
 
             if (bccomp($result, '0', 2) > 0) {
-                if (0 !== bccomp($request->input(['settlement_amount']), $result, 2)) {
+                if (0 !== bccomp($request->input(['ss_settlement_amount']), $result, 2)) {
                     $validator->errors()->add('settlement_amount', '结算费计算错误');
 
                     return;
@@ -277,7 +295,7 @@ class SaleSettlementController extends Controller
             }
 
             if (bccomp($result, '0', 2) < 0) {
-                if (0 !== bccomp($request->input(['deposit_return_amount']), bcmul($result, '-1', 2), 2)) {
+                if (0 !== bccomp($request->input(['ss_deposit_return_amount']), bcmul($result, '-1', 2), 2)) {
                     $validator->errors()->add('deposit_return_amount', '应退押金金额计算错误');
 
                     return;
@@ -290,7 +308,7 @@ class SaleSettlementController extends Controller
                 }
             }
 
-            $saleContract = SaleContract::query()->findOrFail($request->input('sc_id'));
+            $saleContract = SaleContract::query()->findOrFail($request->input('ss_sc_id'));
 
             if (!$saleContract->check_status([ScStatus::SIGNED], $validator)) {
                 return;
@@ -328,7 +346,7 @@ class SaleSettlementController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response
     {
-        return Uploader::upload($request, 'sale_settlement', ['additional_photos'], $this);
+        return Uploader::upload($request, 'sale_settlement', ['ss_additional_photos'], $this);
     }
 
     protected function options(?bool $with_group_count = false): void

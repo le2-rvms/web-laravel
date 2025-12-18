@@ -635,12 +635,20 @@ class SaleContractController extends Controller
     /**
      * 通过签约模板生成.
      */
-    #[PermissionAction(PermissionAction::READ)]
+    #[PermissionAction(PermissionAction::WRITE)]
     public function generate(Request $request, SaleContractTpl $saleContractTpl): Response
     {
         $saleContractTpl->append('sc_no');
 
-        $result = array_filter($saleContractTpl->toArray());
+        $items  = $saleContractTpl->toArray();
+        $result = [];
+        foreach ($items as $item_key => $item_value) {
+            if (null === $item_value || '' === $item_value) {
+                continue;
+            }
+            $item_key          = str_replace('sct_', 'sc_', $item_key);
+            $result[$item_key] = $item_value;
+        }
 
         return $this->response()->withData($result)->respond();
     }

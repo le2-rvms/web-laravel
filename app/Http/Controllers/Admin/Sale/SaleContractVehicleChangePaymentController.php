@@ -115,7 +115,7 @@ class SaleContractVehicleChangePaymentController extends Controller
             $target->update([
                 'sc_is_current_version' => true,
                 'sc_version'            => $source->sc_version + 1,
-                'signed_at'             => $target->signed_at ?? now(),
+                'sc_signed_at'          => $target->sc_signed_at ?? now(),
             ]);
 
             $target->Vehicle?->updateStatus(ve_status_rental: VeStatusRental::RENTED);

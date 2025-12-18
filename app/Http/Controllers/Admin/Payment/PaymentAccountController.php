@@ -11,7 +11,6 @@ use App\Services\PaginateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('收付款账号')]
@@ -83,10 +82,10 @@ class PaymentAccountController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?PaymentAccount $paymentAccount): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
-                'pa_name'   => ['required', 'string', 'max:255'],
+                'pa_name'   => ['required', 'string', 'max:255', Rule::unique(PaymentAccount::class)->ignore($paymentAccount)],
                 'pa_status' => ['required', Rule::in(PaStatus::label_keys())],
                 'pa_remark' => ['nullable', 'string'],
             ],
@@ -97,13 +96,8 @@ class PaymentAccountController extends Controller
                 if ($validator->failed()) {
                     return;
                 }
-            })
+            })->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         if (null === $paymentAccount) {
             $paymentAccount = PaymentAccount::query()->create($input);

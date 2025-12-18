@@ -85,7 +85,7 @@ use Illuminate\Validation\Validator;
  * @property null|OneAccount              $ViolationAccount
  *                                                                     -
  * @property string|VeType                $ve_type_label               车辆类型-中文
- * @property null|string                  $ve_vehicle_brand_model_name 车牌品牌车型
+ * @property null|string                  $ve_brand_model_name         车牌品牌车型
  * @property null|string                  $ve_status_service_label     运营状态-中文
  * @property null|string                  $ve_status_repair_label      维修状态-中文
  * @property null|string                  $ve_status_rental_label      租车状态-中文
@@ -107,7 +107,7 @@ class Vehicle extends Model
 
     protected $appends = [
         've_type_label',
-        've_vehicle_brand_model_name',
+        've_brand_model_name',
         've_status_service_label',
         've_status_repair_label',
         've_status_rental_label',
@@ -275,7 +275,7 @@ class Vehicle extends Model
             ->leftJoin('admins as adm', 've.ve_vehicle_manager', '=', 'adm.id')
             ->leftJoin('admin_teams as at', 've.ve_team_id', '=', 'at.at_id')
             ->leftJoin('one_accounts as oa', 've.ve_oa_id', '=', 'oa.oa_id')
-            ->select('ve.*', 'vm.*', 'adm.name as vehicle_manager_name', 'at.at_name as ve_team_name', 'oa.oa_name')
+            ->select('ve.*', 'vm.*', 'adm.name as adm_vehicle_manager_name', 'at.at_name', 'oa.oa_name')
             ->addSelect(
                 DB::raw(VeStatusService::toCaseSQL()),
                 DB::raw(VeStatusService::toColorSQL()),
@@ -297,7 +297,7 @@ class Vehicle extends Model
             'Vehicle.ve_license_type'          => fn ($item) => $item->ve_license_type,
             'Vehicle.ve_license_purchase_date' => fn ($item) => $item->ve_license_purchase_date,
             'Vehicle.ve_status_service'        => fn ($item) => $item->ve_status_service_label,
-            'AdminTeam.at_name'                => fn ($item) => $item->ve_team_name,
+            'AdminTeam.at_name'                => fn ($item) => $item->at_name,
             'OneAccount.oa_name'               => fn ($item) => $item->oa_name,
         ];
     }
@@ -411,7 +411,7 @@ class Vehicle extends Model
         };
     }
 
-    protected function veVehicleBrandModelName(): Attribute
+    protected function veBrandModelName(): Attribute
     {
         return Attribute::make(
             get: fn () => join(' | ', [

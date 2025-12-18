@@ -80,7 +80,7 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
  * @property null|string                            $sc_payment_period_label                付款类型-中文
  * @property int                                    $sc_cu_id                               客户序号；指向客户表
  * @property int                                    $sc_ve_id                               车辆序号；指向车辆表
- * @property null|int                               $sc_ve_id_replace                       临时车辆序号
+ * @property null|int                               $sc_ve_id_tmp                           临时车辆序号
  * @property int                                    $sc_version                             合同版本号
  * @property bool                                   $sc_is_current_version                  是否当前版本
  * @property string                                 $sc_no                                  合同编号
@@ -198,7 +198,7 @@ class SaleContract extends Model
 
     public function VehicleReplace(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 'sc_ve_id_replace', 've_id')->with('VehicleModel');
+        return $this->belongsTo(Vehicle::class, 'sc_ve_id_tmp', 've_id')->with('VehicleModel');
     }
 
     public function Payments(): HasMany
@@ -382,7 +382,7 @@ class SaleContract extends Model
 
         $value = DB::query()
             ->from('sale_contracts', 'sc')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id_replace')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id_tmp')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
             ->where('sc.sc_is_current_version', '=', true)
             ->when($where, function (Builder $builder) use ($where) {

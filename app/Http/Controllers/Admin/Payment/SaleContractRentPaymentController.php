@@ -6,6 +6,7 @@ use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Payment\PaStatus;
 use App\Enum\Payment\PPayStatus;
+use App\Enum\SaleContract\ScRentalType;
 use App\Enum\SaleContract\ScStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\Payment;
@@ -40,7 +41,9 @@ class SaleContractRentPaymentController extends Controller
             PPayStatus::options(),
             SaleContract::options(
                 where: function (Builder $builder) {
-                    $builder->whereIn('sc.sc_status', [ScStatus::SIGNED]);
+                    $builder->whereIn('sc.sc_status', [ScStatus::SIGNED])
+                        ->where('sc.sc_rental_type', '=', ScRentalType::LONG_TERM)
+                    ;
                 }
             ),
         );

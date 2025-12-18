@@ -132,7 +132,7 @@ class OneAccountController extends Controller
         $this->response()->withExtras(
             OaType::options(),
             OaIsSyncRentalContract::options(),
-            ['how_cookie_url' => config('setting.host_manual').'/config/122']
+            //            ['how_cookie_url' => config('setting.host_manual').'/config/122']
         );
     }
 }

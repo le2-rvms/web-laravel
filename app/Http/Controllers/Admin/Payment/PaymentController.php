@@ -237,7 +237,7 @@ class PaymentController extends Controller
                     return;
                 }
                 if (PPayStatus::UNPAID === $request->input('p_pay_status')) {
-                    if ($request->input('p_actual_pay_date') || $request->input('p_actual_pay_amount') || $request->input('pa_id')) {
+                    if ($request->input('p_actual_pay_date') || $request->input('p_actual_pay_amount') || $request->input('p_pa_id')) {
                         $validator->errors()->add('p_pay_status', '支付状态为「未支付」时，实际收付金额、日期、收支账户不允许填入。');
                     }
                 }

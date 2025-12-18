@@ -27,7 +27,7 @@ class AuthController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'phone' => ['required', 'digits:11', Rule::exists(Customer::class, 'contact_phone')],
+                'phone' => ['required', 'digits:11', Rule::exists(Customer::class, 'cu_contact_phone')],
             ]
         )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey, &$cacheIpKey) {
             if ($validator->failed()) {
@@ -76,7 +76,7 @@ class AuthController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'phone' => ['required', 'digits:11', Rule::exists(Customer::class, 'contact_phone')],
+                'phone' => ['required', 'digits:11', Rule::exists(Customer::class, 'cu_contact_phone')],
                 'code'  => ['required', 'digits:4'],
             ]
         )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey) {
@@ -98,7 +98,7 @@ class AuthController extends Controller
 
         $input = $validator->validated();
 
-        $customer = Customer::query()->where('contact_phone', $input['phone'])->first();
+        $customer = Customer::query()->where('cu_contact_phone', $input['phone'])->first();
 
         DB::transaction(function () use ($customer, &$token, &$cacheKey) {
             $customer->tokens()->delete();

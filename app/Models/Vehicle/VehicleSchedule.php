@@ -104,8 +104,8 @@ class VehicleSchedule extends Model
                 null === $ve_id,
                 function (Builder $query) {
                     $query->whereRaw(
-                        'EXTRACT(EPOCH FROM now() - vs.vs_next_inspection_date) / 86400.0 <= ?',
-                        [Configuration::fetch('risk.vs_interval_day.less')]
+                        'EXTRACT(EPOCH FROM now() - vs.vs_next_inspection_date) / 86400.0 >= ?',
+                        ['-'.Configuration::fetch('risk.vs_interval_day.less')]
                     );
                 },
             )

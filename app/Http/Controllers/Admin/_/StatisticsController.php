@@ -95,7 +95,7 @@ class StatisticsController extends Controller
         $sql_array = [
             [
                 'SaleContract::read',
-                "SELECT to_char(signed_at, 'YYYY-MM') as period,count(1) as count,sum(total_rent_amount) as amount from sale_contracts where 1=1 GROUP BY 1 order by 1",
+                "SELECT to_char(sc_signed_at, 'YYYY-MM') as period,count(1) as count,sum(sc_total_rent_amount) as amount from sale_contracts where 1=1 GROUP BY 1 order by 1",
                 function ($sql_value, &$result) {
                     $result[] = [
                         'categories' => array_column($sql_value, 'period'),
@@ -111,7 +111,7 @@ class StatisticsController extends Controller
 
             [
                 'SaleSettlement::read',
-                "SELECT to_char(return_datetime, 'YYYY-MM') as period,count(1) as count from sale_settlements where 1=1 GROUP BY 1 order by 1",
+                "SELECT to_char(ss_return_datetime, 'YYYY-MM') as period,count(1) as count from sale_settlements where 1=1 GROUP BY 1 order by 1",
                 function ($sql_value, &$result) {
                     $result[] = [
                         'categories' => array_column($sql_value, 'period'),
@@ -159,7 +159,7 @@ class StatisticsController extends Controller
             ],
             [
                 'VehicleRepair::read',
-                "SELECT to_char(entry_datetime, 'YYYY-MM') as period,count(1) as count,sum(repair_cost) as amount from vehicle_repairs where 1=1 GROUP BY 1 order by 1",
+                "SELECT to_char(vr_entry_datetime, 'YYYY-MM') as period,count(1) as count,sum(vr_repair_cost) as amount from vehicle_repairs where 1=1 GROUP BY 1 order by 1",
                 function ($sql_value, &$result) {
                     $result[] = [
                         'categories' => array_column($sql_value, 'period'),

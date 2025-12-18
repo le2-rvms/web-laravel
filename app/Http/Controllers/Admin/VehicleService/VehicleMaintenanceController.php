@@ -167,11 +167,11 @@ class VehicleMaintenanceController extends Controller
             PaymentAccount::options(),
         );
 
-        if ($vehicleMaintenance->ve_id) {
+        if ($vehicleMaintenance->vm_ve_id) {
             $this->response()->withExtras(
                 SaleContract::options(
                     where: function (Builder $builder) use ($vehicleMaintenance) {
-                        $builder->where('sc.sc_ve_id', '=', $vehicleMaintenance->ve_id);
+                        $builder->where('sc.sc_ve_id', '=', $vehicleMaintenance->vm_ve_id);
                     }
                 ),
             );
@@ -214,8 +214,8 @@ class VehicleMaintenanceController extends Controller
                 'payment.p_should_pay_amount' => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'numeric'],
                 'payment.p_remark'            => ['bail', 'nullable', 'string'],
             ]
-            + Uploader::validator_rule_upload_array('additional_photos')
-            + Uploader::validator_rule_upload_array('maintenance_info.*.info_photos'),
+            + Uploader::validator_rule_upload_array('vm_additional_photos')
+            + Uploader::validator_rule_upload_array('vm_maintenance_info.*.info_photos'),
             [],
             trans_property(VehicleMaintenance::class) + Arr::dot(['payment' => trans_property(Payment::class)])
         )

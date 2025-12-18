@@ -188,16 +188,16 @@ class PPtId extends EnumLikeBase
     {
         return match ($term) {
             ScRentalType::LONG_TERM => [
-                'deposit_amount'           => PPtId::DEPOSIT,
+                'sc_deposit_amount'        => PPtId::DEPOSIT,
                 'sc_management_fee_amount' => PPtId::MANAGEMENT_FEE,
             ],
             ScRentalType::SHORT_TERM => [
-                'deposit_amount'                  => PPtId::DEPOSIT,
-                'sc_management_fee_amount'        => PPtId::MANAGEMENT_FEE,
-                'total_rent_amount'               => PPtId::SHORT_TERM_RENT,
-                'insurance_base_fee_amount'       => PPtId::BASIC_INSURANCE_FEE,
-                'insurance_additional_fee_amount' => PPtId::ADDITIONAL_INSURANCE_FEE,
-                'other_fee_amount'                => PPtId::OTHER,
+                'sc_deposit_amount'                  => PPtId::DEPOSIT,
+                'sc_management_fee_amount'           => PPtId::MANAGEMENT_FEE,
+                'sc_total_rent_amount'               => PPtId::SHORT_TERM_RENT,
+                'sc_insurance_base_fee_amount'       => PPtId::BASIC_INSURANCE_FEE,
+                'sc_insurance_additional_fee_amount' => PPtId::ADDITIONAL_INSURANCE_FEE,
+                'sc_other_fee_amount'                => PPtId::OTHER,
             ],
         };
     }

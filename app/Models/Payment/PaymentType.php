@@ -77,7 +77,7 @@ class PaymentType extends Model
         $key = preg_replace('/^.*\\\/', '', get_called_class()).'Index';
 
         $value = static::query()->toBase()
-            ->select(DB::raw('pt_name as text, pt_id as value, required as disable'))
+            ->select(DB::raw('pt_name as text, pt_id as value, pt_required as disable'))
             ->orderby('pt_id')
             ->get()
         ;

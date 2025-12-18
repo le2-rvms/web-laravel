@@ -53,7 +53,7 @@ class VehicleTmpController extends Controller
 
         $paginate = new PaginateService(
             [],
-            [['vr.vr_id', 'desc']],
+            [['vt.vt_id', 'desc']],
             [],
             []
         );
@@ -193,13 +193,13 @@ class VehicleTmpController extends Controller
 
             switch ($input['vt_change_status']) {
                 case VtChangeStatus::IN_PROGRESS:
-                    $saleContract->sc_ve_id_replace = $vehicle->ve_id;
+                    $saleContract->sc_ve_id_tmp = $vehicle->ve_id;
                     $saleContract->save();
 
                     break;
 
                 case VtChangeStatus::COMPLETED:
-                    $saleContract->sc_ve_id_replace = null;
+                    $saleContract->sc_ve_id_tmp = null;
                     $saleContract->save();
 
                     break;
@@ -269,13 +269,13 @@ class VehicleTmpController extends Controller
 
                 switch ($input['vt_change_status']) {
                     case VtChangeStatus::IN_PROGRESS:
-                        $saleContract->sc_ve_id_replace = $vehicleTmp->vt_new_ve_id;
+                        $saleContract->sc_ve_id_tmp = $vehicleTmp->vt_new_ve_id;
                         $saleContract->save();
 
                         break;
 
                     case VtChangeStatus::COMPLETED:
-                        $saleContract->sc_ve_id_replace = null;
+                        $saleContract->sc_ve_id_tmp = null;
                         $saleContract->save();
 
                         break;

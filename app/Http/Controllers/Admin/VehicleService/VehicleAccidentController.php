@@ -121,6 +121,16 @@ class VehicleAccidentController extends Controller
             VehicleCenter::options(),
         );
 
+        if ($vehicleAccident->va_ve_id) {
+            $this->response()->withExtras(
+                SaleContract::options(
+                    where: function (Builder $builder) use ($vehicleAccident) {
+                        $builder->where('sc.sc_ve_id', '=', $vehicleAccident->va_ve_id);
+                    }
+                ),
+            );
+        }
+
         $vehicleAccident->load('Vehicle', 'SaleContract'); // ,'SaleContract.Customer'
 
         return $this->response()->withData($vehicleAccident)->respond();
@@ -263,7 +273,7 @@ class VehicleAccidentController extends Controller
         $this->response()->withExtras(
             SaleContract::options(
                 where: function (Builder $builder) use ($input) {
-                    $builder->where('sc.sc_ve_id', '=', $input['ve_id']);
+                    $builder->where('sc.sc_ve_id', '=', $input['va_ve_id']);
                 }
             )
         );

@@ -26,7 +26,7 @@ class ExpiryVehicleController extends Controller
 
         $paginate = new PaginateService(
             [],
-            [['ve.ve_license_valid_until_date', 'desc']],
+            [['ve.ve_license_valid_until_date', 'asc']],
             [],
             []
         );

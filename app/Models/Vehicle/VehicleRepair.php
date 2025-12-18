@@ -241,7 +241,7 @@ class VehicleRepair extends Model
         $status = false;
         foreach ($list as $item) {
             /** @var VehicleRepair $item */
-            if (VrRepairStatus::COMPLETED !== $item->repair_status) {
+            if (VrRepairStatus::COMPLETED !== $item->vr_repair_status) {
                 $status = true;
             }
         }

@@ -16,15 +16,15 @@ class PaymentObserver
 
     public function updated(Payment $payment): void
     {
-        $occur_amount = $account = $io_type = null;
+        $occur_amount = $pa = $io_type = null;
         $original     = $payment->getOriginal();
 
         if (PIsValid::VALID === $payment->p_is_valid->value) {
             if (PPayStatus::PAID === $payment->p_pay_status->value) { // 未支付→支付 支付→支付
                 $occur_amount = bcsub($payment->p_actual_pay_amount, $original['p_actual_pay_amount'] ?? '0', 2);
 
-                $account = $payment->PaymentAccount;
-                if (!$account) {
+                $pa = $payment->PaymentAccount;
+                if (!$pa) {
                     return;
                 }
 
@@ -35,7 +35,7 @@ class PaymentObserver
 
                 $occur_amount = bcsub('0', $original['p_actual_pay_amount'], 2);
 
-                $account = PaymentAccount::query()->find($original['pa_id']);
+                $pa = PaymentAccount::query()->find($original['p_pa_id']);
 
                 $io_type = bccomp($occur_amount, '0', '2') > 0 ? IoType::OUT_ : IoType::IN_;
             }
@@ -43,23 +43,23 @@ class PaymentObserver
             // 已支付的 => 生成反向记录
             if (PPayStatus::PAID === $payment->p_pay_status->value) {
                 $occur_amount = bcsub('0', $original['p_actual_pay_amount'], 2);
-                $account      = PaymentAccount::query()->find($original['pa_id']);
+                $pa           = PaymentAccount::query()->find($original['p_pa_id']);
                 $io_type      = bccomp($occur_amount, '0', '2') > 0 ? IoType::OUT_ : IoType::IN_;
             }
             // 未支付的 => 不做处理
         }
 
         if (null !== $occur_amount) {
-            $lastPaymentInout = PaymentInout::query()->where('pa_id', '=', $account->pa_id)->orderByDesc('io_id')->first();
+            $lastPaymentInout = PaymentInout::query()->where('io_pa_id', '=', $pa->pa_id)->orderByDesc('io_id')->first();
 
-            if (0 !== bccomp($lastPaymentInout?->io_account_balance ?? '0', $account->pa_balance, 2)) {
+            if (0 !== bccomp($lastPaymentInout?->io_account_balance ?? '0', $pa->pa_balance, 2)) {
                 throw new ClientException('金额错误-before');
             }
 
             $MoneyIo = PaymentInout::query()->create([
                 'io_type'            => $io_type,
                 'io_cu_id'           => $payment->SaleContract->sc_cu_id,
-                'io_pa_id'           => $account->pa_id,
+                'io_pa_id'           => $pa->pa_id,
                 'io_occur_datetime'  => now(),
                 'io_occur_amount'    => $occur_amount,
                 'io_account_balance' => bcadd($lastPaymentInout->io_account_balance ?? '0', $occur_amount, 2),
@@ -68,13 +68,13 @@ class PaymentObserver
 
             // 更新钱包总金额
 
-            $account->pa_balance = bcadd($account->pa_balance, $occur_amount, 2);
+            $pa->pa_balance = bcadd($pa->pa_balance, $occur_amount, 2);
 
-            if (0 !== bccomp($MoneyIo->io_account_balance, $account->pa_balance, 2)) {
+            if (0 !== bccomp($MoneyIo->io_account_balance, $pa->pa_balance, 2)) {
                 throw new ClientException('金额错误-after');
             }
 
-            $account->save();
+            $pa->save();
         }
     }
 

@@ -26,6 +26,7 @@ use App\Services\PaginateService;
 use App\Services\Uploader;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -139,15 +140,15 @@ class CustomerController extends Controller
             [
                 'cu_type'                 => ['required', 'string', Rule::in(CuType::label_keys())],
                 'cu_contact_name'         => ['required', 'string', 'max:255'],
-                'cu_contact_phone'        => ['required', 'regex:/^\d{11}$/', Rule::unique(Customer::class, 'contact_phone')->ignore($customer)],
-                'cu_contact_email'        => ['nullable', 'email', Rule::unique(Customer::class, 'contact_email')->ignore($customer)],
+                'cu_contact_phone'        => ['required', 'regex:/^\d{11}$/', Rule::unique(Customer::class, 'cu_contact_phone')->ignore($customer)],
+                'cu_contact_email'        => ['nullable', 'email', Rule::unique(Customer::class, 'cu_contact_email')->ignore($customer)],
                 'cu_contact_wechat'       => ['nullable', 'string', 'max:255'],
                 'cu_contact_live_city'    => ['nullable', 'string', 'max:64'],
                 'cu_contact_live_address' => ['nullable', 'string', 'max:255'],
                 'cu_cert_no'              => ['nullable', 'string', 'max:50'],
                 'cu_cert_valid_to'        => ['nullable', 'date'],
                 'cu_remark'               => ['nullable', 'string', 'max:255'],
-                'cu_team_id'              => ['required', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
+                'cu_team_id'              => ['nullable', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
 
                 'cu_sales_manager'  => ['nullable', Rule::exists(Admin::class, 'id')],
                 'cu_driver_manager' => ['nullable', Rule::exists(Admin::class, 'id')],
@@ -181,7 +182,7 @@ class CustomerController extends Controller
                 + Uploader::validator_rule_upload_object('cu_cert_photo')
                 + Uploader::validator_rule_upload_array('cu_additional_photos'),
                 [],
-                trans_property(CustomerIndividual::class),
+                Arr::dot(['customer_individual' => trans_property(CustomerIndividual::class)]),
             ),
 
             CuType::COMPANY => Validator::make(
@@ -221,7 +222,7 @@ class CustomerController extends Controller
 
                     $customer->CustomerIndividual()->updateOrCreate(
                         [
-                            'cu_id' => $customer->cu_id,
+                            'cui_cu_id' => $customer->cu_id,
                         ],
                         $input_individual,
                     );
@@ -235,7 +236,7 @@ class CustomerController extends Controller
 
                     $customer->CustomerCompany()->updateOrCreate(
                         [
-                            'cu_id' => $customer->cu_id,
+                            'cuc_cu_id' => $customer->cu_id,
                         ],
                         $input_company,
                     );

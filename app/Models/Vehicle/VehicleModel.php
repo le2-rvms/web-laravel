@@ -66,8 +66,8 @@ class VehicleModel extends Model
                 DB::raw(VmStatus::toColorSQL()),
             )
             ->addSelect([
-                'vm_vehicle_count_service'    => Vehicle::query()->selectRaw('count(*)')->whereColumn('vehicles.vm_id', 'vm.vm_id')->where('vehicles.ve_status_service', '=', VeStatusService::YES),
-                'vm_vehicle_count_un_service' => Vehicle::query()->selectRaw('count(*)')->whereColumn('vehicles.vm_id', 'vm.vm_id')->where('vehicles.ve_status_service', '=', VeStatusService::NO),
+                'vm_vehicle_count_service'    => Vehicle::query()->selectRaw('count(*)')->whereColumn('vehicles.ve_vm_id', 'vm.vm_id')->where('vehicles.ve_status_service', '=', VeStatusService::YES),
+                'vm_vehicle_count_un_service' => Vehicle::query()->selectRaw('count(*)')->whereColumn('vehicles.ve_vm_id', 'vm.vm_id')->where('vehicles.ve_status_service', '=', VeStatusService::NO),
             ])
         ;
     }

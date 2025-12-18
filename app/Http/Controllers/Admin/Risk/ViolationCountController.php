@@ -42,13 +42,13 @@ class ViolationCountController extends Controller
         // 构建 vehicle_manual_violations 表的查询
         $manualViolations = DB::table('vehicle_manual_violations', 'vv')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.vv_ve_id')
-            ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vu_id')
-            ->leftJoin('vehicle_inspections as vi', 'vi.vi_id', '=', 'vu.start_vi_id')
-            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.sc_id')
+            ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vv_vu_id')
+            ->leftJoin('vehicle_inspections as vi', 'vi.vi_id', '=', 'vu.vu_start_vi_id')
+            ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.vi_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->select('vv.vv_violation_datetime', 'sc.sc_id', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', 'vv.vv_ve_id', 'vv.fine_amount', 'vv.penalty_points')
-            ->where('status', '=', VvStatus::UNPROCESSED)
-            ->whereNotNull('vv.vu_id')
+            ->select('vv.vv_violation_datetime', 'sc.sc_id', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', 'vv.vv_ve_id', 'vv.vv_fine_amount', 'vv.vv_penalty_points')
+            ->where('vv_status', '=', VvStatus::UNPROCESSED)
+            ->whereNotNull('vv.vv_vu_id')
         ;
 
         // 使用 UNION ALL 合并两个查询
@@ -59,12 +59,15 @@ class ViolationCountController extends Controller
             ->fromSub($combinedViolations, 'combined_violations')
             ->select(
                 'sc_id',
+                've_plate_no',
+                'cu_contact_name',
+                'cu_contact_phone',
                 DB::raw('COUNT(*) as count'),
-                DB::raw('SUM(fine_amount) as sum_fine_amount'),
-                DB::raw('SUM(penalty_points) as sum_penalty_points')
+                DB::raw('SUM(vv_fine_amount) as sum_vv_fine_amount'),
+                DB::raw('SUM(vv_penalty_points) as sum_vv_penalty_points')
             )
-            ->groupBy('sc_id')
-            ->havingRaw('SUM(fine_amount) > 0 OR SUM(penalty_points) > 0 OR COUNT(*) > 0')
+            ->groupBy('sc_id', 've_plate_no', 'cu_contact_name', 'cu_contact_phone')
+            ->havingRaw('SUM(vv_fine_amount) > 0 OR SUM(vv_penalty_points) > 0 OR COUNT(*) > 0')
             ->orderBy('count', 'desc')
         ;
 
@@ -78,7 +81,7 @@ class ViolationCountController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('vv.violation_content', 'like', '%'.$value.'%');
+                    $builder->where('vv.vv_violation_content', 'like', '%'.$value.'%');
                 });
             },
         ]);

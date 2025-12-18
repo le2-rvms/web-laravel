@@ -65,7 +65,7 @@ class SaleContractSignPaymentController extends Controller
                 $saleContract->sc_total_rent_amount_true = $saleContract->sc_total_rent_amount ?? '0.00';
                 $saleContract->sc_deposit_amount_true    = $saleContract->sc_deposit_amount ?? '0.00';
             }
-            $saleContract->p_actual_pay_date = now()->format('Y-m-d');
+            $saleContract->sc_actual_pay_date = now()->format('Y-m-d');
         } else {
             $saleContract = [];
         }
@@ -82,17 +82,17 @@ class SaleContractSignPaymentController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'p_deposit_amount'                  => ['bail', 'required', 'numeric'],
-                'p_deposit_amount_true'             => ['bail', 'required', 'numeric'],
-                'p_management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'p_management_fee_amount_true'      => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'decimal:0,2', 'gte:0'],
-                'p_total_rent_amount'               => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
-                'p_total_rent_amount_true'          => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
-                'p_insurance_base_fee_amount'       => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
-                'p_insurance_additional_fee_amount' => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
-                'p_other_fee_amount'                => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
-                'p_actual_pay_date'                 => ['bail', 'required', 'date'],
-                'p_pa_id'                           => ['bail', 'required', Rule::exists(PaymentAccount::class, 'pa_id')->where('pa_status', PaStatus::ENABLED)],
+                'sc_deposit_amount'                  => ['bail', 'required', 'numeric'],
+                'sc_deposit_amount_true'             => ['bail', 'required', 'numeric'],
+                'sc_management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sc_management_fee_amount_true'      => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'decimal:0,2', 'gte:0'],
+                'sc_total_rent_amount'               => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
+                'sc_total_rent_amount_true'          => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
+                'sc_insurance_base_fee_amount'       => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
+                'sc_insurance_additional_fee_amount' => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
+                'sc_other_fee_amount'                => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
+                'sc_actual_pay_date'                 => ['bail', 'required', 'date'],
+                'sc_pa_id'                           => ['bail', 'required', Rule::exists(PaymentAccount::class, 'pa_id')->where('pa_status', PaStatus::ENABLED)],
             ],
             [],
             trans_property(SaleContract::class) + trans_property(Payment::class),
@@ -127,9 +127,9 @@ class SaleContractSignPaymentController extends Controller
                         'p_should_pay_date'   => $saleContract->sc_start_date,
                         'p_should_pay_amount' => $should_pay_amount,
                         'p_pay_status'        => PPayStatus::PAID,
-                        'p_actual_pay_date'   => $input['p_actual_pay_date'],
+                        'p_actual_pay_date'   => $input['sc_actual_pay_date'],
                         'p_actual_pay_amount' => $actual_pay_amount ?? $should_pay_amount,
-                        'p_pa_id'             => $input['pa_id'],
+                        'p_pa_id'             => $input['sc_pa_id'],
                     ]);
                 }
             }

@@ -64,7 +64,7 @@ class DeliveryWecomGroupController extends Controller
             $request->all(),
             [
                 'items'                       => ['bail', 'nullable', 'array'],
-                'items.*.sc_id'               => ['bail', 'required', 'integer', Rule::exists(SaleContract::class, 'sc_id')],
+                'items.*.sce_sc_id'           => ['bail', 'required', 'integer', Rule::exists(SaleContract::class, 'sc_id')],
                 'items.*.sce_wecom_group_url' => ['bail', 'required', 'max:255'],
             ],
             [],
@@ -86,10 +86,10 @@ class DeliveryWecomGroupController extends Controller
 
         DB::transaction(function () use (&$items) {
             foreach ($items->chunk(50) as $chunks) {
-                SaleContractExt::query()->upsert($chunks->all(), ['sc_id'], ['sce_wecom_group_url']);
+                SaleContractExt::query()->upsert($chunks->all(), ['sce_sc_id'], ['sce_wecom_group_url']);
             }
 
-            SaleContractExt::query()->whereNotIn('sc_id', $items->pluck('sc_id')->all())->delete();
+            SaleContractExt::query()->whereNotIn('sce_sc_id', $items->pluck('sc_id')->all())->delete();
         });
 
         return $this->response()->respond();

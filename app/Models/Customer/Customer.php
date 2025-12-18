@@ -141,16 +141,16 @@ class Customer extends Authenticatable
                     ->where('cu.cu_type', '=', CuType::INDIVIDUAL)
                 ;
             })
-            ->leftjoin('admins as admin_sm', 'cu.sales_manager', '=', 'admin_sm.id')
-            ->leftjoin('admins as admin_dm', 'cu.driver_manager', '=', 'admin_dm.id')
+            ->leftjoin('admins as adm_sm', 'cu.cu_sales_manager', '=', 'adm_sm.id')
+            ->leftjoin('admins as adm_dm', 'cu.cu_driver_manager', '=', 'adm_dm.id')
             ->leftJoin('admin_teams as at', 'cu.cu_team_id', '=', 'at.at_id')
             ->select('cuc.*', 'cui.*', 'cu.*') // cu.* 在最后，这样可以让空值在前
             ->addSelect(
                 DB::raw(CuType::toCaseSQL()),
                 DB::raw(CuiGender::toCaseSQL()),
-                'admin_sm.name as sales_manager_name',
-                'admin_dm.name as driver_manager_name',
-                'at.at_name as cu_team_name',
+                'adm_sm.name as adm_sales_manager_name',
+                'adm_dm.name as adm_driver_manager_name',
+                'at.at_name',
             )
         ;
     }
@@ -242,10 +242,10 @@ class Customer extends Authenticatable
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['cu_type']                   = CuType::searchValue($item['cu_type']);
-            $item['cu_cui_gender']             = CuiGender::searchValue($item['cu_cui_gender'] ?? null);
-            static::$fields['contact_phone'][] = $item['contact_phone'] ?? null;
-            static::$fields['contact_email'][] = $item['contact_email'] ?? null;
+            $item['cu_type']                      = CuType::searchValue($item['cu_type']);
+            $item['cu_cui_gender']                = CuiGender::searchValue($item['cu_cui_gender'] ?? null);
+            static::$fields['cu_contact_phone'][] = $item['cu_contact_phone'] ?? null;
+            static::$fields['cu_contact_email'][] = $item['cu_contact_email'] ?? null;
         };
     }
 
@@ -347,7 +347,7 @@ class Customer extends Authenticatable
         return Attribute::make(
             get: fn () => join(' | ', [
                 $this->getOriginal('cu_contact_name'),
-                $this->getOriginal('contact_phone'),
+                $this->getOriginal('cu_contact_phone'),
             ])
         );
     }
