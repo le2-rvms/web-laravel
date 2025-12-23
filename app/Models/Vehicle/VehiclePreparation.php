@@ -6,6 +6,10 @@ use App\Attributes\ClassName;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
+use App\Enum\VehiclePreparation\VpAnnualCheckIs;
+use App\Enum\VehiclePreparation\VpDocumentCheckIs;
+use App\Enum\VehiclePreparation\VpInsuredCheckIs;
+use App\Enum\VehiclePreparation\VpVehicleCheckIs;
 use App\Enum\YesNo;
 use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -45,10 +49,10 @@ class VehiclePreparation extends Model
         'vp_document_check_dt' => 'datetime:Y-m-d H:i:s',
         'vp_insured_check_dt'  => 'datetime:Y-m-d H:i:s',
         'vp_vehicle_check_dt'  => 'datetime:Y-m-d H:i:s',
-        'vp_annual_check_is'   => YesNo::class,
-        'vp_insured_check_is'  => YesNo::class,
-        'vp_vehicle_check_is'  => YesNo::class,
-        'vp_document_check_is' => YesNo::class,
+        'vp_annual_check_is'   => VpAnnualCheckIs::class,
+        'vp_insured_check_is'  => VpInsuredCheckIs::class,
+        'vp_vehicle_check_is'  => VpVehicleCheckIs::class,
+        'vp_document_check_is' => VpDocumentCheckIs::class,
     ];
 
     public function Vehicle(): BelongsTo
@@ -56,7 +60,7 @@ class VehiclePreparation extends Model
         return $this->belongsTo(Vehicle::class, 'vp_ve_id', 've_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('vehicle_preparations', 'vp')
@@ -79,7 +83,7 @@ class VehiclePreparation extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

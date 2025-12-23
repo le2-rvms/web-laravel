@@ -50,7 +50,7 @@ class DocTpl extends Model
         //        'dt_file',
     ];
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('doc_tpls', 'dt')
@@ -65,9 +65,9 @@ class DocTpl extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
 
         $value1 = DB::query()
             ->from('doc_tpls', 'dt')

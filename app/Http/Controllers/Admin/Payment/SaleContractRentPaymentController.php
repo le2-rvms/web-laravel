@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('收租金')]
@@ -70,7 +69,7 @@ class SaleContractRentPaymentController extends Controller
 
         abort_if(!$selectedData, 404);
 
-        $validator = Validator::make(
+        $input = Validator::make(
             $selectedData,
             [
                 'p_id'                => ['bail', 'required', 'int'],
@@ -91,12 +90,8 @@ class SaleContractRentPaymentController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input) {
             $Payment = Payment::query()->where('p_id', $input['p_id'])->lockForUpdate()->first();

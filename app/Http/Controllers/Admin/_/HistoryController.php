@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class HistoryController extends Controller
@@ -30,19 +29,15 @@ class HistoryController extends Controller
             $class_basename_models[$class_basename] = $model_name;
         }
 
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->route()->parameters(),
             [
                 'class_basename' => ['required', Rule::in($class_basename_array)],
                 'pk'             => ['required', 'int'],
             ]
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         $class_basename = $input['class_basename'];
         $pk             = $input['pk'];

@@ -20,7 +20,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('签约模板')]
@@ -114,7 +113,7 @@ class SaleContractTplController extends Controller
 
         $is_long_term = SctRentalType::LONG_TERM === $input1['sct_rental_type'];
 
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'sct_name'                            => ['bail', 'required', 'max:255'],
@@ -144,12 +143,10 @@ class SaleContractTplController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
 
-        $input = $input1 + $validator->validated();
+        $input = $input1 + $input;
 
         DB::transaction(function () use (&$input, &$saleContractTpl) {
             if (null === $saleContractTpl) {
@@ -176,7 +173,7 @@ class SaleContractTplController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function status(Request $request, SaleContractTpl $saleContractTpl): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'sct_status' => ['bail', 'required', Rule::in(SctStatus::label_keys())],
@@ -189,12 +186,8 @@ class SaleContractTplController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         $saleContractTpl->update([
             'sct_status' => $input['sct_status'],

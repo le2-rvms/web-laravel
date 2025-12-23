@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('员工权限')]
@@ -57,7 +56,7 @@ class AdminPermissionController extends Controller
 
     public function store(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'name'  => ['required', Rule::unique(AdminPermission::class, 'name')],
@@ -65,13 +64,9 @@ class AdminPermissionController extends Controller
             ],
             [],
             trans_property(AdminPermission::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input, &$admin_permission) {
             $admin_permission = AdminPermission::query()->create($input);
@@ -84,7 +79,7 @@ class AdminPermissionController extends Controller
 
     public function update(Request $request, AdminPermission $admin_permission): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'name'  => ['required', Rule::unique(AdminPermission::class, 'name')->ignore($admin_permission)],
@@ -92,13 +87,9 @@ class AdminPermissionController extends Controller
             ],
             [],
             trans_property(AdminPermission::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input, &$admin_permission) {
             $admin_permission->fill($input);

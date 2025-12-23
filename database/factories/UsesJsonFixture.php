@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Enum\Admin\AdmUserType;
+use App\Enum\Admin\AUserType;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -88,7 +88,7 @@ trait UsesJsonFixture
         static $datas = null;
 
         if (null === $datas) {
-            $query = Admin::query()->where('user_type', '!=', AdmUserType::TEMP);
+            $query = Admin::query()->where('a_user_type', '!=', AUserType::TEMP);
             if ($query_func) {
                 $query_func($query);
             }
@@ -109,7 +109,7 @@ trait UsesJsonFixture
         static $datas = null;
 
         if (null === $datas) {
-            $query = Admin::query()->where('user_type', '!=', AdmUserType::TEMP)->whereLike('name', '%'.AdminRole::role_vehicle_service.'%');
+            $query = Admin::query()->where('a_user_type', '!=', AUserType::TEMP)->whereLike('name', '%'.AdminRole::role_vehicle_service.'%');
             $datas = $query->pluck('id')->toArray();
         }
 

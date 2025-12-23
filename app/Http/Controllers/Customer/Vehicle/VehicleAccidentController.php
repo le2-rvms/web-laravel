@@ -20,13 +20,22 @@ class VehicleAccidentController extends Controller
     #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
-        $data = VehicleAccident::customerQuery($this)
+        $perPage = 20;
+
+        $this->response()->withExtras(
+            ['perPage' => $perPage]
+        );
+
+        $auth = auth();
+
+        $data = VehicleAccident::indexQuery(['cu_id' => $auth->id()])
             ->when(
-                $request->get('last_id'),
+                $request->query('last_id'),
                 function (Builder $query) use ($request) {
-                    $query->where('va.va_id', '<', $request->get('last_id'));
+                    $query->where('va.va_id', '<', $request->query('last_id'));
                 }
             )
+            ->forPage(1, $perPage)
             ->get()
         ;
 

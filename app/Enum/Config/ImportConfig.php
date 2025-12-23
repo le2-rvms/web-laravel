@@ -35,24 +35,26 @@ class ImportConfig
 
     public static function options(): array
     {
-        $result = [];
+        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $value = [];
         foreach (static::keys() as $model) {
-            $result[] = [
+            $value[] = [
                 'text'  => trans_model($model).trans_model_suffix($model),
                 'value' => $model,
             ];
         }
 
-        return [preg_replace('/^.*\\\/', '', get_called_class()).'Options' => $result];
+        return [$key => $value];
     }
 
     public static function kv(): array
     {
-        $result = [];
+        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Kvs';
+        $value = [];
         foreach (static::keys() as $model) {
-            $result[$model] = trans_model($model).trans_model_suffix($model);
+            $value[$model] = trans_model($model).trans_model_suffix($model);
         }
 
-        return [preg_replace('/^.*\\\/', '', get_called_class()).'kv' => $result];
+        return [$key => $value];
     }
 }

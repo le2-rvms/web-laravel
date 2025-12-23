@@ -61,7 +61,7 @@ use Illuminate\Validation\ValidationException;
  * @property null|string   $vm_pickup_status           提车状态
  * @property null|string   $vm_settlement_method       结算方式
  * @property null|string   $vm_custody_vehicle         代管车辆
- * @property null|string   $vm_vm_remark               保养备注
+ * @property null|string   $vm_remark                  保养备注
  * @property null|mixed    $vm_additional_photos       附加照片;JSON 格式存储图片路径或链接
  * @property null|mixed    $vm_maintenance_info        车辆保养信息
  * @property null|string   $vm_settlement_status_label 结算状态
@@ -150,11 +150,11 @@ class VehicleMaintenance extends Model
         return $this->belongsTo(VehicleCenter::class, 'vm_vc_id', 'vc_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $vm_ve_id = $search['vm_ve_id'] ?? null;
-        $vm_cu_id = $search['vm_cu_id'] ?? null;
-        $vm_vc_id = $search['vm_vc_id'] ?? null;
+        //        $vm_ve_id = $search['ve_id'] ?? null;
+        //        $vm_cu_id = $search['cu_id'] ?? null;
+        //        $vm_vc_id = $search['vc_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_maintenances', 'vm')
@@ -163,24 +163,24 @@ class VehicleMaintenance extends Model
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vm.vm_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->when($vm_ve_id, function (Builder $query) use ($vm_ve_id) {
-                $query->where('vm.ve_id', '=', $vm_ve_id);
-            })
-            ->when($vm_cu_id, function (Builder $query) use ($vm_cu_id) {
-                $query->where('sc.sc_cu_id', '=', $vm_cu_id);
-            })
-            ->when($vm_vc_id, function (Builder $query) use ($vm_vc_id) {
-                $query->where('vm.vc_id', '=', $vm_vc_id);
-            })
-            ->when(
-                null === $vm_ve_id && null === $vm_cu_id,
-                function (Builder $query) {
-                    $query->orderByDesc('vm.vm_id');
-                },
-                function (Builder $query) {
-                    $query->orderBy('vm.vm_id');
-                }
-            )
+//            ->when($vm_ve_id, function (Builder $query) use ($vm_ve_id) {
+//                $query->where('vm.ve_id', '=', $vm_ve_id);
+//            })
+//            ->when($vm_cu_id, function (Builder $query) use ($vm_cu_id) {
+//                $query->where('sc.sc_cu_id', '=', $vm_cu_id);
+//            })
+//            ->when($vm_vc_id, function (Builder $query) use ($vm_vc_id) {
+//                $query->where('vm.vm_vc_id', '=', $vm_vc_id);
+//            })
+//            ->when(
+//                null === $vm_ve_id && null === $vm_cu_id,
+//                function (Builder $query) {
+//                    $query->orderByDesc('vm.vm_id');
+//                },
+//                function (Builder $query) {
+//                    $query->orderBy('vm.vm_id');
+//                }
+//            )
             ->select('vm.*', 'vc.vc_name', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', '_vm.vm_brand_name', '_vm.vm_model_name')
             ->addSelect(
                 DB::raw(VmCustodyVehicle::toCaseSQL()),
@@ -189,8 +189,8 @@ class VehicleMaintenance extends Model
                 DB::raw(VmSettlementStatus::toCaseSQL()),
                 DB::raw("to_char(vm_entry_datetime, 'YYYY-MM-DD HH24:MI') as vm_entry_datetime_"),
                 DB::raw("to_char(vm_departure_datetime, 'YYYY-MM-DD HH24:MI') as vm_departure_datetime_"),
+                DB::raw('EXTRACT(EPOCH FROM vm_departure_datetime - vm_entry_datetime) / 86400.0 as vm_interval_day'),
             )
-            ->addSelect(DB::raw('EXTRACT(EPOCH FROM vm_departure_datetime - vm_entry_datetime) / 86400.0 as vm_interval_day'))
         ;
     }
 
@@ -210,57 +210,57 @@ class VehicleMaintenance extends Model
             'VehicleMaintenance.vm_settlement_method'   => fn ($item) => $item->vm_settlement_method_label,
             'VehicleMaintenance.vm_custody_vehicle'     => fn ($item) => $item->vm_custody_vehicle_label,
             'VehicleMaintenance.vm_remark'              => fn ($item) => $item->vm_remark,
-            'VehicleMaintenance.vm_maintenance_info'    => fn ($item) => str_render($item->vm_maintenance_info, 'vm_maintenance_info'),
+            'VehicleMaintenance.vm_maintenance_info'    => fn ($item) => str_render($item->vm_maintenance_info, 'maintenance_info'),
         ];
     }
 
     public static function importColumns(): array
     {
         return [
-            'plate_no'              => [VehicleMaintenance::class, 'plate_no'],
-            'vc_name'               => [VehicleCenter::class, 'vc_name'],
-            'entry_datetime'        => [VehicleMaintenance::class, 'entry_datetime'],
-            'maintenance_amount'    => [VehicleMaintenance::class, 'maintenance_amount'],
-            'entry_mileage'         => [VehicleMaintenance::class, 'entry_mileage'],
-            'next_maintenance_date' => [VehicleMaintenance::class, 'next_maintenance_date'],
-            'departure_datetime'    => [VehicleMaintenance::class, 'departure_datetime'],
-            'maintenance_mileage'   => [VehicleMaintenance::class, 'maintenance_mileage'],
-            'settlement_status'     => [VehicleMaintenance::class, 'settlement_status'],
-            'pickup_status'         => [VehicleMaintenance::class, 'pickup_status'],
-            'settlement_method'     => [VehicleMaintenance::class, 'settlement_method'],
-            'custody_vehicle'       => [VehicleMaintenance::class, 'custody_vehicle'],
-            'vm_remark'             => [VehicleMaintenance::class, 'vm_remark'],
+            'vm_plate_no'              => [Vehicle::class, 've_plate_no'],
+            'vm_vc_name'               => [VehicleCenter::class, 'vc_name'],
+            'vm_entry_datetime'        => [VehicleMaintenance::class, 'vm_entry_datetime'],
+            'vm_maintenance_amount'    => [VehicleMaintenance::class, 'vm_maintenance_amount'],
+            'vm_entry_mileage'         => [VehicleMaintenance::class, 'vm_entry_mileage'],
+            'vm_next_maintenance_date' => [VehicleMaintenance::class, 'vm_next_maintenance_date'],
+            'vm_departure_datetime'    => [VehicleMaintenance::class, 'vm_departure_datetime'],
+            'vm_maintenance_mileage'   => [VehicleMaintenance::class, 'vm_maintenance_mileage'],
+            'vm_settlement_status'     => [VehicleMaintenance::class, 'vm_settlement_status'],
+            'vm_pickup_status'         => [VehicleMaintenance::class, 'vm_pickup_status'],
+            'vm_settlement_method'     => [VehicleMaintenance::class, 'vm_settlement_method'],
+            'vm_custody_vehicle'       => [VehicleMaintenance::class, 'vm_custody_vehicle'],
+            'vm_remark'                => [VehicleMaintenance::class, 'vm_remark'],
         ];
     }
 
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['ve_id']             = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['vc_id']             = VehicleCenter::nameKv($item['vc_name'] ?? null);
-            $item['settlement_status'] = VmSettlementStatus::searchValue($item['settlement_status'] ?? null);
-            $item['pickup_status']     = VmPickupStatus::searchValue($item['pickup_status'] ?? null);
-            $item['settlement_method'] = VmSettlementMethod::searchValue($item['settlement_method'] ?? null);
-            $item['custody_vehicle']   = VmCustodyVehicle::searchValue($item['custody_vehicle'] ?? null);
+            $item['vm_ve_id']             = Vehicle::plateNoKv($item['vm_plate_no'] ?? null);
+            $item['vm_vc_id']             = VehicleCenter::nameKv($item['vm_vc_name'] ?? null);
+            $item['vm_settlement_status'] = VmSettlementStatus::searchValue($item['vm_settlement_status'] ?? null);
+            $item['vm_pickup_status']     = VmPickupStatus::searchValue($item['vm_pickup_status'] ?? null);
+            $item['vm_settlement_method'] = VmSettlementMethod::searchValue($item['vm_settlement_method'] ?? null);
+            $item['vm_custody_vehicle']   = VmCustodyVehicle::searchValue($item['vm_custody_vehicle'] ?? null);
         };
     }
 
     public static function importValidatorRule(array $item, array $fieldAttributes): void
     {
         $rules = [
-            've_id'               => ['required', 'integer'],
-            'sc_id'               => ['nullable', 'integer'],
-            'entry_datetime'      => ['required', 'date'],
-            'entry_mileage'       => ['nullable', 'integer', 'min:0'],
-            'maintenance_mileage' => ['nullable', 'integer', 'min:0'],
-            'maintenance_amount'  => ['nullable', 'decimal:0,2', 'gte:0'],
-            'vc_id'               => ['required', 'integer'],
-            'departure_datetime'  => ['nullable', 'date'],
-            'settlement_status'   => ['required', 'string', Rule::in(VmSettlementStatus::label_keys())],
-            'pickup_status'       => ['required', 'string', Rule::in(VmPickupStatus::label_keys())],
-            'settlement_method'   => ['required', 'string', Rule::in(VmSettlementMethod::label_keys())],
-            'custody_vehicle'     => ['required', 'string', Rule::in(VmCustodyVehicle::label_keys())],
-            'vm_remark'           => ['nullable', 'string'],
+            'vm_ve_id'               => ['required', 'integer'],
+            'vm_sc_id'               => ['nullable', 'integer'],
+            'vm_entry_datetime'      => ['required', 'date'],
+            'vm_entry_mileage'       => ['nullable', 'integer', 'min:0'],
+            'vm_maintenance_mileage' => ['nullable', 'integer', 'min:0'],
+            'vm_maintenance_amount'  => ['nullable', 'decimal:0,2', 'gte:0'],
+            'vm_vc_id'               => ['required', 'integer'],
+            'vm_departure_datetime'  => ['nullable', 'date'],
+            'vm_settlement_status'   => ['required', 'string', Rule::in(VmSettlementStatus::label_keys())],
+            'vm_pickup_status'       => ['required', 'string', Rule::in(VmPickupStatus::label_keys())],
+            'vm_settlement_method'   => ['required', 'string', Rule::in(VmSettlementMethod::label_keys())],
+            'vm_custody_vehicle'     => ['required', 'string', Rule::in(VmCustodyVehicle::label_keys())],
+            'vm_remark'              => ['nullable', 'string'],
         ];
 
         $validator = Validator::make($item, $rules, [], $fieldAttributes);
@@ -282,7 +282,7 @@ class VehicleMaintenance extends Model
         };
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

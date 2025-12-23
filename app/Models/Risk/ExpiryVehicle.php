@@ -13,7 +13,7 @@ class ExpiryVehicle extends Model
 {
     use ModelTrait;
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         $days = 60;
 
@@ -31,7 +31,7 @@ class ExpiryVehicle extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

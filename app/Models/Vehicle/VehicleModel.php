@@ -44,9 +44,10 @@ class VehicleModel extends Model
         return $this->hasMany(Vehicle::class, 've_vm_id', 'vm_id');
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
+
         $value = static::query()->toBase()
             ->select(DB::raw("(vm_brand_name || '-' || vm_model_name) as text,vm_id as value"))
             ->where('vm_status', '=', VmStatus::ENABLED)
@@ -56,7 +57,7 @@ class VehicleModel extends Model
         return [$key => $value];
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('vehicle_models', 'vm')

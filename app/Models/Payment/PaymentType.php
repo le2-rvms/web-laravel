@@ -37,14 +37,26 @@ class PaymentType extends Model
         return $this->hasMany(Payment::class, 'p_pt_id', 'pt_id');
     }
 
-    public static function options(
-        ?\Closure $where = null
-    ): array {
-        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+    public static function options(?\Closure $where = null, ?string $key = null): array
+    {
+        $key = static::getOptionKey($key);
 
         $value = static::query()->toBase()
-            ->where('pt_is_active', PtIsActive::ENABLED)
+            ->where($where)
             ->select(DB::raw('pt_name as text, pt_id as value'))
+            ->get()
+        ;
+
+        return [$key => $value];
+    }
+
+    public static function indexOptions(): array
+    {
+        $key = static::getOptionKey();
+
+        $value = static::query()->toBase()
+            ->select(DB::raw('pt_name as text, pt_id as value, pt_required as disable'))
+            ->orderby('pt_id')
             ->get()
         ;
 
@@ -53,7 +65,7 @@ class PaymentType extends Model
 
     public static function options_with_count(?\Closure $where = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey();
 
         $value = DB::query()
             ->from('payment_types', 'pt')
@@ -72,20 +84,7 @@ class PaymentType extends Model
         return [$key => $value];
     }
 
-    public static function indexOptions(): array
-    {
-        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Index';
-
-        $value = static::query()->toBase()
-            ->select(DB::raw('pt_name as text, pt_id as value, pt_required as disable'))
-            ->orderby('pt_id')
-            ->get()
-        ;
-
-        return [$key => $value];
-    }
-
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query();
     }

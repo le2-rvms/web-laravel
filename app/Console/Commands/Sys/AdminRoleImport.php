@@ -3,8 +3,8 @@
 namespace App\Console\Commands\Sys;
 
 use App\Attributes\PermissionAction;
-use App\Enum\Admin\AdmUserType;
 use App\Enum\Admin\ArIsCustom;
+use App\Enum\Admin\AUserType;
 use App\Http\Controllers\Admin\Admin\AdminController;
 use App\Http\Controllers\Admin\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\Admin\AdminRoleController;
@@ -65,6 +65,7 @@ class AdminRoleImport extends Command
     /** 导入的内置角色清单 */
     private array $builtinRoles = [
         AdminRole::role_vehicle_mgr     => [GpsDataController::class => [PermissionAction::READ], IotDeviceBindingController::class => [PermissionAction::READ, PermissionAction::WRITE], ExpiryDriverController::class => [PermissionAction::READ], ExpiryVehicleController::class => [PermissionAction::READ], VehicleForceTakeController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleInsuranceController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleScheduleController::class => [PermissionAction::READ, PermissionAction::WRITE], ViolationCountController::class => [PermissionAction::READ], VehicleCenterController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleAccidentController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleMaintenanceController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleRepairController::class => [PermissionAction::READ, PermissionAction::WRITE], OneAccountController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleInspectionController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleManualViolationController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleModelController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleViolationController::class => [PermissionAction::READ, PermissionAction::WRITE], VehiclePreparationController::class => [PermissionAction::READ, PermissionAction::WRITE]],
+        AdminRole::role_driver_mgr      => [],
         AdminRole::role_payment         => [InoutController::class => [PermissionAction::READ], PaymentController::class => [PermissionAction::READ, PermissionAction::WRITE], PaymentTypeController::class => [PermissionAction::WRITE], SaleContractRentPaymentController::class => [PermissionAction::WRITE], SaleContractSignPaymentController::class => [PermissionAction::WRITE], VehiclePreparationController::class => [PermissionAction::READ, PermissionAction::WRITE], SaleSettlementApproveController::class => [PermissionAction::WRITE]],
         AdminRole::role_sales           => [BookingOrderController::class => [PermissionAction::READ, PermissionAction::WRITE], BookingVehicleController::class => [PermissionAction::READ, PermissionAction::WRITE], SaleContractController::class => [PermissionAction::READ, PermissionAction::WRITE], SaleContractCancelController::class => [PermissionAction::WRITE], SaleContractTplController::class => [PermissionAction::READ, PermissionAction::WRITE], SaleContractVehicleChangeController::class => [PermissionAction::WRITE], SaleContractVehicleChangePaymentController::class => [PermissionAction::WRITE], SaleSettlementController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleTmpController::class => [PermissionAction::READ, PermissionAction::WRITE], CustomerController::class => [PermissionAction::READ, PermissionAction::WRITE]],
         AdminRole::role_vehicle_service => [VehicleAccidentController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleMaintenanceController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleRepairController::class => [PermissionAction::READ, PermissionAction::WRITE]],
@@ -77,6 +78,7 @@ class AdminRoleImport extends Command
         '演示修理厂' => AdminRole::role_vehicle_service,
         '演示销售'   => AdminRole::role_sales,
         '演示车管'   => AdminRole::role_vehicle_mgr,
+        '演示驾管'   => AdminRole::role_driver_mgr,
         '演示财务'   => AdminRole::role_payment,
     ];
 
@@ -84,7 +86,7 @@ class AdminRoleImport extends Command
     {
         DB::transaction(function () {
             foreach ($this->builtinRoles as $name => $_permissions) {
-                $role = AdminRole::query()->updateOrCreate(['name' => $name, 'guard_name' => 'web'], ['is_custom' => ArIsCustom::NO]);
+                $role = AdminRole::query()->updateOrCreate(['name' => $name, 'guard_name' => 'web'], ['ar_is_custom' => ArIsCustom::NO]);
                 if ($_permissions) {
                     $permissions = [];
                     foreach ($_permissions as $permission => $suffixes) {
@@ -104,7 +106,7 @@ class AdminRoleImport extends Command
 
             if (config('setting.mock.enable')) {
                 foreach ($this->mock_admins as $admin_name => $role_name) {
-                    $admin = Admin::query()->updateOrCreate(['name' => $admin_name], ['user_type' => AdmUserType::MOCK]);
+                    $admin = Admin::query()->updateOrCreate(['name' => $admin_name], ['a_user_type' => AUserType::MOCK]);
 
                     $role = AdminRole::query()->where(['name' => $role_name])->firstOrFail();
                     $admin->assignRole($role);

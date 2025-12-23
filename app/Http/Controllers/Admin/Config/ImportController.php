@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -41,10 +40,10 @@ class ImportController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function template(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
-                'model_name' => ['required', 'string', Rule::in(ImportConfig::keys())],
+                'app_model_name' => ['required', 'string', Rule::in(ImportConfig::keys())],
             ]
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use (&$vehicle) {
@@ -52,15 +51,10 @@ class ImportController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
-
-        $model_name     = $input['vm_model_name'];
+        $model_name     = $input['app_model_name'];
         $model_basename = class_basename($model_name);
 
         $ts       = now()->format('ymdHis');
@@ -109,6 +103,9 @@ class ImportController extends Controller
                     ->getAlignment()
                     ->setWrapText(true)
                 ;
+                if (null === $columnDesc) {
+                    throw new ClientException(json_encode([$model_name, $column, $relation]));
+                }
                 if ($columnDesc->required) {
                     $sheet->getStyle("{$colLetter}1:{$colLetter}2")->getFont()
                         ->getColor()
@@ -155,12 +152,12 @@ class ImportController extends Controller
         // 验证上传文件
         $input = $request->validate(
             [
-                'vm_model_name' => ['required', Rule::in(ImportConfig::keys())],
+                'app_model_name' => ['required', Rule::in(ImportConfig::keys())],
             ] + Uploader::validator_rule_upload_object('import_file', true)
         );
 
         /** @var ImportTrait $model_name */
-        $model_name = $input['vm_model_name'];
+        $model_name = $input['app_model_name'];
 
         /** @var UploadedFile $import_file */
         $import_file = $input['import_file'];
@@ -213,14 +210,6 @@ class ImportController extends Controller
 
                 // 执行验证
                 $model_name::importValidatorRule($item, $fieldAttributes);
-                //                $validator = Validator::make($item, $rules, [], $fieldAttributes);
-                //                if ($validator->fails()) {
-                //                    // a) 抛出异常，整个导入中断
-                //                    throw new ValidationException($validator);
-                //                    // b) 或者：把错误附加到 $item 里，后面 filter 掉
-                //                    // $item['_errors'] = $validator->errors()->all();
-                //                    // return $item;
-                //                }
 
                 ++$count;
 

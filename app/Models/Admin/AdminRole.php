@@ -4,20 +4,24 @@ namespace App\Models\Admin;
 
 use App\Attributes\ClassName;
 use App\Enum\Admin\ArIsCustom;
+use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 #[ClassName('员工角色')]
 /**
- * @property int            $id          序号
- * @property string         $name        角色名
+ * @property int            $id           序号
+ * @property string         $name         角色名
  * @property string         $guard_name
- * @property ArIsCustom|int $is_custom   是否是自定义
+ * @property ArIsCustom|int $ar_is_custom 是否是自定义
  * @property Collection     $permissions
  */
 class AdminRole extends Role
 {
+    use ModelTrait;
+
     public const string role_system = '系统管理';
 
     public const string role_manager    = '经理';
@@ -33,12 +37,13 @@ class AdminRole extends Role
     protected $table        = 'admin_roles';
 
     protected $attributes = [
-        'is_custom' => ArIsCustom::NO,
+        'ar_is_custom' => ArIsCustom::NO,
     ];
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
+
         $value = Role::query()->toBase()
             ->where('name', '!=', config('setting.super_role.name'))
             ->orderBy('id')
@@ -48,10 +53,15 @@ class AdminRole extends Role
         return [$key => $value];
     }
 
+    public static function indexQuery(): Builder
+    {
+        // TODO: Implement indexQuery() method.
+    }
+
     protected function casts(): array
     {
         return [
-            'is_custom' => ArIsCustom::class,
+            'ar_is_custom' => ArIsCustom::class,
         ];
     }
 }

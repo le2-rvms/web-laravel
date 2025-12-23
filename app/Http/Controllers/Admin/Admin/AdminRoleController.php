@@ -15,7 +15,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('员工角色')]
@@ -68,7 +67,7 @@ class AdminRoleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'name'         => ['required', Rule::unique(AdminRole::class, 'name')],
@@ -77,16 +76,12 @@ class AdminRoleController extends Controller
             ],
             [],
             trans_property(AdminRole::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input) {
-            $admin_role = AdminRole::create($input + ['guard_name' => 'web', 'is_custom' => ArIsCustom::YES]);
+            $admin_role = AdminRole::create($input + ['guard_name' => 'web', 'ar_is_custom' => ArIsCustom::YES]);
 
             $permissions = $input['_permissions'] ?? [];
             if ($permissions) {
@@ -129,7 +124,7 @@ class AdminRoleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, AdminRole $admin_role): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'name'         => ['required', Rule::unique(AdminRole::class, 'name')->ignore($admin_role)],
@@ -138,13 +133,9 @@ class AdminRoleController extends Controller
             ],
             [],
             trans_property(AdminRole::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         abort_if(config('setting.super_role.name') == $admin_role->name, 403, 'You Cannot Edit Super Admin Role!');
 

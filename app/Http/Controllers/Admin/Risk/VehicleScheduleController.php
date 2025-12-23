@@ -16,7 +16,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('待年检')]
@@ -101,7 +100,7 @@ class VehicleScheduleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleSchedule $vehicleSchedule = null): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'vs_inspection_type'      => ['required', 'string', Rule::in(VsInspectionType::label_keys())],
@@ -136,13 +135,8 @@ class VehicleScheduleController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input, &$vehicle, &$vehicleSchedule) {
             if (null === $vehicleSchedule) {
@@ -158,23 +152,6 @@ class VehicleScheduleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleSchedule $vehicleSchedule): Response
     {
-        $validator = Validator::make(
-            [],
-            []
-        )
-            ->after(function (\Illuminate\Validation\Validator $validator) {
-                if ($validator->failed()) {
-                    return;
-                }
-            })
-        ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $vehicleSchedule->delete();
-
         return $this->response()->withData($vehicleSchedule)->respond();
     }
 

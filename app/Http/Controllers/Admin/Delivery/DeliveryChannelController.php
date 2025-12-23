@@ -16,7 +16,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('消息类型')]
@@ -99,7 +98,7 @@ class DeliveryChannelController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?DeliveryChannel $deliveryChannel): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'dc_key'      => ['bail', 'required', Rule::in(DcKey::label_keys())],
@@ -117,12 +116,8 @@ class DeliveryChannelController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input, &$deliveryChannel) {
             if (null === $deliveryChannel) {
@@ -149,7 +144,7 @@ class DeliveryChannelController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function status(Request $request, DeliveryChannel $deliveryChannel): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'dc_status' => ['bail', 'required', Rule::in(DcStatus::label_keys())],
@@ -162,12 +157,8 @@ class DeliveryChannelController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         $deliveryChannel->update($input);
 

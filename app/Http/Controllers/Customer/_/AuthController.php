@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
@@ -24,7 +23,7 @@ class AuthController extends Controller
 
     public function sendVerificationCode(Request $request, SmsService $smsService): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'phone' => ['required', 'digits:11', Rule::exists(Customer::class, 'cu_contact_phone')],
@@ -52,13 +51,9 @@ class AuthController extends Controller
 
                 return;
             }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        })
+            ->validate()
+        ;
 
         $code = mt_rand(1000, 9999);
 
@@ -73,7 +68,7 @@ class AuthController extends Controller
 
     public function login(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'phone' => ['required', 'digits:11', Rule::exists(Customer::class, 'cu_contact_phone')],
@@ -90,13 +85,9 @@ class AuthController extends Controller
             if ($cachedCode != $request->input('code')) {
                 $validator->errors()->add('code', '验证码不正确');
             }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        })
+            ->validate()
+        ;
 
         $customer = Customer::query()->where('cu_contact_phone', $input['phone'])->first();
 

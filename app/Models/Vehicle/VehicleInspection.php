@@ -138,35 +138,35 @@ class VehicleInspection extends Model
         ];
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $vi_ve_id = $search['vi_ve_id'] ?? null;
-        $vi_sc_id = $search['vi_sc_id'] ?? null;
-        $vi_cu_id = $search['vi_cu_id'] ?? null;
+        //        $ve_id = $search['ve_id'] ?? null;
+        //        $sc_id = $search['sc_id'] ?? null;
+        //        $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_inspections', 'vi')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vi.vi_ve_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.vi_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->when($vi_ve_id, function (Builder $query) use ($vi_ve_id) {
-                $query->where('vi.vi_ve_id', '=', $vi_ve_id);
-            })
-            ->when($vi_sc_id, function (Builder $query) use ($vi_sc_id) {
-                $vi_sc_id && $query->where('vi.vi_sc_id', '=', $vi_sc_id);
-            })
-            ->when($vi_cu_id, function (Builder $query) use ($vi_cu_id) {
-                $query->where('cu.cu_id', '=', $vi_cu_id);
-            })
-            ->when(
-                null === $vi_ve_id && null === $vi_sc_id && null === $vi_cu_id,
-                function (Builder $query) {
-                    $query->orderByDesc('vi.vi_id');
-                },
-                function (Builder $query) {
-                    $query->orderBy('vi.vi_id');
-                }
-            )
+//            ->when($ve_id, function (Builder $query) use ($ve_id) {
+//                $query->where('vi.vi_ve_id', '=', $ve_id);
+//            })
+//            ->when($sc_id, function (Builder $query) use ($sc_id) {
+//                $sc_id && $query->where('vi.vi_sc_id', '=', $sc_id);
+//            })
+//            ->when($cu_id, function (Builder $query) use ($cu_id) {
+//                $query->where('cu.cu_id', '=', $cu_id);
+//            })
+//            ->when(
+//                null === $sc_id && null === $sc_id && null === $cu_id,
+//                function (Builder $query) {
+//                    $query->orderByDesc('vi.vi_id');
+//                },
+//                function (Builder $query) {
+//                    $query->orderBy('vi.vi_id');
+//                }
+//            )
             ->select('vi.*', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone')
             ->addSelect(
                 DB::raw(ViInspectionType::toCaseSQL()),
@@ -180,7 +180,7 @@ class VehicleInspection extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

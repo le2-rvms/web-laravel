@@ -90,9 +90,10 @@ class BookingOrder extends Model
         return $this->belongsTo(Customer::class, 'bo_cu_id', 'cu_id')->withDefault();
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        return DB::query()->from('booking_orders', 'bo')
+        return DB::query()
+            ->from('booking_orders', 'bo')
             ->leftJoin('vehicles as ve', 'bo.bo_plate_no', '=', 've.ve_plate_no')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'bo.bo_cu_id')
@@ -108,7 +109,7 @@ class BookingOrder extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

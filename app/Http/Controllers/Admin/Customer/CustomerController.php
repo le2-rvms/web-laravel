@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Customer;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AdmTeamLimit;
+use App\Enum\Admin\ATeamLimit;
 use App\Enum\Customer\CuiGender;
 use App\Enum\Customer\CuType;
 use App\Http\Controllers\Controller;
@@ -30,7 +30,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('顾客')]
@@ -59,9 +58,9 @@ class CustomerController extends Controller
         $admin = auth()->user();
 
         // 车队作为查询条件
-        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+        if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereIn('cu.cu_team_id', $admin->team_ids)->orWhereNull('cu.cu_team_id');
+                $query->whereIn('cu.cu_team_id', $admin->a_team_ids)->orWhereNull('cu.cu_team_id');
             });
         }
 
@@ -118,16 +117,16 @@ class CustomerController extends Controller
             CuiGender::flipLabelDic(),
         );
 
-        $this->response()->withExtras(
-            VehicleInspection::kvList(cu_id: $customer->cu_id),
-            SaleContract::kvList(cu_id: $customer->cu_id),
-            Payment::kvList(cu_id: $customer->cu_id),
-            SaleSettlement::kvList(cu_id: $customer->cu_id),
-            VehicleUsage::kvList(cu_id: $customer->cu_id),
-            VehicleRepair::kvList(cu_id: $customer->cu_id),
-            VehicleViolation::kvList(cu_id: $customer->cu_id),
-            VehicleManualViolation::kvList(cu_id: $customer->cu_id),
-        );
+        //        $this->response()->withExtras(
+        //            VehicleInspection::kvList(cu_id: $customer->cu_id),
+        //            SaleContract::kvList(cu_id: $customer->cu_id),
+        //            Payment::kvList(cu_id: $customer->cu_id),
+        //            SaleSettlement::kvList(cu_id: $customer->cu_id),
+        //            VehicleUsage::kvList(cu_id: $customer->cu_id),
+        //            VehicleRepair::kvList(cu_id: $customer->cu_id),
+        //            VehicleViolation::kvList(cu_id: $customer->cu_id),
+        //            VehicleManualViolation::kvList(cu_id: $customer->cu_id),
+        //        );
 
         return $this->response()->withData($customer)->respond();
     }
@@ -201,11 +200,7 @@ class CustomerController extends Controller
             }
         });
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $input0 + $validator->validated();
+        $input = $input0 + $validator->validate();
 
         DB::transaction(function () use (&$input, &$customer) {
             if (null === $customer) {
@@ -269,7 +264,9 @@ class CustomerController extends Controller
         $this->options();
 
         $this->response()->withExtras(
-            Admin::optionsWithRoles(),
+            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+                $builder->role(AdminRole::role_sales);
+            }, 'cu_driver_manager'),
             AdminTeam::options(),
         );
 
@@ -286,19 +283,40 @@ class CustomerController extends Controller
         $this->options();
 
         $this->response()->withExtras(
-            Admin::optionsWithRoles(),
+            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+                $builder->role(AdminRole::role_sales);
+            }, 'cu_sales_manager'),
+            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+                $builder->role(AdminRole::role_driver_mgr);
+            }, 'cu_driver_manager'),
             AdminTeam::options(),
         );
 
         $this->response()->withExtras(
-            VehicleInspection::kvList(cu_id: $customer->cu_id),
-            SaleContract::kvList(cu_id: $customer->cu_id),
-            Payment::kvList(cu_id: $customer->cu_id),
-            SaleSettlement::kvList(cu_id: $customer->cu_id),
-            VehicleUsage::kvList(cu_id: $customer->cu_id),
-            VehicleRepair::kvList(cu_id: $customer->cu_id),
-            VehicleViolation::kvList(cu_id: $customer->cu_id),
-            VehicleManualViolation::kvList(cu_id: $customer->cu_id),
+            VehicleInspection::indexList(function (Builder $query) use ($customer) {
+                $query->where('cu.cu_id', '=', $customer->cu_id);
+            }),
+            SaleContract::indexList(function (Builder $query) use ($customer) {
+                $query->where('cu.cu_id', '=', $customer->cu_id);
+            }),
+            Payment::indexList(function (Builder $query) use ($customer) {
+                $query->where('sc.sc_cu_id', '=', $customer->cu_id);
+            }),
+            SaleSettlement::indexList(function (Builder $query) use ($customer) {
+                $query->where('cu.cu_id', '=', $customer->cu_id);
+            }),
+            VehicleUsage::indexList(function (Builder $query) use ($customer) {
+                $query->where('sc.sc_cu_id', '=', $customer->cu_id);
+            }),
+            VehicleRepair::indexList(function (Builder $query) use ($customer) {
+                $query->where('vr.vr_sc_id', '=', $customer->cu_id);
+            }),
+            VehicleViolation::indexList(function (Builder $query) use ($customer) {
+                $query->where('sc.sc_cu_id', '=', $customer->cu_id);
+            }),
+            VehicleManualViolation::indexList(function (Builder $query) use ($customer) {
+                $query->where('sc.sc_cu_id', '=', $customer->cu_id);
+            }),
         );
 
         $customer->load('CustomerIndividual', 'CustomerCompany');

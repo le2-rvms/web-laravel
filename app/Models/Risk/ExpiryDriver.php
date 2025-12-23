@@ -5,7 +5,6 @@ namespace App\Models\Risk;
 use App\Enum\Customer\CuiGender;
 use App\Enum\Customer\CuType;
 use App\Models\_\ModelTrait;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinClause;
@@ -15,13 +14,9 @@ class ExpiryDriver extends Model
 {
     use ModelTrait;
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $days = 30;
-
-        $targetDate = Carbon::today()->addDays($days)->toDateString();
-
-        $cu_id = $search['cu_id'] ?? null;
+        //        $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
             ->from('customer_individuals', 'cui')
@@ -31,14 +26,14 @@ class ExpiryDriver extends Model
                 ;
             })
 //            ->where('cu.cu_type', CuCustomerType::INDIVIDUAL)
-            ->where(function (Builder $q) use ($targetDate) {
-                $q->where('cui.cui_driver_license_expiry_date', '<=', $targetDate)
-                    ->orWhere('cui_id_expiry_date', '<=', $targetDate)
-                ;
-            })
-            ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('cu.cu_id', '=', $cu_id);
-            })
+//            ->where(function (Builder $q) use ($targetDate) {
+//                $q->where('cui.cui_driver_license_expiry_date', '<=', $targetDate)
+//                    ->orWhere('cui_id_expiry_date', '<=', $targetDate)
+//                ;
+//            })
+//            ->when($cu_id, function (Builder $query) use ($cu_id) {
+//                $query->where('cu.cu_id', '=', $cu_id);
+//            })
             ->select('cu.*', 'cui.*')
             ->addSelect(
                 DB::raw(CuType::toCaseSQL()),
@@ -47,7 +42,7 @@ class ExpiryDriver extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

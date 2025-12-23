@@ -30,7 +30,7 @@ use Illuminate\Validation\Validator;
 #[ClassName('车辆', '信息')]
 #[ColumnDesc('ve_plate_no', required: true, unique: true)]
 #[ColumnDesc('ve_type', required: false, enum_class: VeType::class)]
-#[ColumnDesc('ve_vm_id', required: true, desc: '通过[车型信息管理]添加的序号，文本格式')]
+#[ColumnDesc('ve_vm_id', required: false, desc: '通过[车型信息管理]添加的序号，文本格式')]
 #[ColumnDesc('ve_license_owner')]
 #[ColumnDesc('ve_license_address')]
 #[ColumnDesc('ve_license_usage')]
@@ -198,10 +198,9 @@ class Vehicle extends Model
         return $this->update($update);
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class())
-            .'Options';
+        $key = static::getOptionKey($key);
 
         $value = DB::query()
             ->from('vehicles', 've')
@@ -217,10 +216,9 @@ class Vehicle extends Model
         return [$key => $value];
     }
 
-    public static function optionsNo(?\Closure $where = null): array
+    public static function optionsNo(?\Closure $where = null, ?string $key = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class())
-            .'Options';
+        $key = static::getOptionKey($key);
 
         $value = DB::query()
             ->from('vehicles', 've')
@@ -267,15 +265,15 @@ class Vehicle extends Model
         return true;
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('vehicles', 've')
             ->leftJoin('vehicle_models as vm', 've.ve_vm_id', '=', 'vm.vm_id')
-            ->leftJoin('admins as adm', 've.ve_vehicle_manager', '=', 'adm.id')
+            ->leftJoin('admins as a', 've.ve_vehicle_manager', '=', 'a.id')
             ->leftJoin('admin_teams as at', 've.ve_team_id', '=', 'at.at_id')
             ->leftJoin('one_accounts as oa', 've.ve_oa_id', '=', 'oa.oa_id')
-            ->select('ve.*', 'vm.*', 'adm.name as adm_vehicle_manager_name', 'at.at_name', 'oa.oa_name')
+            ->select('ve.*', 'vm.*', 'a.name as adm_vehicle_manager_name', 'at.at_name', 'oa.oa_name')
             ->addSelect(
                 DB::raw(VeStatusService::toCaseSQL()),
                 DB::raw(VeStatusService::toColorSQL()),
@@ -315,11 +313,7 @@ class Vehicle extends Model
             ;
         }
 
-        if ($plate_no) {
-            return $kv[$plate_no] ?? null;
-        }
-
-        return $kv;
+        return $kv[$plate_no] ?? null;
     }
 
     public static function importColumns(): array
@@ -350,19 +344,19 @@ class Vehicle extends Model
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['ve_type']                 = VeType::searchValue($item['ve_type']);
+            $item['ve_type']                 = VeType::searchValue($item['ve_type'] ?? null);
             static::$fields['ve_plate_no'][] = $item['ve_plate_no'];
-            static::$fields['ve_vm_id'][]    = $item['ve_vm_id'];
-            static::$fields['ve_team_id'][]  = $item['ve_team_id']; // todo
+            static::$fields['ve_vm_id'][]    = $item['ve_vm_id'] ?? null;
+            static::$fields['ve_team_id'][]  = $item['ve_team_id'] ?? null; // todo
         };
     }
 
     public static function importValidatorRule(array $item, array $fieldAttributes): void
     {
         $rules = [
-            'plate_no'                    => ['required', 'string', 'max:64'],
+            've_plate_no'                 => ['required', 'string', 'max:64'],
             've_type'                     => ['nullable', 'string', Rule::in(VeType::label_keys())],
-            'vm_id'                       => ['nullable', 'integer'],
+            've_vm_id'                    => ['nullable', 'integer'],
             've_license_owner'            => ['nullable', 'string', 'max:100'],
             've_license_address'          => ['nullable', 'string', 'max:255'],
             've_license_usage'            => ['nullable', 'string', 'max:50'],
@@ -397,7 +391,8 @@ class Vehicle extends Model
                 throw new ClientException('以下车牌号已经存在：'.join(',', $plate_no));
             }
             // vm_id
-            $missing = array_diff(static::$fields['vm_id'], VehicleModel::query()->pluck('vm_id')->toArray());
+            static::$fields['ve_vm_id'] = array_filter(static::$fields['ve_vm_id']);
+            $missing                    = array_diff(static::$fields['ve_vm_id'], VehicleModel::query()->pluck('vm_id')->toArray());
             if (count($missing) > 0) {
                 throw new ClientException('以下车型序列号不存在：'.join(',', $missing));
             }

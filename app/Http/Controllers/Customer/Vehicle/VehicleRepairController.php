@@ -18,14 +18,23 @@ class VehicleRepairController extends Controller
 
     public function index(Request $request): Response
     {
-        $data = VehicleRepair::customerQuery($this)
+        $perPage = 20;
+
+        $this->response()->withExtras(
+            ['perPage' => $perPage]
+        );
+
+        $auth = auth();
+
+        $data = VehicleRepair::indexQuery()
+            ->where('sc.sc_cu_id', '=', $auth->id())
             ->when(
-                $request->get('last_id'),
+                $request->query('last_id'),
                 function (Builder $query) use ($request) {
-                    $query->where('vr.vr_id', '<', $request->get('last_id'));
+                    $query->where('vr.vr_id', '<', $request->query('last_id'));
                 }
             )
-            ->get()
+            ->forPage(1, $perPage)
         ;
 
         return $this->response()->withData($data)->respond();

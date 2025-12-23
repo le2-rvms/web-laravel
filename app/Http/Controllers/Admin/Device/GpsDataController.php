@@ -29,7 +29,7 @@ class GpsDataController extends Controller
     #[PermissionAction(PermissionAction::READ)]
     public function history(Request $request, Vehicle $vehicle): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'db_start_at' => ['required', 'date'],
@@ -50,12 +50,8 @@ class GpsDataController extends Controller
                     $validator->errors()->add('db_end_at', '开始与结束的时间间隔不能超过 3 天。');
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         $winRows = DB::connection()->select(
             <<<'SQL'

@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionNoneType('个人密码')]
@@ -37,7 +36,7 @@ class AdminProfileController extends Controller
 
     public function update(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'current_password'      => ['required', 'string', 'min:8', 'current_password'],
@@ -46,13 +45,9 @@ class AdminProfileController extends Controller
             ],
             [],
             trans_property(Admin::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         /** @var Admin $admin */
         $admin = $request->user();

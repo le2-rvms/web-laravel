@@ -70,10 +70,9 @@ class VehicleCenter extends Model
         return $this->hasMany(VehicleAccident::class, 'va_vc_id', 'vc_id');
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class())
-            .'Options';
+        $key = static::getOptionKey($key);
 
         /** @var Admin $admin */
         $admin = Auth::user();
@@ -91,7 +90,7 @@ class VehicleCenter extends Model
         return [$key => $value];
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('vehicle_centers', 'vc')
@@ -110,17 +109,13 @@ class VehicleCenter extends Model
         if (null === $kv) {
             $kv = DB::query()
                 ->from('vehicle_centers')
-                ->select('vc_id', 'name')
-                ->pluck('vc_id', 'name')
+                ->select('vc_id', 'vc_name')
+                ->pluck('vc_id', 'vc_name')
                 ->toArray()
             ;
         }
 
-        if ($name) {
-            return $kv[$name] ?? null;
-        }
-
-        return $kv;
+        return $kv[$name] ?? null;
     }
 
     protected function vcStatusLabel(): Attribute

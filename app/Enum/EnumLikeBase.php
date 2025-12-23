@@ -120,7 +120,9 @@ abstract class EnumLikeBase implements Castable
 
     public static function finalValue(): array
     {
-        return [preg_replace('/^.*\\\/', '', get_called_class()).'FinalValue' => static::final];
+        $key = preg_replace('/^.*\\\/', '', get_called_class()).'FinalValue';
+
+        return [$key => static::final];
     }
 
     public static function labelOptions(?string $fieldName = null): array
@@ -135,20 +137,20 @@ abstract class EnumLikeBase implements Castable
     public static function options(): array
     {
         $class = get_called_class();
+        $key   = preg_replace('/^.*\\\/', '', $class).'Options';
 
-        return
-            [
-                preg_replace('/^.*\\\/', '', $class).'Options' => array_map(
-                    function ($k, $v) use ($class) {
-                        $text = $v.((static::$options_groups[$class] ?? null) ? ('('.(static::$options_groups[$class][$k] ?? 0).')') : '');
+        return [
+            $key => array_map(
+                function ($k, $v) use ($class) {
+                    $text = $v.((static::$options_groups[$class] ?? null) ? ('('.(static::$options_groups[$class][$k] ?? 0).')') : '');
 
-                        return ['text' => $text, 'value' => $k];
-                    },
-                    //  static fn ($k, $v) => ['text' => $v, 'value' => $k],
-                    array_keys(static::LABELS),
-                    static::LABELS
-                ),
-            ];
+                    return ['text' => $text, 'value' => $k];
+                },
+                //  static fn ($k, $v) => ['text' => $v, 'value' => $k],
+                array_keys(static::LABELS),
+                static::LABELS
+            ),
+        ];
     }
 
     public static function options_with_count(string $group_by_model_class_name): array

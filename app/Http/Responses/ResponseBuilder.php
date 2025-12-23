@@ -79,6 +79,18 @@ final class ResponseBuilder
     }
 
     /**
+     * 设置额外字段，替换原数组.
+     *
+     * @param mixed $extra
+     */
+    public function withExtra($extra): self
+    {
+        $this->extras += $extra;
+
+        return $this;
+    }
+
+    /**
      * 合并额外字段（追加到已有的 extras）.
      */
     public function appendExtras(array $more): self

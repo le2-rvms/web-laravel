@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class CompanyController extends Controller
@@ -23,7 +22,7 @@ class CompanyController extends Controller
 
     public function show($company, Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             ['company' => $company],
             ['company' => ['required', 'regex:/^[\w-]+$/']],
         )->after(function ($validator) use ($company, &$envFilePath) {
@@ -35,11 +34,9 @@ class CompanyController extends Controller
             if (!file_exists($envFilePath)) {
                 $validator->errors()->add('filename', '公司输入有误');
             }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
+        })
+            ->validate()
+        ;
 
         $rawContent = file_get_contents($envFilePath);
 
@@ -52,7 +49,7 @@ class CompanyController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $input = Validator::make($request->all(), [
             'company_name'    => ['required', 'string', 'max:100'],
             'cu_contact_name' => ['required', 'string', 'max:10'],
             'contact_phone'   => ['required', 'digits:11'],
@@ -75,12 +72,9 @@ class CompanyController extends Controller
             if ($attempts > 3) {
                 $validator->errors()->add('company_name', '超过注册次数限制，请联系客服。');
             }
-        });
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        })
+            ->validate()
+        ;
 
         try {
             Mail::to(config('mail.from.address'))

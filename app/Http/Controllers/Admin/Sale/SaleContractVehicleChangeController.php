@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AdmTeamLimit;
+use App\Enum\Admin\ATeamLimit;
+use App\Enum\Payment\PIsValid;
+use App\Enum\Payment\PPtId;
 use App\Enum\SaleContract\ScPaymentDay_Month;
 use App\Enum\SaleContract\ScPaymentDay_Week;
 use App\Enum\SaleContract\ScPaymentPeriod;
@@ -30,10 +32,9 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('租车合同')]
+#[PermissionType('租车合同变更-车辆变更')]
 class SaleContractVehicleChangeController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -50,21 +51,27 @@ class SaleContractVehicleChangeController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function show(Request $request, SaleContract $saleContract): Response
     {
-        $validator = validator();
-        $saleContract->check_status([ScStatus::SIGNED], $validator); // 验证合同状态为已签约
+        $input = validator([], [])->after(function ($validator) use ($saleContract) {
+            $saleContract->check_status([ScStatus::EARLY_TERMINATION, ScStatus::COMPLETED], $validator); // 验证合同状态为已完成、或已提前完成
+        })->validate();
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
+        // 归零
+        if (ScRentalType::LONG_TERM === $saleContract->sc_rental_type->value) {
+            $saleContract->sc_start_date   = now()->format('Y-m-d');
+            $saleContract->sc_installments = null;
+            $saleContract->sc_end_date     = null;
+            //            $saleContract->sc_rent_amount  = null;
+            $saleContract->sc_ve_id = null;
+        } elseif (ScRentalType::SHORT_TERM === $saleContract->sc_rental_type->value) {
         }
 
-        $saleContract->sc_start_date = now()->format('Y-m-d');
+        ++$saleContract->sc_version;
 
-        if (ScRentalType::LONG_TERM === $saleContract->sc_rental_type) {
-            $saleContract->installments = null;
-        } elseif (ScRentalType::SHORT_TERM === $saleContract->sc_rental_type) {
-        }
+        //        foreach (PPtId::getFeeTypes($saleContract->sc_rental_type->value) as $pay_key => $pay_value) {
+        //            $saleContract->{$pay_key} = null;
+        //        }
 
-        $saleContract->load('Customer', 'Vehicle', 'Payments');
+        $saleContract->load('Customer'); // , 'Vehicle', 'Payments'
 
         /** @var Admin $admin */
         $admin = auth()->user();
@@ -78,15 +85,21 @@ class SaleContractVehicleChangeController extends Controller
                         ->whereIn('ve_status_rental', [VeStatusRental::LISTED])
                         ->whereIn('ve_status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
                         ->when(
-                            ($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids,
+                            ($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids,
                             function ($query) use ($admin) {
-                                $query->whereIn('ve.ve_team_id', $admin->team_ids)->orwhereNull('ve.ve_team_id');
+                                $query->whereIn('ve.ve_team_id', $admin->a_team_ids)->orwhereNull('ve.ve_team_id');
                             }
                         )
                     ;
                 }
             ),
             Customer::options(),
+            Payment::indexList(where: function (Builder $query) use ($saleContract) {
+                $query->where('p.p_sc_id', '=', $saleContract->sc_id)
+                    ->where('p.p_is_valid', '=', PIsValid::VALID)
+                ;
+            }),
+            Payment::indexStat(),
         );
 
         return $this->response()->withData($saleContract)->respond();
@@ -95,40 +108,48 @@ class SaleContractVehicleChangeController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, SaleContract $saleContract): Response
     {
-        $is_long_term  = ScRentalType::LONG_TERM === $saleContract->sc_rental_type;
-        $is_short_term = ScRentalType::SHORT_TERM === $saleContract->sc_rental_type;
+        $is_long_term  = ScRentalType::LONG_TERM === $saleContract->sc_rental_type->value;
+        $is_short_term = ScRentalType::SHORT_TERM === $saleContract->sc_rental_type->value;
 
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
-                'sc_ve_id'        => ['bail', 'required', 'integer'],
-                'sc_free_days'    => ['bail', 'nullable', 'int:4'],
-                'sc_start_date'   => ['bail', 'required', 'date', 'before_or_equal:sc_end_date'],
-                'sc_installments' => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', 'min:1'],
-                'sc_rental_days'  => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'nullable', 'int:4'], // 短租的
-                'sc_end_date'     => ['bail', 'required', 'date', 'after_or_equal:sc_start_date'],
+                'sc_ve_id' => ['bail', 'required', 'integer'],
+                //                'sc_no'         => ['bail', 'required', 'string', 'max:50', Rule::unique(SaleContract::class, 'sc_no')->ignore($saleContract->sc_no, 'sc_no')],
+                'sc_free_days'  => ['bail', 'nullable', 'int:4'],
+                'sc_start_date' => ['bail', 'required', 'date', 'before_or_equal:sc_end_date'],
+                'sc_end_date'   => ['bail', 'required', 'date', 'after_or_equal:sc_start_date'],
 
-                'sc_deposit_amount'                  => ['bail', 'required', 'decimal:0,2', 'gte:0'],
-                'sc_management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'sc_rent_amount'                     => ['bail', 'required', 'numeric', 'min:0'],
-                'sc_payment_day'                     => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', new PaymentDayCheck($saleContract->sc_payment_period)],
-                'sc_total_rent_amount'               => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-                'sc_insurance_base_fee_amount'       => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-                'sc_insurance_additional_fee_amount' => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-                'sc_other_fee_amount'                => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-                'sc_total_amount'                    => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+                'sc_deposit_amount'        => ['bail', 'required', 'decimal:0,2', 'gte:0'],
+                'sc_management_fee_amount' => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sc_rent_amount'           => ['bail', 'required', 'numeric', 'min:0'],
 
-                'sc_cus_1'                       => ['bail', 'nullable', 'max:255'],
-                'sc_cus_2'                       => ['bail', 'nullable', 'max:255'],
-                'sc_cus_3'                       => ['bail', 'nullable', 'max:255'],
-                'sc_discount_plan'               => ['bail', 'nullable', 'max:255'],
-                'sc_remark'                      => ['bail', 'nullable', 'max:255'],
-                'payments'                       => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'array', 'min:1'],
-                'payments.*.p_pt_id'             => ['bail', 'required', 'integer', Rule::exists(PaymentType::class, 'pt_id')],
-                'payments.*.p_should_pay_date'   => ['bail', 'required', 'date'],
-                'payments.*.p_should_pay_amount' => ['bail', 'required', 'decimal:0,2', 'gte:0'],
-                'payments.*.p_remark'            => ['nullable', 'string'],
-            ]
+                'sc_cus_1'         => ['bail', 'nullable', 'max:255'],
+                'sc_cus_2'         => ['bail', 'nullable', 'max:255'],
+                'sc_cus_3'         => ['bail', 'nullable', 'max:255'],
+                'sc_discount_plan' => ['bail', 'nullable', 'max:255'],
+                'sc_remark'        => ['bail', 'nullable', 'max:255'],
+            ] + (
+                $is_long_term ? [
+                    'sc_installments'                => ['bail', 'required', 'integer', 'min:1'],
+                    'sc_payment_day'                 => ['bail', 'required', 'integer', new PaymentDayCheck($saleContract->sc_payment_period)],
+                    'payments'                       => ['bail', 'required', 'array', 'min:1'],
+                    'payments.*.p_pt_id'             => ['bail', 'required', 'integer', Rule::exists(PaymentType::class, 'pt_id')],
+                    'payments.*.p_should_pay_date'   => ['bail', 'required', 'date'],
+                    'payments.*.p_should_pay_amount' => ['bail', 'required', 'decimal:0,2', 'gte:0'],
+                    'payments.*.p_remark'            => ['nullable', 'string'],
+                ] : []
+            )
+            + (
+                $is_short_term ? [
+                    'sc_rental_days'                     => ['bail', 'required', 'nullable', 'int:4'], // 短租的
+                    'sc_total_rent_amount'               => ['bail', 'required', 'numeric', 'min:0'],
+                    'sc_insurance_base_fee_amount'       => ['bail', 'required', 'numeric', 'min:0'],
+                    'sc_insurance_additional_fee_amount' => ['bail', 'required', 'numeric', 'min:0'],
+                    'sc_other_fee_amount'                => ['bail', 'required', 'numeric', 'min:0'],
+                    'sc_total_amount'                    => ['bail', 'required', 'numeric', 'min:0'],
+                ] : []
+            )
             + Uploader::validator_rule_upload_array('sc_additional_photos')
             + Uploader::validator_rule_upload_object('sc_additional_file'),
             [],
@@ -138,6 +159,15 @@ class SaleContractVehicleChangeController extends Controller
                 if ($validator->failed()) {
                     return;
                 }
+                // sale_contract
+                if (!$saleContract->check_status([ScStatus::EARLY_TERMINATION, ScStatus::COMPLETED], $validator)) {
+                    return;
+                }
+
+                if (!$saleContract->sc_is_current_version) {
+                    $validator->errors()->add('_', '原合同不是最新的');
+                }
+
                 // ve_id
                 $ve_id   = $request->input('sc_ve_id');
                 $vehicle = Vehicle::query()->find($ve_id);
@@ -157,10 +187,6 @@ class SaleContractVehicleChangeController extends Controller
                 if (!$customer) {
                     $validator->errors()->add('sc_cu_id', 'The customer does not exist.');
 
-                    return;
-                }
-
-                if (!$saleContract->check_status([ScStatus::SIGNED], $validator)) {
                     return;
                 }
 
@@ -185,36 +211,35 @@ class SaleContractVehicleChangeController extends Controller
                         $validator->errors()->add('sc_total_amount', '总金额计算错误');
                     }
                 }
-            })
+            })->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
 
-        $input = $validator->validated();
-
-        // input数据修正
-        if (ScRentalType::LONG_TERM === $input['sc_rental_type']) {
+        $input = $input + [
+            'sc_rental_type'        => $saleContract->sc_rental_type,
+            'sc_payment_period'     => $saleContract->sc_payment_period,
+            'sc_cu_id'              => $saleContract->sc_cu_id,
+            'sc_order_at'           => now(),
+            'sc_status'             => ScStatus::PENDING,
+            'sc_no'                 => $saleContract->sc_no,
+            'sc_version'            => $saleContract->sc_version + 1,
+            'sc_is_current_version' => false,
+        ]
+        + ($is_long_term ? [
             // 总计租金金额
-            $input['sc_total_rent_amount'] = bcmul($input['sc_installments'], $input['sc_rent_amount'], 2);
+            'sc_total_rent_amount' => $sc_total_rent_amount = bcmul($input['sc_installments'], $input['sc_rent_amount'], 2),
 
             // 总计金额
-            $input['sc_total_amount'] = math_array_bcadd(2, $input['sc_total_rent_amount'], $input['sc_deposit_amount'], $input['sc_management_fee_amount']);
+            'sc_total_amount' => math_array_bcadd(2, $sc_total_rent_amount, $input['sc_deposit_amount'], $input['sc_management_fee_amount']),
 
             // 租期天数 rental_days
-            $input['sc_rental_days'] = Carbon::parse($input['sc_start_date'])->diffInDays(Carbon::parse($input['sc_end_date']), true) + 1;
-        }
+            'sc_rental_days' => Carbon::parse($input['sc_start_date'])->diffInDays(Carbon::parse($input['sc_end_date']), true) + 1,
+        ] : []);
 
-        DB::transaction(function () use (&$input, &$saleContract) {
+        $saleContract_new = null;
+        DB::transaction(function () use ($is_long_term, &$input, &$saleContract_new) {
             /** @var SaleContract $saleContract */
-            if (null === $saleContract) {
-                $saleContract = SaleContract::query()->create($input + [
-                    'sc_order_at'           => now(),
-                    'sc_status'             => ScStatus::PENDING,
-                    'sc_version'            => $saleContract->sc_version + 1,
-                    'sc_is_current_version' => false,
-                ]);
-            }
+            $saleContract_new = SaleContract::query()->create($input);
+
             //            else {
             //                // 有修改车辆，前提是必须是在初始阶段，要把原车辆的状态改回来。
             //                if ($saleContract->sc_ve_id !== $input['ve_id']) {
@@ -224,20 +249,20 @@ class SaleContractVehicleChangeController extends Controller
             //                $saleContract->update($input);
             //            }
 
-            if (ScRentalType::LONG_TERM === $saleContract->sc_rental_type->value) {
+            if ($is_long_term) {
                 //                $saleContract->Payments()->delete();
 
                 foreach ($input['payments'] as $payment) {
-                    $saleContract->Payments()->create($payment);
+                    $saleContract_new->Payments()->create($payment);
                 }
             }
 
-            $saleContract->Vehicle->updateStatus(ve_status_rental: VeStatusRental::RESERVED);
+            $saleContract_new->Vehicle->updateStatus(ve_status_rental: VeStatusRental::RESERVED);
         });
 
-        $saleContract->refresh()->load('Payments');
+        //        $saleContract->refresh()->load('Payments');
 
-        return $this->response()->withData($saleContract)->respond();
+        return $this->response()->withData($saleContract_new)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]

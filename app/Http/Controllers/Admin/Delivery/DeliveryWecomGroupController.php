@@ -15,7 +15,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('企业微信群机器人')]
@@ -60,7 +59,7 @@ class DeliveryWecomGroupController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'items'                       => ['bail', 'nullable', 'array'],
@@ -75,12 +74,8 @@ class DeliveryWecomGroupController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         $items = collect($input['items']);
 

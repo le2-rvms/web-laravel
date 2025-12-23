@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Vehicle;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AdmTeamLimit;
+use App\Enum\Admin\ATeamLimit;
 use App\Enum\Vehicle\VeStatusService;
 use App\Enum\VehicleManualViolation\VvStatus;
 use App\Http\Controllers\Controller;
@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('手动违章')]
@@ -43,9 +42,9 @@ class VehicleManualViolationController extends Controller
         /** @var Admin $admin */
         $admin = auth()->user();
 
-        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+        if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereIn('ve.ve_team_id', $admin->team_ids)->orwhereNull('ve.ve_team_id');
+                $query->whereIn('ve.ve_team_id', $admin->a_team_ids)->orwhereNull('ve.ve_team_id');
             });
         }
 
@@ -106,7 +105,7 @@ class VehicleManualViolationController extends Controller
     public function update(Request $request, ?VehicleManualViolation $vehicleManualViolation): Response
     {
         // 创建验证器实例
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'vv_ve_id'              => ['required', 'integer', Rule::exists(Vehicle::class, 've_id')],
@@ -141,13 +140,9 @@ class VehicleManualViolationController extends Controller
                     return;
                 }
             }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        })
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input, &$vehicleManualViolation) {
             if (null === $vehicleManualViolation) {

@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('设备绑定')]
@@ -93,7 +92,7 @@ class IotDeviceBindingController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?IotDeviceBinding $iotDeviceBinding): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'd_id'         => ['required', 'integer', Rule::exists(IotDevice::class)],
@@ -122,13 +121,9 @@ class IotDeviceBindingController extends Controller
                     return;
                 }
             }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        })
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input, &$iotDeviceBinding) {
             if (null === $iotDeviceBinding) {

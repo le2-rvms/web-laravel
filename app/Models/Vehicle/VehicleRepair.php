@@ -166,31 +166,31 @@ class VehicleRepair extends Model
     public static function indexColumns(): array
     {
         return [
-            'Vehicle.plate_no'                 => fn ($item) => $item->plate_no,
-            'Customer.cu_contact_name'         => fn ($item) => $item->cu_contact_name,
-            'VehicleRepair.entry_datetime'     => fn ($item) => $item->entry_datetime_,
-            'VehicleRepair.vr_mileage'         => fn ($item) => $item->vr_mileage,
-            'VehicleRepair.repair_cost'        => fn ($item) => $item->repair_cost,
-            'VehicleRepair.delay_days'         => fn ($item) => $item->delay_days,
-            'VehicleCenter.vc_name'            => fn ($item) => $item->vc_name,
-            'VehicleRepair.repair_content'     => fn ($item) => $item->repair_content,
-            'VehicleRepair.departure_datetime' => fn ($item) => $item->departure_datetime_,
-            'VehicleRepair.repair_status'      => fn ($item) => $item->repair_status_label,
-            'VehicleRepair.pickup_status'      => fn ($item) => $item->pickup_status_label,
-            'VehicleRepair.settlement_status'  => fn ($item) => $item->settlement_status_label,
-            'VehicleRepair.custody_vehicle'    => fn ($item) => $item->custody_vehicle_label,
-            'VehicleRepair.repair_attribute'   => fn ($item) => $item->repair_attribute_label,
-            'VehicleRepair.vr_remark'          => fn ($item) => $item->vr_remark,
-            'VehicleRepair.repair_info'        => fn ($item) => str_render($item->repair_info, 'repair_info'),
+            'Vehicle.plate_no'                    => fn ($item) => $item->plate_no,
+            'Customer.cu_contact_name'            => fn ($item) => $item->cu_contact_name,
+            'VehicleRepair.vr_entry_datetime'     => fn ($item) => $item->vr_entry_datetime_,
+            'VehicleRepair.vr_mileage'            => fn ($item) => $item->vr_mileage,
+            'VehicleRepair.vr_repair_cost'        => fn ($item) => $item->vr_repair_cost,
+            'VehicleRepair.vr_delay_days'         => fn ($item) => $item->vr_delay_days,
+            'VehicleCenter.vc_name'               => fn ($item) => $item->vc_name,
+            'VehicleRepair.vr_repair_content'     => fn ($item) => $item->vr_repair_content,
+            'VehicleRepair.vr_departure_datetime' => fn ($item) => $item->vr_departure_datetime_,
+            'VehicleRepair.vr_repair_status'      => fn ($item) => $item->vr_repair_status_label,
+            'VehicleRepair.vr_pickup_status'      => fn ($item) => $item->vr_pickup_status_label,
+            'VehicleRepair.vr_settlement_status'  => fn ($item) => $item->vr_settlement_status_label,
+            'VehicleRepair.vr_custody_vehicle'    => fn ($item) => $item->vr_custody_vehicle_label,
+            'VehicleRepair.vr_repair_attribute'   => fn ($item) => $item->vr_repair_attribute_label,
+            'VehicleRepair.vr_remark'             => fn ($item) => $item->vr_remark,
+            'VehicleRepair.vr_repair_info'        => fn ($item) => str_render($item->vr_repair_info, 'repair_info'),
         ];
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $ve_id = $search['ve_id'] ?? null;
-        $sc_id = $search['sc_id'] ?? null;
-        $cu_id = $search['cu_id'] ?? null;
-        $vc_id = $search['vc_id'] ?? null;
+        //        $ve_id = $search['ve_id'] ?? null;
+        //        $sc_id = $search['sc_id'] ?? null;
+        //        $cu_id = $search['cu_id'] ?? null;
+        //        $vc_id = $search['vc_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_repairs', 'vr')
@@ -199,27 +199,27 @@ class VehicleRepair extends Model
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vr.vr_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->when($ve_id, function (Builder $query) use ($ve_id) {
-                $query->where('vr.vr_ve_id', '=', $ve_id);
-            })
-            ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $query->where('vr.vr_sc_id', '=', $sc_id);
-            })
-            ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('sc.sc_cu_id', '=', $cu_id);
-            })
-            ->when($vc_id, function (Builder $query) use ($vc_id) {
-                $query->where('vr.vr_vc_id', '=', $vc_id);
-            })
-            ->when(
-                null === $ve_id && null === $sc_id && null === $cu_id,
-                function (Builder $query) {
-                    $query->orderByDesc('vr.vr_id');
-                },
-                function (Builder $query) {
-                    $query->orderBy('vr.vr_id');
-                }
-            )
+//            ->when($ve_id, function (Builder $query) use ($ve_id) {
+//                $query->where('vr.vr_ve_id', '=', $ve_id);
+//            })
+//            ->when($sc_id, function (Builder $query) use ($sc_id) {
+//                $query->where('vr.vr_sc_id', '=', $sc_id);
+//            })
+//            ->when($cu_id, function (Builder $query) use ($cu_id) {
+//                $query->where('sc.sc_cu_id', '=', $cu_id);
+//            })
+//            ->when($vc_id, function (Builder $query) use ($vc_id) {
+//                $query->where('vr.vr_vc_id', '=', $vc_id);
+//            })
+//            ->when(
+//                null === $ve_id && null === $sc_id && null === $cu_id,
+//                function (Builder $query) {
+//                    $query->orderByDesc('vr.vr_id');
+//                },
+//                function (Builder $query) {
+//                    $query->orderBy('vr.vr_id');
+//                }
+//            )
             ->select('vr.*', 'vc.vc_name', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', '_vm.vm_brand_name', '_vm.vm_model_name')
             ->addSelect(
                 DB::raw(VrRepairAttribute::toCaseSQL()),
@@ -236,7 +236,7 @@ class VehicleRepair extends Model
         ;
     }
 
-    public static function indexStat($list): bool
+    public static function indexStatValue($list): bool
     {
         $status = false;
         foreach ($list as $item) {
@@ -252,56 +252,56 @@ class VehicleRepair extends Model
     public static function importColumns(): array
     {
         return [
-            'plate_no'           => [VehicleRepair::class, 'plate_no'],
-            'entry_datetime'     => [VehicleRepair::class, 'entry_datetime'],
-            'vr_mileage'         => [VehicleRepair::class, 'vr_mileage'],
-            'repair_cost'        => [VehicleRepair::class, 'repair_cost'],
-            'delay_days'         => [VehicleRepair::class, 'delay_days'],
-            'vc_name'            => [VehicleCenter::class, 'vc_name'],
-            'repair_content'     => [VehicleRepair::class, 'repair_content'],
-            'departure_datetime' => [VehicleRepair::class, 'departure_datetime'],
-            'repair_status'      => [VehicleRepair::class, 'repair_status'],
-            'settlement_status'  => [VehicleRepair::class, 'settlement_status'],
-            'pickup_status'      => [VehicleRepair::class, 'pickup_status'],
-            'settlement_method'  => [VehicleRepair::class, 'settlement_method'],
-            'custody_vehicle'    => [VehicleRepair::class, 'custody_vehicle'],
-            'repair_attribute'   => [VehicleRepair::class, 'repair_attribute'],
-            'vr_remark'          => [VehicleRepair::class, 'vr_remark'],
+            'vr_plate_no'           => [Vehicle::class, 've_plate_no'],
+            'vr_entry_datetime'     => [VehicleRepair::class, 'vr_entry_datetime'],
+            'vr_mileage'            => [VehicleRepair::class, 'vr_mileage'],
+            'vr_repair_cost'        => [VehicleRepair::class, 'vr_repair_cost'],
+            'vr_delay_days'         => [VehicleRepair::class, 'vr_delay_days'],
+            'vr_vc_name'            => [VehicleCenter::class, 'vc_name'],
+            'vr_repair_content'     => [VehicleRepair::class, 'vr_repair_content'],
+            'vr_departure_datetime' => [VehicleRepair::class, 'vr_departure_datetime'],
+            'vr_repair_status'      => [VehicleRepair::class, 'vr_repair_status'],
+            'vr_settlement_status'  => [VehicleRepair::class, 'vr_settlement_status'],
+            'vr_pickup_status'      => [VehicleRepair::class, 'vr_pickup_status'],
+            'vr_settlement_method'  => [VehicleRepair::class, 'vr_settlement_method'],
+            'vr_custody_vehicle'    => [VehicleRepair::class, 'vr_custody_vehicle'],
+            'vr_repair_attribute'   => [VehicleRepair::class, 'vr_repair_attribute'],
+            'vr_remark'             => [VehicleRepair::class, 'vr_remark'],
         ];
     }
 
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['ve_id']             = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['vc_id']             = VehicleCenter::nameKv($item['vc_name'] ?? null);
-            $item['repair_status']     = VrRepairStatus::searchValue($item['repair_status'] ?? null);
-            $item['settlement_status'] = VrSettlementStatus::searchValue($item['settlement_status'] ?? null);
-            $item['pickup_status']     = VrPickupStatus::searchValue($item['pickup_status'] ?? null);
-            $item['settlement_method'] = VrSettlementMethod::searchValue($item['settlement_method'] ?? null);
-            $item['custody_vehicle']   = VrCustodyVehicle::searchValue($item['custody_vehicle'] ?? null);
-            $item['repair_attribute']  = VrRepairAttribute::searchValue($item['repair_attribute'] ?? null);
+            $item['vr_ve_id']             = Vehicle::plateNoKv($item['vr_plate_no'] ?? null);
+            $item['vr_vc_id']             = VehicleCenter::nameKv($item['vr_vc_name'] ?? null);
+            $item['vr_repair_status']     = VrRepairStatus::searchValue($item['vr_repair_status'] ?? null);
+            $item['vr_settlement_status'] = VrSettlementStatus::searchValue($item['vr_settlement_status'] ?? null);
+            $item['vr_pickup_status']     = VrPickupStatus::searchValue($item['vr_pickup_status'] ?? null);
+            $item['vr_settlement_method'] = VrSettlementMethod::searchValue($item['vr_settlement_method'] ?? null);
+            $item['vr_custody_vehicle']   = VrCustodyVehicle::searchValue($item['vr_custody_vehicle'] ?? null);
+            $item['vr_repair_attribute']  = VrRepairAttribute::searchValue($item['vr_repair_attribute'] ?? null);
         };
     }
 
     public static function importValidatorRule(array $item, array $fieldAttributes): void
     {
         $rules = [
-            've_id'              => ['required', 'integer'],
-            'entry_datetime'     => ['required', 'date'],
-            'vr_mileage'         => ['nullable', 'integer', 'min:0'],
-            'repair_cost'        => ['nullable', 'decimal:0,2', 'gte:0'],
-            'delay_days'         => ['nullable', 'integer', 'min:0'],
-            'vc_id'              => ['required', 'integer'],
-            'repair_content'     => ['required', 'string'],
-            'departure_datetime' => ['nullable', 'date'],
-            'repair_status'      => ['required', 'string', Rule::in(VrRepairStatus::label_keys())],
-            'settlement_status'  => ['required', 'string', Rule::in(VrSettlementStatus::label_keys())],
-            'pickup_status'      => ['required', 'string', Rule::in(VrPickupStatus::label_keys())],
-            'settlement_method'  => ['required', 'string', Rule::in(VrSettlementMethod::label_keys())],
-            'custody_vehicle'    => ['required', 'string', Rule::in(VrCustodyVehicle::label_keys())],
-            'repair_attribute'   => ['required', 'string', Rule::in(VrRepairAttribute::label_keys())],
-            'vr_remark'          => ['nullable', 'string'],
+            'vr_ve_id'              => ['required', 'integer'],
+            'vr_entry_datetime'     => ['required', 'date'],
+            'vr_mileage'            => ['nullable', 'integer', 'min:0'],
+            'vr_repair_cost'        => ['nullable', 'decimal:0,2', 'gte:0'],
+            'vr_delay_days'         => ['nullable', 'integer', 'min:0'],
+            'vr_vc_id'              => ['required', 'integer'],
+            'vr_repair_content'     => ['required', 'string'],
+            'vr_departure_datetime' => ['nullable', 'date'],
+            'vr_repair_status'      => ['required', 'string', Rule::in(VrRepairStatus::label_keys())],
+            'vr_settlement_status'  => ['required', 'string', Rule::in(VrSettlementStatus::label_keys())],
+            'vr_pickup_status'      => ['required', 'string', Rule::in(VrPickupStatus::label_keys())],
+            'vr_settlement_method'  => ['required', 'string', Rule::in(VrSettlementMethod::label_keys())],
+            'vr_custody_vehicle'    => ['required', 'string', Rule::in(VrCustodyVehicle::label_keys())],
+            'vr_repair_attribute'   => ['required', 'string', Rule::in(VrRepairAttribute::label_keys())],
+            'vr_remark'             => ['nullable', 'string'],
         ];
 
         $validator = Validator::make($item, $rules, [], $fieldAttributes);
@@ -323,7 +323,7 @@ class VehicleRepair extends Model
         };
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

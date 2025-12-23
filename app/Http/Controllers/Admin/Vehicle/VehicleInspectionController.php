@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Vehicle;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AdmTeamLimit;
+use App\Enum\Admin\ATeamLimit;
 use App\Enum\Exist;
 use App\Enum\Payment\PIsValid;
 use App\Enum\Payment\PPayStatus;
@@ -41,7 +41,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('验车')]
@@ -72,9 +71,9 @@ class VehicleInspectionController extends Controller
         /** @var Admin $admin */
         $admin = auth()->user();
 
-        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+        if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereIn('ve.ve_team_id', $admin->team_ids)->orwhereNull('ve.ve_team_id');
+                $query->whereIn('ve.ve_team_id', $admin->a_team_ids)->orwhereNull('ve.ve_team_id');
             });
         }
 
@@ -176,7 +175,7 @@ class VehicleInspectionController extends Controller
     {
         $vehicle = $saleContract = null;
 
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'vi_inspection_type'       => ['bail', 'required', 'string', Rule::in(ViInspectionType::label_keys())],
@@ -270,13 +269,10 @@ class VehicleInspectionController extends Controller
                     }
                 }
             }
-        });
+        })
+            ->validate()
+        ;
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input         = $validator->validated();
         $input_payment = $input['payment'];
 
         if (null === $vehicleInspection) {
@@ -371,16 +367,12 @@ class VehicleInspectionController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function saleContractsOption(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             ['vi_inspection_type' => ['bail', 'required', 'string', Rule::in(ViInspectionType::label_keys())]]
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         $this->response()->withExtras(
             match ($input['vi_inspection_type']) {

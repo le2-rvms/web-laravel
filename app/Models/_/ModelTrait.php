@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * @property null|string $updated_by
@@ -28,14 +29,15 @@ trait ModelTrait
 
     use FieldsTrait;
 
-    public static $kvValue;
+    public static $indexValue;
+    public static $detailValue;
 
     //    public function getHidden()
     //    {
     //        return array_merge($this->hidden, ['created_at', 'updated_at']);
     //    }
 
-    abstract public static function indexQuery(array $search = []);
+    abstract public static function indexQuery();
 
     public function toArray(): array|object
     {
@@ -44,63 +46,77 @@ trait ModelTrait
         return !empty($attributes) ? $attributes : (object) [];
     }
 
-    public static function kvList(...$query): array
+    public static function indexList(?\Closure $where = null): array
     {
-        $query = array_filter($query);
-        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'List';
+        //        $query = array_filter($query);
+        $key = preg_replace('/^.*\\\/', '', get_called_class()).'IndexList';
 
-        static::$kvValue = $value = static::indexQuery($query)
+        static::$indexValue = $value = static::indexQuery()
+            ->where($where)
             ->get()
         ;
 
         return [$key => $value];
     }
 
-    public static function kvStat(): array
+    public static function detailList(?\Closure $where = null): array
     {
-        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Stat';
-        $value = static::indexStat(static::$kvValue);
+        //        $query = array_filter($query);
+        $key = preg_replace('/^.*\\\/', '', get_called_class()).'DetailList';
+
+        static::$detailValue = $value = static::detailQuery()
+            ->where($where)
+            ->get()
+        ;
 
         return [$key => $value];
     }
 
-    public static function customerQuery(Controller $controller): Builder
+    public static function indexStat(): array
     {
-        $perPage = 20;
+        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'IndexStat';
+        $value = static::indexStatValue(static::$indexValue);
 
-        $controller->response()->withExtras(
-            ['perPage' => $perPage]
-        );
-
-        $auth = auth();
-
-        return static::indexQuery(['cu_id' => $auth->id()])
-            ->forPage(1, $perPage)
-        ;
+        return [$key => $value];
     }
 
-    public static function customerQueryWithOrderVeId(Controller $controller, Request $request): Builder
-    {
-        $page = $request->input('page', 1);
+    //    public static function customerQuery(Controller $controller): Builder
+    //    {
+    //        $perPage = 20;
+    //
+    //        $controller->response()->withExtras(
+    //            ['perPage' => $perPage]
+    //        );
+    //
+    //        $auth = auth();
+    //
+    //        return static::indexQuery(['cu_id' => $auth->id()])
+    //            ->forPage(1, $perPage)
+    //        ;
+    //    }
 
-        $perPage = 20;
-
-        $controller->response()->withExtras(
-            ['perPage' => $perPage]
-        );
-
-        return static::indexQuery()
-            ->whereIn('ve.ve_id', SaleContract::CustomerHasVeId())
-            ->forPage($page, $perPage)
-        ;
-    }
+    //    public static function customerQueryWithOrderVeId(Controller $controller, Request $request): Builder
+    //    {
+    //        $page = $request->input('page', 1);
+    //
+    //        $perPage = 20;
+    //
+    //        $controller->response()->withExtras(
+    //            ['perPage' => $perPage]
+    //        );
+    //
+    //        return static::indexQuery()
+    //            ->whereIn('ve.ve_id', SaleContract::CustomerHasVeId())
+    //            ->forPage($page, $perPage)
+    //        ;
+    //    }
 
     public function ProcessedBy(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'processed_by', 'id');
     }
 
-    abstract public static function options(?\Closure $where = null): array;
+    abstract public static function options(?\Closure $where = null, ?string $key = null): array;
 
     protected function uploadFile(): Attribute
     {
@@ -188,5 +204,10 @@ trait ModelTrait
                 $model->{$updated_by_name} = AuthUserType::getValue();
             }
         });
+    }
+
+    protected static function getOptionKey(?string $key = null): string
+    {
+        return ($key ? Str::studly($key) : preg_replace('/^.*\\\/', '', get_called_class())).'Datas';
     }
 }

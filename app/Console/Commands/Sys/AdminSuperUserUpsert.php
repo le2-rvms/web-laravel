@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Sys;
 
-use App\Enum\Admin\AdmUserType;
+use App\Enum\Admin\AUserType;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
 use Illuminate\Console\Command;
@@ -57,8 +57,8 @@ class AdminSuperUserUpsert extends Command
                     'name'                 => $name,
                     'password'             => Hash::make($password),
                     'password_verified_at' => now(),
-                    'user_type'            => AdmUserType::TEMP,
-                    'expires_at'           => Carbon::now()->addDays(3),
+                    'a_user_type'          => AUserType::TEMP,
+                    'a_expires_at'         => Carbon::now()->addDays(3),
                 ]
             )
                 ->syncRoles([$role])

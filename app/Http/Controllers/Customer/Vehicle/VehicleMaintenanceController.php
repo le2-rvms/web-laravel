@@ -18,11 +18,21 @@ class VehicleMaintenanceController extends Controller
 
     public function index(Request $request): Response
     {
-        $data = VehicleMaintenance::customerQuery($this)
+        $perPage = 20;
+
+        $this->response()->withExtras(
+            ['perPage' => $perPage]
+        );
+
+        $auth = auth();
+
+        $data = VehicleMaintenance::indexQuery()
+            ->where('sc.sc_cu_id', '=', $auth->id())
+            ->forPage(1, $perPage)
             ->when(
-                $request->get('last_id'),
+                ${$request}->query('last_id'),
                 function (Builder $query) use ($request) {
-                    $query->where('vm.vm_id', '<', $request->get('last_id'));
+                    $query->where('vm.vm_id', '<', $request->query('last_id'));
                 }
             )
             ->get()

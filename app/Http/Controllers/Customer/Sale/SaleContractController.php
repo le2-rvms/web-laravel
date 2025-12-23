@@ -18,13 +18,24 @@ class SaleContractController extends Controller
 
     public function index(Request $request): Response
     {
-        $data = SaleContract::customerQuery($this)
+        $perPage = 20;
+
+        $this->response()->withExtras(
+            ['perPage' => $perPage]
+        );
+
+        $auth = auth();
+
+        $data = SaleContract::indexQuery()
+            ->where('cu.cu_id', '=', $auth->id())
+            ->where('sc.sc_is_current_version', '=', true)
             ->when(
-                $request->get('last_id'),
+                $request->query('last_id'),
                 function (Builder $query) use ($request) {
-                    $query->where('sc.sc_id', '<', $request->get('last_id'));
+                    $query->where('sc.sc_id', '<', $request->query('last_id'));
                 }
             )
+            ->forPage(1, $perPage)
             ->get()
         ;
 

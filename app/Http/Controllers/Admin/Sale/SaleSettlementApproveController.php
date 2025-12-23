@@ -18,7 +18,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('退车结算审核')]
@@ -29,7 +28,7 @@ class SaleSettlementApproveController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, SaleSettlement $saleSettlement): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
             ],
@@ -44,12 +43,8 @@ class SaleSettlementApproveController extends Controller
                     $validator->errors()->add('ss_return_status', '不能重复审核');
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        //        $input = $validator->validated();
 
         $saleContract = $saleSettlement->SaleContract;
 
@@ -69,7 +64,7 @@ class SaleSettlementApproveController extends Controller
 
             $saleContract->Vehicle->updateStatus(ve_status_rental: VeStatusRental::PENDING);
 
-            switch ($saleSettlement->delete_option) {
+            switch ($saleSettlement->ss_delete_option->value) {
                 case SsDeleteOption::DELETE:
                     Payment::query()
                         ->where('p_sc_id', '=', $saleContract->sc_id)

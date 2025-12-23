@@ -70,10 +70,10 @@ class VehicleTmp extends Model
         return $this->belongsTo(Vehicle::class, 'vt_new_ve_id', 've_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $sc_id = $search['sc_id'] ?? null;
-        $cu_id = $search['cu_id'] ?? null;
+        //        $sc_id = $search['sc_id'] ?? null;
+        //        $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_tmps', 'vt')
@@ -81,21 +81,21 @@ class VehicleTmp extends Model
             ->leftJoin('vehicles as ve1', 've1.ve_id', '=', 'vt.vt_current_ve_id')
             ->leftJoin('vehicles as ve2', 've2.ve_id', '=', 'vt.vt_new_ve_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $query->where('sc.sc_id', '=', $sc_id);
-            })
-            ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('sc.sc_cu_id', '=', $cu_id);
-            })
-            ->when(
-                null === $sc_id && null === $cu_id,
-                function (Builder $query) {
-                    $query->orderByDesc('vt.vt_id');
-                },
-                function (Builder $query) {
-                    $query->orderBy('vt.vt_id');
-                }
-            )
+//            ->when($sc_id, function (Builder $query) use ($sc_id) {
+//                $query->where('sc.sc_id', '=', $sc_id);
+//            })
+//            ->when($cu_id, function (Builder $query) use ($cu_id) {
+//                $query->where('sc.sc_cu_id', '=', $cu_id);
+//            })
+//            ->when(
+//                null === $sc_id && null === $cu_id,
+//                function (Builder $query) {
+//                    $query->orderByDesc('vt.vt_id');
+//                },
+//                function (Builder $query) {
+//                    $query->orderBy('vt.vt_id');
+//                }
+//            )
             ->select('vt.*', 'sc.*', 'cu.*', 've1.ve_plate_no as current_ve_plate_no', 've2.ve_plate_no as new_ve_plate_no')
             ->addSelect(
                 DB::raw(VtChangeStatus::toCaseSQL()),
@@ -117,9 +117,9 @@ class VehicleTmp extends Model
         ];
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
 
         $value = static::options_value($where);
 

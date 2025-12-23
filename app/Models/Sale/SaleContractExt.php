@@ -33,7 +33,7 @@ class SaleContractExt extends Model
         return $this->belongsTo(SaleContract::class, 'sce_sc_id', 'sc_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('sale_contract_exts', 'sce')
@@ -45,7 +45,7 @@ class SaleContractExt extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

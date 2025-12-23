@@ -19,7 +19,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('整备')]
@@ -83,7 +82,7 @@ class VehiclePreparationController extends Controller
         $role_prep_vehicle  = $admin->hasRole(AdminRole::role_vehicle_mgr) || $admin->hasRole(config('setting.super_role.name'));
         $role_prep_document = $admin->hasRole(AdminRole::role_payment) || $admin->hasRole(config('setting.super_role.name'));
 
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'vp_ve_id' => ['bail', 'required', 'integer'],
@@ -117,13 +116,8 @@ class VehiclePreparationController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         if ($input['vp_annual_check_is']) {
             $input['vp_annual_check_dt'] = now();

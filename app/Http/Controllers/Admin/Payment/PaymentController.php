@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Payment;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AdmTeamLimit;
+use App\Enum\Admin\ATeamLimit;
 use App\Enum\Payment\PaStatus;
 use App\Enum\Payment\PIsValid;
 use App\Enum\Payment\PPayStatus;
@@ -27,7 +27,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('收付款')]
@@ -54,9 +53,9 @@ class PaymentController extends Controller
         /** @var Admin $admin */
         $admin = auth()->user();
 
-        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+        if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereIn('cu.cu_team_id', $admin->team_ids)->orWhereNull('cu.cu_team_id');
+                $query->whereIn('cu.cu_team_id', $admin->a_team_ids)->orWhereNull('cu.cu_team_id');
             });
         }
 
@@ -165,7 +164,7 @@ class PaymentController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function undo(Request $request, Payment $payment): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
             ],
@@ -180,12 +179,8 @@ class PaymentController extends Controller
                     $validator->errors()->add('p_pay_status', '未支付，无需退还');
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input, $payment) {
             $payment->update([
@@ -202,7 +197,7 @@ class PaymentController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?Payment $payment): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'p_sc_id'             => ['bail', 'required', 'integer', Rule::exists(SaleContract::class, 'sc_id')],
@@ -250,12 +245,8 @@ class PaymentController extends Controller
                     }
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input, &$payment) {
             if ($payment && $payment->exists) {

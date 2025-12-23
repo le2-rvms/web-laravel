@@ -10,7 +10,6 @@ use App\Services\Uploader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionNoneType('公司信息管理')]
@@ -37,7 +36,7 @@ class CompanyController extends Controller
 
     public function update(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'cp_name'                 => ['bail', 'required', 'max:255'],
@@ -57,13 +56,9 @@ class CompanyController extends Controller
             + Uploader::validator_rule_upload_object('cp_business_license_photo', false),
             [],
             trans_property(Company::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input, &$company) {
             $company = Company::query()->firstOrNew();

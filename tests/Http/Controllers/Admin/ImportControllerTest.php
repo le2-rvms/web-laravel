@@ -3,10 +3,16 @@
 namespace Tests\Http\Controllers\Admin;
 
 use App\Enum\Config\ImportConfig;
+use App\Enum\Vehicle\VcStatus;
 use App\Http\Controllers\Admin\Config\ImportController;
 use App\Models\Customer\Customer;
+use App\Models\Customer\CustomerCompany;
+use App\Models\Customer\CustomerIndividual;
+use App\Models\Payment\Payment;
 use App\Models\Sale\SaleContract;
 use App\Models\Vehicle\Vehicle;
+use App\Models\Vehicle\VehicleCenter;
+use App\Models\Vehicle\VehicleRepair;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -22,23 +28,19 @@ class ImportControllerTest extends TestCase
     {
         parent::setUp();
 
-        /** @var Customer $customer */
-        $customer = Customer::query()->where('cu_contact_name', '=', '苏妹妹')->first();
-        if ($customer) {
-            DB::transaction(function () use ($customer) {
-                $customer->CustomerIndividual()->delete();
-                $customer->CustomerCompany()->delete();
-                $customer->delete();
-            });
-        }
-        Vehicle::query()->whereIn('ve_plate_no', ['川N7JF90'])->delete();
-        $saleContract = SaleContract::query()->whereLike('sc_no', 'TMP%')->first();
-        if ($saleContract) {
-            DB::transaction(function () use ($saleContract) {
-                $saleContract->Payments()->delete();
-                $saleContract->delete();
-            });
-        }
+        DB::transaction(function () {
+            VehicleRepair::query()->whereRaw("vr_ve_id in (select ve_id from vehicles where ve_plate_no like '测%' )")->delete();
+
+            Payment::query()->whereRaw("p_sc_id in (select sc_id from sale_contracts where sc_no like 'TMP%')")->delete();
+            SaleContract::query()->whereLike('sc_no', 'TMP%')->delete();
+
+            Vehicle::query()->whereLike('ve_plate_no', '测%')->delete();
+            CustomerIndividual::query()->whereRaw("cui_cu_id in (select cu_id from customers where cu_contact_name like '测%')")->delete();
+            CustomerCompany::query()->whereRaw("cuc_cu_id in (select cu_id from customers where cu_contact_name like '测%')")->delete();
+            Customer::query()->whereLike('cu_contact_name', '测%')->delete();
+
+            VehicleCenter::query()->insertOrIgnore(['vc_name' => '演示修理厂', 'vc_status' => VcStatus::ENABLED]);
+        });
     }
 
     public function testUpdate()
@@ -68,8 +70,8 @@ class ImportControllerTest extends TestCase
             $response11 = $this->putJson(
                 action([ImportController::class, 'update']),
                 [
-                    'model'       => $model,
-                    'import_file' => [
+                    'app_model_name' => $model,
+                    'import_file'    => [
                         'name'    => 'a',
                         'extname' => 'xlsx',
                         'size'    => '123',
@@ -87,7 +89,7 @@ class ImportControllerTest extends TestCase
     {
         foreach (ImportConfig::keys() as $model) {
             $resp = $this->getJson(
-                action([ImportController::class, 'template'], ['model' => $model]),
+                action([ImportController::class, 'template'], ['app_model_name' => $model]),
             );
             $resp->assertStatus(200)
                 ->assertJsonStructure(['data' => ['url']])

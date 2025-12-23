@@ -23,7 +23,6 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('预定租车')]
@@ -109,7 +108,7 @@ class BookingOrderController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?BookingOrder $bookingOrder): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             (null === $bookingOrder  // 新增的时候
                 ? [
@@ -161,12 +160,8 @@ class BookingOrderController extends Controller
                     }
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         if (null === $bookingOrder) {
             $bookingOrder = BookingOrder::query()->create($input + ['order_at' => now()]);

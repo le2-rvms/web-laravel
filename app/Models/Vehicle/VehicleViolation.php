@@ -68,11 +68,11 @@ class VehicleViolation extends Model
         return $this->belongsTo(VehicleUsage::class, 'vv_vu_id', 'vu_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $ve_id = $search['ve_id'] ?? null;
-        $sc_id = $search['sc_id'] ?? null;
-        $cu_id = $search['cu_id'] ?? null;
+        //        $ve_id = $search['ve_id'] ?? null;
+        //        $sc_id = $search['sc_id'] ?? null;
+        //        $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_violations', 'vv')
@@ -80,24 +80,24 @@ class VehicleViolation extends Model
             ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vv_vu_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vu.vu_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->when($ve_id, function (Builder $query) use ($ve_id) {
-                $query->where('vv.vv_ve_id', '=', $ve_id);
-            })
-            ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $query->where('vu.vu_sc_id', '=', $sc_id);
-            })
-            ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('sc.sc_cu_id', '=', $cu_id);
-            })
-            ->when(
-                null === $ve_id && null === $sc_id && null === $cu_id,
-                function (Builder $query) {
-                    $query->orderByDesc('vv.vv_id');
-                },
-                function (Builder $query) {
-                    $query->orderBy('vv.vv_id');
-                }
-            )
+//            ->when($ve_id, function (Builder $query) use ($ve_id) {
+//                $query->where('vv.vv_ve_id', '=', $ve_id);
+//            })
+//            ->when($sc_id, function (Builder $query) use ($sc_id) {
+//                $query->where('vu.vu_sc_id', '=', $sc_id);
+//            })
+//            ->when($cu_id, function (Builder $query) use ($cu_id) {
+//                $query->where('sc.sc_cu_id', '=', $cu_id);
+//            })
+//            ->when(
+//                null === $ve_id && null === $sc_id && null === $cu_id,
+//                function (Builder $query) {
+//                    $query->orderByDesc('vv.vv_id');
+//                },
+//                function (Builder $query) {
+//                    $query->orderBy('vv.vv_id');
+//                }
+//            )
             ->select(
                 'vv.*',
                 DB::raw("to_char(vv_violation_datetime, 'YYYY-MM-DD HH24:MI') as vv_violation_datetime_"),
@@ -122,12 +122,12 @@ class VehicleViolation extends Model
         ];
     }
 
-    public static function indexStat($list): bool
+    public static function indexStatValue($list): bool
     {
         return count($list) > 0;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

@@ -52,7 +52,7 @@ class LoginController extends Controller
                 return $response;
             }
 
-            if ($admin->expires_at && $admin->expires_at->lt(Carbon::now())) {
+            if ($admin->a_expires_at && $admin->a_expires_at->lt(Carbon::now())) {
                 throw ValidationException::withMessages([
                     $this->username() => ['临时账户已过期，无法登录。'],
                 ]);

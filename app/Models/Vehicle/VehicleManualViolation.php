@@ -76,11 +76,11 @@ class VehicleManualViolation extends Model
         return $this->belongsTo(VehicleUsage::class, 'vv_vu_id', 'vu_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $ve_id = $search['ve_id'] ?? null;
-        $sc_id = $search['sc_id'] ?? null;
-        $cu_id = $search['cu_id'] ?? null;
+        //        $ve_id = $search['ve_id'] ?? null;
+        //        $sc_id = $search['sc_id'] ?? null;
+        //        $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_manual_violations', 'vv')
@@ -88,24 +88,24 @@ class VehicleManualViolation extends Model
             ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vv_vu_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vu.vu_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->when($ve_id, function (Builder $query) use ($ve_id) {
-                $query->where('vv.vv_ve_id', '=', $ve_id);
-            })
-            ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $query->where('vu.vu_sc_id', '=', $sc_id);
-            })
-            ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('sc.sc_cu_id', '=', $cu_id);
-            })
-            ->when(
-                null === $ve_id && null === $sc_id && null === $cu_id,
-                function (Builder $query) {
-                    $query->orderByDesc('vv.vv_id');
-                },
-                function (Builder $query) {
-                    $query->orderBy('vv.vv_id');
-                }
-            )
+//            ->when($ve_id, function (Builder $query) use ($ve_id) {
+//                $query->where('vv.vv_ve_id', '=', $ve_id);
+//            })
+//            ->when($sc_id, function (Builder $query) use ($sc_id) {
+//                $query->where('vu.vu_sc_id', '=', $sc_id);
+//            })
+//            ->when($cu_id, function (Builder $query) use ($cu_id) {
+//                $query->where('sc.sc_cu_id', '=', $cu_id);
+//            })
+//            ->when(
+//                null === $ve_id && null === $sc_id && null === $cu_id,
+//                function (Builder $query) {
+//                    $query->orderByDesc('vv.vv_id');
+//                },
+//                function (Builder $query) {
+//                    $query->orderBy('vv.vv_id');
+//                }
+//            )
             ->select('vv.*', 've.ve_plate_no')
             ->addSelect(
                 DB::raw(VvStatus::toCaseSQL()),
@@ -115,7 +115,7 @@ class VehicleManualViolation extends Model
         ;
     }
 
-    public static function indexStat($list): bool
+    public static function indexStatValue($list): bool
     {
         return count($list) > 0;
     }
@@ -123,38 +123,37 @@ class VehicleManualViolation extends Model
     public static function importColumns(): array
     {
         return [
-            'plate_no'           => [VehicleManualViolation::class, 'plate_no'],
-            'violation_datetime' => [VehicleManualViolation::class, 'violation_datetime'],
-            'location'           => [VehicleManualViolation::class, 'location'],
-            'violation_content'  => [VehicleManualViolation::class, 'violation_content'],
-            'fine_amount'        => [VehicleManualViolation::class, 'fine_amount'],
-            'penalty_points'     => [VehicleManualViolation::class, 'penalty_points'],
-            'status'             => [VehicleManualViolation::class, 'status'],
-            'vv_remark'          => [VehicleManualViolation::class, 'vv_remark'],
+            'vv_plate_no'           => [Vehicle::class, 've_plate_no'],
+            'vv_violation_datetime' => [VehicleManualViolation::class, 'vv_violation_datetime'],
+            'vv_location'           => [VehicleManualViolation::class, 'vv_location'],
+            'vv_violation_content'  => [VehicleManualViolation::class, 'vv_violation_content'],
+            'vv_fine_amount'        => [VehicleManualViolation::class, 'vv_fine_amount'],
+            'vv_penalty_points'     => [VehicleManualViolation::class, 'vv_penalty_points'],
+            'vv_status'             => [VehicleManualViolation::class, 'vv_status'],
+            'vv_remark'             => [VehicleManualViolation::class, 'vv_remark'],
         ];
     }
 
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['ve_id']  = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['status'] = VvStatus::searchValue($item['status'] ?? null);
+            $item['vv_ve_id']  = Vehicle::plateNoKv($item['vv_plate_no'] ?? null);
+            $item['vv_status'] = VvStatus::searchValue($item['vv_status'] ?? null);
         };
     }
 
     public static function importValidatorRule(array $item, array $fieldAttributes): void
     {
-        $rules
-            = [
-                've_id'              => ['required', 'integer'],
-                'violation_datetime' => ['required', 'date'],
-                'violation_content'  => ['nullable', 'string', 'max:200'],
-                'location'           => ['nullable', 'string', 'max:255'],
-                'fine_amount'        => ['nullable', 'numeric'],
-                'penalty_points'     => ['nullable', 'integer'],
-                'status'             => ['required', 'integer', Rule::in(VvStatus::label_keys())],
-                'vv_remark'          => ['nullable', 'string'],
-            ];
+        $rules = [
+            'vv_ve_id'              => ['required', 'integer'],
+            'vv_violation_datetime' => ['required', 'date'],
+            'vv_violation_content'  => ['nullable', 'string', 'max:200'],
+            'vv_location'           => ['nullable', 'string', 'max:255'],
+            'vv_fine_amount'        => ['nullable', 'numeric'],
+            'vv_penalty_points'     => ['nullable', 'integer'],
+            'vv_status'             => ['required', 'integer', Rule::in(VvStatus::label_keys())],
+            'vv_remark'             => ['nullable', 'string'],
+        ];
 
         $validator = Validator::make($item, $rules, [], $fieldAttributes);
 
@@ -175,7 +174,7 @@ class VehicleManualViolation extends Model
         };
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

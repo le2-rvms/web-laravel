@@ -25,7 +25,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('出险')]
@@ -206,13 +205,8 @@ class VehicleAccidentController extends Controller
                     }
                 }
             })
+            ->validate()
         ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input, &$vehicle, &$vehicleAccident) {
             if (null === $vehicleAccident) {
@@ -228,21 +222,6 @@ class VehicleAccidentController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleAccident $vehicleAccident): Response
     {
-        $validator = Validator::make(
-            [],
-            []
-        )
-            ->after(function (\Illuminate\Validation\Validator $validator) {
-                if ($validator->failed()) {
-                    return;
-                }
-            })
-        ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
         $vehicleAccident->delete();
 
         return $this->response()->withData($vehicleAccident)->respond();
@@ -257,18 +236,14 @@ class VehicleAccidentController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function saleContractsOption(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'va_ve_id' => ['bail', 'required', 'integer'],
             ]
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         $this->response()->withExtras(
             SaleContract::options(

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin\Admin;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AdmTeamLimit;
-use App\Enum\Admin\AdmUserType;
+use App\Enum\Admin\ATeamLimit;
+use App\Enum\Admin\AUserType;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\CheckAdminIsMock;
 use App\Models\Admin\Admin;
@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('员工')]
@@ -37,7 +36,7 @@ class AdminController extends Controller
         $this->response()->withExtras();
 
         $query = Admin::query()
-            ->where('user_type', '!=', AdmUserType::TEMP)
+            ->where('a_user_type', '!=', AUserType::TEMP)
             ->addSelect([
                 'vehicle_manager_count' => Vehicle::query()->selectRaw('count(*)')->whereColumn('vehicles.ve_vehicle_manager', 'admins.id'),
             ])
@@ -72,7 +71,7 @@ class AdminController extends Controller
         );
 
         $admin = new Admin([
-            'team_limit' => AdmTeamLimit::NOT_LIMITED,
+            'a_team_limit' => ATeamLimit::NOT_LIMITED,
         ]);
 
         return $this->response()->withData($admin)->respond();
@@ -97,45 +96,41 @@ class AdminController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'name'                  => ['bail', 'required', 'string', 'max:255'],
-                'wecom_name'            => ['bail', 'nullable', 'string', 'max:255'],
+                'a_wecom_name'          => ['bail', 'nullable', 'string', 'max:255'],
                 'email'                 => ['bail', 'nullable', 'string', 'email', 'max:255', Rule::unique(Admin::class, 'email')],
                 'password'              => ['bail', 'required', 'string', 'min:8', 'confirmed'],
                 'password_confirmation' => ['bail', 'required', 'string', 'min:8'],
                 'roles_'                => ['bail', 'required'],
-                'expires_at'            => ['bail', 'nullable', 'date'],
-                'team_limit'            => ['bail', 'required', Rule::in(AdmTeamLimit::label_keys())],
-                'team_ids'              => [
+                'a_expires_at'          => ['bail', 'nullable', 'date'],
+                'a_team_limit'          => ['bail', 'required', Rule::in(ATeamLimit::label_keys())],
+                'a_team_ids'            => [
                     'bail',
-                    Rule::excludeIf(AdmTeamLimit::LIMITED !== (int) $request->team_limit),
-                    Rule::when(fn ($input) => AdmTeamLimit::LIMITED === (int) $input->team_limit, 'required', 'nullable'),
+                    Rule::excludeIf(ATeamLimit::LIMITED !== (int) $request->a_team_limit),
+                    Rule::when(fn ($input) => ATeamLimit::LIMITED === (int) $input->a_team_limit, 'required', 'nullable'),
                     'array',
                 ],
-                'team_ids.*' => ['bail', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
+                'a_team_ids.*' => ['bail', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
             ],
             [],
             trans_property(Admin::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         if (null === $input['password']) {
             unset($input['password'], $input['password_verified_at']);
         }
 
-        $input['user_type'] = (function () use ($input) {
+        $input['a_user_type'] = (function () use ($input) {
             if (config('setting.mock.enable') && Str::startsWith($input['name'], '演示')) {
-                return AdmUserType::MOCK;
+                return AUserType::MOCK;
             }
 
-            return AdmUserType::COMMON;
+            return AUserType::COMMON;
         })();
 
         DB::transaction(function () use (&$input, &$admin) {
@@ -153,45 +148,41 @@ class AdminController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, Admin $admin): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'name'                  => ['bail', 'required', 'string', 'max:255'],
-                'wecom_name'            => ['bail', 'nullable', 'string', 'max:255'],
+                'a_wecom_name'          => ['bail', 'nullable', 'string', 'max:255'],
                 'email'                 => ['bail', 'nullable', 'string', 'email', 'max:255', Rule::unique(Admin::class)->ignore($admin)],
                 'roles_'                => ['bail', 'nullable'],
                 'password'              => ['bail', 'nullable', 'required_with:password_confirmation', 'string', 'min:8', 'confirmed'],
                 'password_confirmation' => ['bail', 'nullable', 'required_with:password', 'string', 'min:8'],
-                'expires_at'            => ['bail', 'nullable', 'date'],
-                'team_limit'            => ['bail', 'required', Rule::in(AdmTeamLimit::label_keys())],
-                'team_ids'              => [
+                'a_expires_at'          => ['bail', 'nullable', 'date'],
+                'a_team_limit'          => ['bail', 'required', Rule::in(ATeamLimit::label_keys())],
+                'a_team_ids'            => [
                     'bail',
-                    Rule::excludeIf(AdmTeamLimit::LIMITED !== (int) $request->team_limit),
-                    Rule::when(fn ($input) => AdmTeamLimit::LIMITED === (int) $input->team_limit, 'required', 'nullable'),
+                    Rule::excludeIf(ATeamLimit::LIMITED !== (int) $request->input('a_team_limit')),
+                    Rule::when(fn ($input) => ATeamLimit::LIMITED === (int) $input->a_team_limit, 'required', 'nullable'),
                     'array',
                 ],
-                'team_ids.*' => ['bail', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
+                'a_team_ids.*' => ['bail', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
             ],
             [],
             trans_property(Admin::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         if (array_key_exists('password', $input) && null === $input['password']) {
             unset($input['password'], $input['password_verified_at']);
         }
 
-        $input['user_type'] = (function () use ($input) {
+        $input['a_user_type'] = (function () use ($input) {
             if (config('setting.mock.enable') && Str::startsWith($input['name'], '演示')) {
-                return AdmUserType::MOCK;
+                return AUserType::MOCK;
             }
 
-            return AdmUserType::COMMON;
+            return AUserType::COMMON;
         })();
 
         DB::transaction(function () use (&$input, &$admin) {
@@ -234,14 +225,14 @@ class AdminController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
-            AdmTeamLimit::labelOptions(),
+            ATeamLimit::labelOptions(),
         );
     }
 
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
-            AdmTeamLimit::options(),
+            ATeamLimit::options(),
         );
     }
 }

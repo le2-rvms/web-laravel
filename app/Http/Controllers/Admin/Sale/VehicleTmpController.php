@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AdmTeamLimit;
+use App\Enum\Admin\ATeamLimit;
 use App\Enum\Sale\VtChangeStatus;
 use App\Enum\SaleContract\ScStatus;
 use App\Enum\Vehicle\VeStatusDispatch;
@@ -21,7 +21,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('临时车')]
@@ -45,9 +44,9 @@ class VehicleTmpController extends Controller
         $columns = VehicleTmp::indexColumns();
 
         // 车队查询条件
-        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+        if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereIn('cu.cu_team_id', $admin->team_ids)->orWhereNull('cu.cu_team_id');
+                $query->whereIn('cu.cu_team_id', $admin->a_team_ids)->orWhereNull('cu.cu_team_id');
             });
         }
 
@@ -68,7 +67,7 @@ class VehicleTmpController extends Controller
     {
         /** @var SaleContract $saleContract */
         $saleContract = null; // todo  去掉？
-        $validator    = Validator::make(
+        $input        = Validator::make(
             $request->all(),
             [
                 'sc_id' => ['nullable', 'integer'],
@@ -80,24 +79,21 @@ class VehicleTmpController extends Controller
                 if ($validator->failed()) {
                     return;
                 }
-                if ($sc_id = $request->get('sc_id')) {
+                if ($sc_id = $request->query('sc_id')) {
                     $saleContract = SaleContract::query()->findOrFail($sc_id);
 
-                    $saleContract->load('Vehicle');
+                    //                    $saleContract->load('Vehicle');
 
                     $vehicle0 = $saleContract->Vehicle;
 
-                    $pass = $vehicle0->check_status(VeStatusService::YES, [VeStatusRental::RESERVED], [VeStatusDispatch::NOT_DISPATCHED], $validator);
+                    $pass = $vehicle0->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [], $validator);
                     if (!$pass) {
                         return;
                     }
                 }
             })
+            ->validate()
         ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
 
         $this->options();
         $this->response()->withExtras(
@@ -116,10 +112,11 @@ class VehicleTmpController extends Controller
         );
 
         $vehicleTmp = new VehicleTmp([
-            //            'sc_id'                  => $saleContract?->sc_id,
+            'vt_sc_id'             => $saleContract?->sc_id,
             'vt_change_start_date' => now(),
             'vt_change_status'     => VtChangeStatus::IN_PROGRESS,
         ]);
+        $vehicleTmp->SaleContract = $saleContract;
 
         return $this->response()->withData($vehicleTmp)->respond();
     }
@@ -132,7 +129,7 @@ class VehicleTmpController extends Controller
         /** @var SaleContract $saleContract */
         $vehicle0 = $vehicle = $saleContract = null;
 
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'vt_sc_id'             => ['bail', 'required', 'integer'],
@@ -145,9 +142,7 @@ class VehicleTmpController extends Controller
                 + Uploader::validator_rule_upload_array('vt_additional_photos'),
             [],
             trans_property(VehicleTmp::class)
-        );
-
-        $validator->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$saleContract, &$vehicle0, &$vehicle) {
+        )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$saleContract, &$vehicle0, &$vehicle) {
             if ($validator->failed()) {
                 return;
             }
@@ -155,7 +150,7 @@ class VehicleTmpController extends Controller
 
             $vehicle0 = $saleContract->Vehicle;
 
-            $pass = $vehicle0->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [VeStatusDispatch::DISPATCHED], $validator);
+            $pass = $vehicle0->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [], $validator);
             if (!$pass) {
                 return;
             }
@@ -178,13 +173,9 @@ class VehicleTmpController extends Controller
 
                 return;
             }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        })
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input, &$vehicleTmp, &$saleContract, $vehicle) {
             $vehicleTmp = VehicleTmp::query()
@@ -218,13 +209,6 @@ class VehicleTmpController extends Controller
     {
         $this->options();
         $this->response()->withExtras(
-            Vehicle::options(
-                where: function (Builder $builder) {
-                    $builder->whereIn('ve_status_rental', [VeStatusRental::PENDING])
-                        ->whereIn('ve_status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
-                    ;
-                }
-            ),
         );
 
         $vehicleTmp->load('CurrentVehicle', 'NewVehicle');
@@ -235,7 +219,7 @@ class VehicleTmpController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, VehicleTmp $vehicleTmp): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'vt_change_start_date' => ['bail', 'nullable', 'required', 'date'],
@@ -246,19 +230,13 @@ class VehicleTmpController extends Controller
                 + Uploader::validator_rule_upload_array('vt_additional_photos'),
             [],
             trans_property(VehicleTmp::class)
-        );
-
-        $validator->after(function (\Illuminate\Validation\Validator $validator) {
+        )->after(function (\Illuminate\Validation\Validator $validator) {
             if ($validator->failed()) {
                 return;
             }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        })
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input, &$vehicleTmp) {
             $vehicleTmp->update($input);

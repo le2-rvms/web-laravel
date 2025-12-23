@@ -3,6 +3,8 @@
 namespace App\Models\Admin;
 
 use App\Attributes\ClassName;
+use App\Models\_\ModelTrait;
+use Illuminate\Database\Query\Builder;
 use Spatie\Permission\Models\Permission;
 
 #[ClassName('员工权限')]
@@ -14,13 +16,16 @@ use Spatie\Permission\Models\Permission;
  */
 class AdminPermission extends Permission
 {
+    use ModelTrait;
+
     public const UPDATED_BY = 'updated_by';
 
     protected $table = 'permissions';
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
+
         $value = static::query()->toBase()
             ->orderBy('group_name')->orderBy('name')
             ->get()
@@ -28,5 +33,10 @@ class AdminPermission extends Permission
         ;
 
         return [$key => $value];
+    }
+
+    public static function indexQuery(): Builder
+    {
+        // TODO: Implement indexQuery() method.
     }
 }

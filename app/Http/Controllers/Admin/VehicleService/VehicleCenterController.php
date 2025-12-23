@@ -18,7 +18,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('修理厂')]
@@ -103,9 +102,15 @@ class VehicleCenterController extends Controller
             Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
                 $builder->role(AdminRole::role_vehicle_service);
             }),
-            VehicleRepair::kvList(vc_id: $vehicleCenter->vc_id),
-            VehicleMaintenance::kvList(vc_id: $vehicleCenter->vc_id),
-            VehicleAccident::kvList(vc_id: $vehicleCenter->vc_id),
+            VehicleRepair::indexList(function (Builder $query) use ($vehicleCenter) {
+                $query->where('vr.vr_vc_id', '=', $vehicleCenter->vc_id);
+            }),
+            VehicleMaintenance::indexList(function (Builder $query) use ($vehicleCenter) {
+                $query->where('vm.vm_vc_id', '=', $vehicleCenter->vc_id);
+            }),
+            VehicleAccident::indexList(function (Builder $query) use ($vehicleCenter) {
+                $query->where('va.va_vc_id', '=', $vehicleCenter->vc_id);
+            }),
         );
 
         return $this->response()->withData($vehicleCenter)->respond();
@@ -114,7 +119,7 @@ class VehicleCenterController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleCenter $vehicleCenter): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'vc_name'          => ['bail', 'required', 'string', 'max:255'],
@@ -135,12 +140,8 @@ class VehicleCenterController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input, &$vehicleCenter) {
             if (null === $vehicleCenter) {

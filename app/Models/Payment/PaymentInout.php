@@ -67,7 +67,7 @@ class PaymentInout extends Model
         return $this->belongsTo(Payment::class, 'io_p_id', 'p_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('payment_inouts', 'io')
@@ -111,8 +111,10 @@ class PaymentInout extends Model
 
     public static function option(Collection $Payments): array
     {
+        $key = static::getOptionKey($key);
+
         return [
-            preg_replace('/^.*\\\/', '', get_called_class()).'Options' => (function () use ($Payments) {
+            $key => (function () use ($Payments) {
                 $value = [];
                 foreach ($Payments as $key => $p) {
                     $value[] = ['text' => $p->p_remark, 'value' => $key];
@@ -123,7 +125,7 @@ class PaymentInout extends Model
         ];
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class PasswordResetController extends Controller
@@ -27,7 +26,7 @@ class PasswordResetController extends Controller
      */
     public function store(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'email' => ['required', 'email', Rule::exists(Admin::class, 'email')],
@@ -56,13 +55,9 @@ class PasswordResetController extends Controller
 
                 return;
             }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        })
+            ->validate()
+        ;
 
         // 生成并缓存验证码
         $code = mt_rand(1000, 9999);
@@ -83,7 +78,7 @@ class PasswordResetController extends Controller
      */
     public function update(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'email'                 => ['required', 'email', Rule::exists(Admin::class, 'email')],
@@ -100,13 +95,9 @@ class PasswordResetController extends Controller
             if (Cache::get($cacheKey) !== $request->input('code')) {
                 $validator->errors()->add('code', '验证码无效或已过期');
             }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        })
+            ->validate()
+        ;
 
         // 更新用户密码
         Admin::query()->where('email', $input['email'])->update([

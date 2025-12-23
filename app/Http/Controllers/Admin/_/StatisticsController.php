@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class StatisticsController extends Controller
 {
@@ -24,7 +23,7 @@ class StatisticsController extends Controller
     {
         $this->options(true);
 
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'dimension' => ['nullable', 'string', Rule::in(Dimension::label_keys())],
@@ -42,13 +41,10 @@ class StatisticsController extends Controller
 
                 $validator->setData($data);
             }
-        });
+        })
+            ->validate()
+        ;
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
         $this->response()->withOption($input);
 
         $endDate = Carbon::now();

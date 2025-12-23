@@ -39,7 +39,7 @@ class PaymentAccount extends Model
         'pa_balance' => 'decimal:2',
     ];
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('payment_accounts', 'pa')
@@ -51,9 +51,10 @@ class PaymentAccount extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
+
         $value = static::query()->toBase()
             ->where('pa_status', '!=', PaStatus::DISABLED)
             ->select(DB::raw('pa_name as text,pa_id as value'))->get()

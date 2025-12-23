@@ -27,7 +27,7 @@ class IotDeviceBinding extends Model
 
     protected $guarded = ['db_id'];
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('iot_device_bindings', 'db')
@@ -44,7 +44,7 @@ class IotDeviceBinding extends Model
         return $this->belongsTo(Vehicle::class, 've_id', 've_id');
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

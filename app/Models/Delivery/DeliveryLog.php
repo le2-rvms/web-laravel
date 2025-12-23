@@ -73,7 +73,7 @@ class DeliveryLog extends Model
         'dl_send_status_label',
     ];
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('delivery_logs', 'dl')
@@ -86,9 +86,9 @@ class DeliveryLog extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array // todo
+    public static function options(?\Closure $where = null, ?string $key = null): array // todo
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
 
         $value = DB::query()
             ->from('doc_tpls', 'dt')

@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('车队')]
@@ -72,7 +71,7 @@ class AdminTeamController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'at_parent_id' => ['bail', 'nullable', 'int', Rule::unique(AdminTeam::class, 'at_id')],
@@ -83,13 +82,9 @@ class AdminTeamController extends Controller
             ],
             [],
             trans_property(AdminTeam::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input, &$adminTeam) {
             /** @var AdminTeam $adminTeam */
@@ -104,7 +99,7 @@ class AdminTeamController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, AdminTeam $adminTeam): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'at_parent_id' => ['bail', 'nullable', 'int', Rule::unique(AdminTeam::class, 'at_id')],
@@ -115,13 +110,9 @@ class AdminTeamController extends Controller
             ],
             [],
             trans_property(AdminTeam::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input, &$adminTeam) {
             $adminTeam->update($input);

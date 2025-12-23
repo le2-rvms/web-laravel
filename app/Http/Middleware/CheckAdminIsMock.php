@@ -12,7 +12,7 @@ class CheckAdminIsMock
     {
         /** @var Admin $admin */
         $admin = $request->user();
-        if ($admin->is_mock ?? false) {
+        if ($admin->_is_mock ?? false) {
             $method = $request->method();
             if (!in_array($method, ['GET'])) {
                 abort(403, '体验模式禁止此操作！');

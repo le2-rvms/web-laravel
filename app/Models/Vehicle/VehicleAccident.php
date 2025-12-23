@@ -131,11 +131,11 @@ class VehicleAccident extends Model
         return $this->belongsTo(VehicleCenter::class, 'va_vc_id', 'vc_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $va_ve_id = $search['va_ve_id'] ?? null;
-        $va_sc_id = $search['va_sc_id'] ?? null;
-        $va_vc_id = $search['va_vc_id'] ?? null;
+        //        $va_ve_id = $search['ve_id'] ?? null;
+        //        $va_sc_id = $search['sc_id'] ?? null;
+        //        $va_vc_id = $search['vc_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_accidents', 'va')
@@ -144,24 +144,24 @@ class VehicleAccident extends Model
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'va.va_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->when($va_ve_id, function (Builder $query) use ($va_ve_id) {
-                $query->where('va.va_ve_id', '=', $va_ve_id);
-            })
-            ->when($va_sc_id, function (Builder $query) use ($va_sc_id) {
-                $query->where('va.va_sc_id', '=', $va_sc_id);
-            })
-            ->when($va_vc_id, function (Builder $query) use ($va_vc_id) {
-                $query->where('va.va_vc_id', '=', $va_vc_id);
-            })
-            ->when(
-                null === $va_ve_id && null === $va_sc_id,
-                function (Builder $query) {
-                    $query->orderByDesc('va.va_id');
-                },
-                function (Builder $query) {
-                    $query->orderBy('va.va_id');
-                }
-            )
+//            ->when($va_ve_id, function (Builder $query) use ($va_ve_id) {
+//                $query->where('va.va_ve_id', '=', $va_ve_id);
+//            })
+//            ->when($va_sc_id, function (Builder $query) use ($va_sc_id) {
+//                $query->where('va.va_sc_id', '=', $va_sc_id);
+//            })
+//            ->when($va_vc_id, function (Builder $query) use ($va_vc_id) {
+//                $query->where('va.va_vc_id', '=', $va_vc_id);
+//            })
+//            ->when(
+//                null === $va_ve_id && null === $va_sc_id,
+//                function (Builder $query) {
+//                    $query->orderByDesc('va.va_id');
+//                },
+//                function (Builder $query) {
+//                    $query->orderBy('va.va_id');
+//                }
+//            )
             ->select('va.*', 'vc.vc_name', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
                 DB::raw(VaClaimStatus::toCaseSQL()),
@@ -181,92 +181,92 @@ class VehicleAccident extends Model
     public static function indexColumns(): array
     {
         return [
-            'Vehicle.plate_no'                   => fn ($item) => $item->plate_no,
-            'Customer.cu_contact_name'           => fn ($item) => $item->cu_contact_name,
-            'VehicleAccident.accident_location'  => fn ($item) => $item->accident_location,
-            'VehicleAccident.accident_dt'        => fn ($item) => $item->accident_dt_,
-            'VehicleAccident.responsible_party'  => fn ($item) => $item->responsible_party,
-            'VehicleAccident.claim_status'       => fn ($item) => $item->claim_status_label,
-            'VehicleAccident.self_amount'        => fn ($item) => $item->self_amount,
-            'VehicleAccident.third_party_amount' => fn ($item) => $item->third_party_amount,
-            'VehicleAccident.insurance_company'  => fn ($item) => $item->insurance_company,
-            'VehicleAccident.description'        => fn ($item) => $item->description,
-            'VehicleAccident.factory_in_dt'      => fn ($item) => $item->factory_in_dt_,
-            'VehicleCenter.vc_name'              => fn ($item) => $item->vc_name,
-            'VehicleAccident.repair_content'     => fn ($item) => $item->repair_content,
-            'VehicleAccident.repair_status'      => fn ($item) => $item->repair_status_label,
-            'VehicleAccident.factory_out_dt'     => fn ($item) => $item->factory_out_dt_,
-            'VehicleAccident.settlement_status'  => fn ($item) => $item->settlement_status_label,
-            'VehicleAccident.pickup_status'      => fn ($item) => $item->pickup_status_label,
-            'VehicleAccident.settlement_method'  => fn ($item) => $item->settlement_method_label,
-            'VehicleAccident.managed_vehicle'    => fn ($item) => $item->managed_vehicle_label,
-            'VehicleAccident.va_remark'          => fn ($item) => $item->va_remark,
-            'VehicleAccident.accident_info'      => fn ($item) => str_render($item->accident_info, 'accident_info'),
+            'Vehicle.ve_plate_no'                   => fn ($item) => $item->ve_plate_no,
+            'Customer.cu_contact_name'              => fn ($item) => $item->cu_contact_name,
+            'VehicleAccident.va_accident_location'  => fn ($item) => $item->va_accident_location,
+            'VehicleAccident.va_accident_dt'        => fn ($item) => $item->va_accident_dt_,
+            'VehicleAccident.va_responsible_party'  => fn ($item) => $item->va_responsible_party,
+            'VehicleAccident.va_claim_status'       => fn ($item) => $item->va_claim_status_label,
+            'VehicleAccident.va_self_amount'        => fn ($item) => $item->va_self_amount,
+            'VehicleAccident.va_third_party_amount' => fn ($item) => $item->va_third_party_amount,
+            'VehicleAccident.va_insurance_company'  => fn ($item) => $item->va_insurance_company,
+            'VehicleAccident.va_description'        => fn ($item) => $item->va_description,
+            'VehicleAccident.va_factory_in_dt'      => fn ($item) => $item->va_factory_in_dt_,
+            'VehicleCenter.vc_name'                 => fn ($item) => $item->vc_name,
+            'VehicleAccident.va_repair_content'     => fn ($item) => $item->va_repair_content,
+            'VehicleAccident.va_repair_status'      => fn ($item) => $item->va_repair_status_label,
+            'VehicleAccident.va_factory_out_dt'     => fn ($item) => $item->va_factory_out_dt_,
+            'VehicleAccident.va_settlement_status'  => fn ($item) => $item->va_settlement_status_label,
+            'VehicleAccident.va_pickup_status'      => fn ($item) => $item->va_pickup_status_label,
+            'VehicleAccident.va_settlement_method'  => fn ($item) => $item->va_settlement_method_label,
+            'VehicleAccident.va_managed_vehicle'    => fn ($item) => $item->va_managed_vehicle_label,
+            'VehicleAccident.va_remark'             => fn ($item) => $item->va_remark,
+            'VehicleAccident.va_accident_info'      => fn ($item) => str_render($item->va_accident_info, 'accident_info'),
         ];
     }
 
     public static function importColumns(): array
     {
         return [
-            'plate_no'           => [VehicleAccident::class, 'plate_no'],
-            'accident_location'  => [VehicleAccident::class, 'accident_location'],
-            'accident_dt'        => [VehicleAccident::class, 'accident_dt'],
-            'responsible_party'  => [VehicleAccident::class, 'responsible_party'],
-            'claim_status'       => [VehicleAccident::class, 'claim_status'],
-            'self_amount'        => [VehicleAccident::class, 'self_amount'],
-            'third_party_amount' => [VehicleAccident::class, 'third_party_amount'],
-            'insurance_company'  => [VehicleAccident::class, 'insurance_company'],
-            'va_description'     => [VehicleAccident::class, 'va_description'],
-            'factory_in_dt'      => [VehicleAccident::class, 'factory_in_dt'],
-            'vc_name'            => [VehicleCenter::class, 'vc_name'],
-            'repair_content'     => [VehicleAccident::class, 'repair_content'],
-            'repair_status'      => [VehicleAccident::class, 'repair_status'],
-            'factory_out_dt'     => [VehicleAccident::class, 'factory_out_dt'],
-            'settlement_status'  => [VehicleAccident::class, 'settlement_status'],
-            'pickup_status'      => [VehicleAccident::class, 'pickup_status'],
-            'settlement_method'  => [VehicleAccident::class, 'settlement_method'],
-            'managed_vehicle'    => [VehicleAccident::class, 'managed_vehicle'],
-            'va_remark'          => [VehicleAccident::class, 'va_remark'],
+            'va_plate_no'           => [Vehicle::class, 've_plate_no'],
+            'va_accident_location'  => [VehicleAccident::class, 'va_accident_location'],
+            'va_accident_dt'        => [VehicleAccident::class, 'va_accident_dt'],
+            'va_responsible_party'  => [VehicleAccident::class, 'va_responsible_party'],
+            'va_claim_status'       => [VehicleAccident::class, 'va_claim_status'],
+            'va_self_amount'        => [VehicleAccident::class, 'va_self_amount'],
+            'va_third_party_amount' => [VehicleAccident::class, 'va_third_party_amount'],
+            'va_insurance_company'  => [VehicleAccident::class, 'va_insurance_company'],
+            'va_description'        => [VehicleAccident::class, 'va_description'],
+            'va_factory_in_dt'      => [VehicleAccident::class, 'va_factory_in_dt'],
+            'va_vc_name'            => [VehicleCenter::class, 'vc_name'],
+            'va_repair_content'     => [VehicleAccident::class, 'va_repair_content'],
+            'va_repair_status'      => [VehicleAccident::class, 'va_repair_status'],
+            'va_factory_out_dt'     => [VehicleAccident::class, 'va_factory_out_dt'],
+            'va_settlement_status'  => [VehicleAccident::class, 'va_settlement_status'],
+            'va_pickup_status'      => [VehicleAccident::class, 'va_pickup_status'],
+            'va_settlement_method'  => [VehicleAccident::class, 'va_settlement_method'],
+            'va_managed_vehicle'    => [VehicleAccident::class, 'va_managed_vehicle'],
+            'va_remark'             => [VehicleAccident::class, 'va_remark'],
         ];
     }
 
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['ve_id']             = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['vc_id']             = VehicleCenter::nameKv($item['vc_name'] ?? null);
-            $item['claim_status']      = VaClaimStatus::searchValue($item['claim_status'] ?? null);
-            $item['repair_status']     = VaRepairStatus::searchValue($item['repair_status'] ?? null);
-            $item['settlement_status'] = VaSettlementStatus::searchValue($item['settlement_status'] ?? null);
-            $item['pickup_status']     = VaPickupStatus::searchValue($item['pickup_status'] ?? null);
-            $item['settlement_method'] = VaSettlementMethod::searchValue($item['settlement_method'] ?? null);
-            $item['managed_vehicle']   = VaManagedVehicle::searchValue($item['managed_vehicle'] ?? null);
+            $item['va_ve_id']             = Vehicle::plateNoKv($item['va_plate_no'] ?? null);
+            $item['va_vc_id']             = VehicleCenter::nameKv($item['va_vc_name'] ?? null);
+            $item['va_claim_status']      = VaClaimStatus::searchValue($item['va_claim_status'] ?? null);
+            $item['va_repair_status']     = VaRepairStatus::searchValue($item['va_repair_status'] ?? null);
+            $item['va_settlement_status'] = VaSettlementStatus::searchValue($item['va_settlement_status'] ?? null);
+            $item['va_pickup_status']     = VaPickupStatus::searchValue($item['va_pickup_status'] ?? null);
+            $item['va_settlement_method'] = VaSettlementMethod::searchValue($item['va_settlement_method'] ?? null);
+            $item['va_managed_vehicle']   = VaManagedVehicle::searchValue($item['va_managed_vehicle'] ?? null);
         };
     }
 
     public static function importValidatorRule(array $item, array $fieldAttributes): void
     {
         $rules = [
-            've_id'              => ['required', 'integer'],
-            'sc_id'              => ['nullable', 'integer'],
-            'accident_location'  => ['nullable', 'string', 'max:255'],
-            'accident_dt'        => ['required', 'date'],
-            'responsible_party'  => ['nullable', 'string', 'max:255'],
-            'claim_status'       => ['nullable', 'string', Rule::in(VaClaimStatus::label_keys())],
-            'self_amount'        => ['nullable', 'numeric'],
-            'third_party_amount' => ['nullable', 'numeric'],
-            'insurance_company'  => ['nullable', 'string', 'max:100'],
-            'va_description'     => ['nullable', 'string'],
-            'factory_in_dt'      => ['nullable', 'date'],
-            'vc_id'              => ['required', 'integer'],
-            'repair_content'     => ['nullable', 'string'],
-            'repair_status'      => ['nullable', 'string', Rule::in(VaRepairStatus::label_keys())],
-            'factory_out_dt'     => ['nullable', 'date'],
-            'settlement_status'  => ['nullable', 'string', Rule::in(VaSettlementStatus::label_keys())],
-            'pickup_status'      => ['nullable', 'string', Rule::in(VaPickupStatus::label_keys())],
-            'settlement_method'  => ['nullable', 'string', Rule::in(VaSettlementMethod::label_keys())],
-            'managed_vehicle'    => ['nullable', 'string', Rule::in(VaManagedVehicle::label_keys())],
-            'va_remark'          => ['nullable', 'string'],
+            'va_ve_id'              => ['required', 'integer'],
+            'va_sc_id'              => ['nullable', 'integer'],
+            'va_accident_location'  => ['nullable', 'string', 'max:255'],
+            'va_accident_dt'        => ['required', 'date'],
+            'va_responsible_party'  => ['nullable', 'string', 'max:255'],
+            'va_claim_status'       => ['nullable', 'string', Rule::in(VaClaimStatus::label_keys())],
+            'va_self_amount'        => ['nullable', 'numeric'],
+            'va_third_party_amount' => ['nullable', 'numeric'],
+            'va_insurance_company'  => ['nullable', 'string', 'max:100'],
+            'va_description'        => ['nullable', 'string'],
+            'va_factory_in_dt'      => ['nullable', 'date'],
+            'va_vc_id'              => ['required', 'integer'],
+            'va_repair_content'     => ['nullable', 'string'],
+            'va_repair_status'      => ['nullable', 'string', Rule::in(VaRepairStatus::label_keys())],
+            'va_factory_out_dt'     => ['nullable', 'date'],
+            'va_settlement_status'  => ['nullable', 'string', Rule::in(VaSettlementStatus::label_keys())],
+            'va_pickup_status'      => ['nullable', 'string', Rule::in(VaPickupStatus::label_keys())],
+            'va_settlement_method'  => ['nullable', 'string', Rule::in(VaSettlementMethod::label_keys())],
+            'va_managed_vehicle'    => ['nullable', 'string', Rule::in(VaManagedVehicle::label_keys())],
+            'va_remark'             => ['nullable', 'string'],
         ];
 
         $validator = Validator::make($item, $rules, [], $fieldAttributes);
@@ -288,7 +288,7 @@ class VehicleAccident extends Model
         };
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

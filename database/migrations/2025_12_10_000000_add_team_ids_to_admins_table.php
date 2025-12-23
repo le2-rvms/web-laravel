@@ -8,23 +8,23 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        if (Schema::hasColumn('admins', 'team_ids')) {
+        if (Schema::hasColumn('admins', 'a_team_ids')) {
             return;
         }
 
         Schema::table('admins', function (Blueprint $table) {
-            $table->jsonb('team_ids')->default(DB::raw("'[]'::jsonb"))->comment('Related team ids');
+            $table->jsonb('a_team_ids')->default(DB::raw("'[]'::jsonb"))->comment('Related team ids');
         });
     }
 
     public function down(): void
     {
-        if (!Schema::hasColumn('admins', 'team_ids')) {
+        if (!Schema::hasColumn('admins', 'a_team_ids')) {
             return;
         }
 
         Schema::table('admins', function (Blueprint $table) {
-            $table->dropColumn('team_ids');
+            $table->dropColumn('a_team_ids');
         });
     }
 };

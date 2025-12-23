@@ -10,7 +10,6 @@ use App\Models\Payment\PaymentType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('财务类型配置')]
@@ -41,20 +40,16 @@ class PaymentTypeController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'selected_types' => ['required', 'array'],
             ],
             [],
             []
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         DB::transaction(function () use ($input) {
             PaymentType::query()->whereIn('pt_id', $input['selected_types'])->update(['pt_is_active' => PtIsActive::ENABLED]);

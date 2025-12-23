@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer\Payment;
 
 use App\Enum\Payment\PIsValid;
 use App\Enum\Payment\PPayStatus;
+use App\Enum\Payment\PtIsActive;
 use App\Enum\SaleContract\ScStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\Payment;
@@ -23,18 +24,24 @@ class PaymentController extends Controller
 
     public function index(Request $request): Response
     {
+        $perPage = 20;
+
         $this->response()->withExtras(
+            ['perPage' => $perPage],
             PIsValid::options(),
-            PaymentType::options(),
+            PaymentType::options(function ($builder) {
+                $builder->where('pt_is_active', PtIsActive::ENABLED);
+            }),
         );
 
-        $data = Payment::customerQuery($this)
+        $data = Payment::indexQuery()
             ->where('p.p_is_valid', '=', PIsValid::VALID)
             ->whereIn('sc.sc_status', [ScStatus::SIGNED, ScStatus::COMPLETED, ScStatus::EARLY_TERMINATION])
+            ->where('sc.sc_cu_id', '=', auth()->id())
             ->when(
-                $request->get('last_id'),
+                $request->query('last_id'),
                 function (Builder $query) use ($request) {
-                    $query->where('p.p_id', '<', $request->get('last_id'));
+                    $query->where('p.p_id', '<', $request->query('last_id'));
                 }
             )
             ->get()

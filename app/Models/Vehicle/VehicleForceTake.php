@@ -58,27 +58,27 @@ class VehicleForceTake extends Model
         return $this->belongsTo(Customer::class, 'vft_cu_id', 'cu_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $vft_ve_id = $search['vft_ve_id'] ?? null;
+        //        $vft_ve_id = $search['vft_ve_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_force_takes', 'vft')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vft.vft_ve_id')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'vft.vft_cu_id')
-            ->when($vft_ve_id, function (Builder $query) use ($vft_ve_id) {
-                $query->where('vft.vft_ve_id', '=', $vft_ve_id);
-            })
-            ->when(
-                null === $vft_ve_id,
-                function (Builder $query) {
-                    $query->orderByDesc('vft.vft_id');
-                },
-                function (Builder $query) {
-                    $query->orderBy('vft.vft_id');
-                }
-            )
+//            ->when($vft_ve_id, function (Builder $query) use ($vft_ve_id) {
+//                $query->where('vft.vft_ve_id', '=', $vft_ve_id);
+//            })
+//            ->when(
+//                null === $vft_ve_id,
+//                function (Builder $query) {
+//                    $query->orderByDesc('vft.vft_id');
+//                },
+//                function (Builder $query) {
+//                    $query->orderBy('vft.vft_id');
+//                }
+//            )
             ->select('vft.*', 'cu.cu_contact_name', 've.ve_plate_no', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
                 DB::raw(VftStatus::toCaseSQL()),
@@ -86,7 +86,7 @@ class VehicleForceTake extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

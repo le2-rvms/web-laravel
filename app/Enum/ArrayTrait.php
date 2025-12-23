@@ -8,15 +8,15 @@ trait ArrayTrait
 
     public static function options(): array
     {
-        return
-            [
-                preg_replace('/^.*\\\/', '', get_called_class()).'Options' => array_map(function ($region) {
-                    return [
-                        'text'  => $region[static::option_text_key],
-                        'value' => $region[static::option_value_key],
-                    ];
-                }, static::values),
+        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $value = array_map(function ($region) {
+            return [
+                'text'  => $region[static::option_text_key],
+                'value' => $region[static::option_value_key],
             ];
+        }, static::values);
+
+        return [$key => $value];
     }
 
     public static function getKeys(): array

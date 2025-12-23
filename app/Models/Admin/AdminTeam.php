@@ -3,8 +3,9 @@
 namespace App\Models\Admin;
 
 use App\Attributes\ClassName;
-use App\Enum\Admin\AdmUserType;
+use App\Attributes\ColumnDesc;
 use App\Enum\Admin\AtStatus;
+use App\Enum\Admin\AUserType;
 use App\Models\_\ModelTrait;
 use App\Models\Customer\Customer;
 use App\Models\Vehicle\Vehicle;
@@ -16,6 +17,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 #[ClassName('车队')]
+#[ColumnDesc('at_name', )]
 /**
  * @property int             $at_id        序号
  * @property int             $at_parent_id 上层序号
@@ -51,13 +53,13 @@ class AdminTeam extends Model
         return $this->hasMany(static::class, 'parent_id')->orderBy('sort');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->select('at.*')
             ->from('admin_teams as at')
             ->addSelect([
-                'admin_count'    => Admin::query()->selectRaw('count(*)')->whereRaw('admins.team_ids @> to_jsonb(array[at.at_id])'),
+                'admin_count'    => Admin::query()->selectRaw('count(*)')->whereRaw('admins.a_team_ids @> to_jsonb(array[at.at_id])'),
                 'vehicle_count'  => Vehicle::query()->selectRaw('count(*)')->whereColumn('ve_team_id', 'at.at_id'),
                 'customer_count' => Customer::query()->selectRaw('count(*)')->whereColumn('cu_team_id', 'at.at_id'),
             ])
@@ -68,9 +70,10 @@ class AdminTeam extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
+
         $value = static::query()
             ->when($where, fn ($query) => $query->where($where))
             ->orderBy('at_sort')
@@ -84,11 +87,12 @@ class AdminTeam extends Model
 
     public static function optionsWithRoles(?\Closure $where = null): array
     {
-        $key    = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
+
         $admins = static::query()
             ->where($where)
             ->orderBy('at_id')
-            ->where('user_type', '!=', AdmUserType::TEMP)
+            ->where('a_user_type', '!=', AUserType::TEMP)
             ->with('roles')->get()
         ;
 
@@ -159,6 +163,21 @@ class AdminTeam extends Model
         self::cleanupTree($tree);
 
         return $tree;
+    }
+
+    public static function nameKv(?string $at_name = null)
+    {
+        static $kv = null;
+
+        if (null === $kv) {
+            $kv = static::query()
+                ->select('at_id', 'at_name')
+                ->pluck('at_id', 'at_name')
+                ->toArray()
+            ;
+        }
+
+        return $kv[$at_name] ?? null;
     }
 
     protected function casts(): array

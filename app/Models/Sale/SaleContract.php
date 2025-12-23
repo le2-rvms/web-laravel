@@ -47,10 +47,11 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
 #[ColumnDesc('sc_rental_type', required: true, enum_class: ScRentalType_Short::class)]
 #[ColumnDesc('sc_payment_period', required: true, enum_class: ScPaymentPeriod::class)]
 #[ColumnDesc('sc_cu_id')]
-#[ColumnDesc('sc_contact_name', required: true)]
-#[ColumnDesc('sc_plate_no', required: true)]
+#[ColumnDesc('cu_contact_name', required: true)]
+#[ColumnDesc('cu_contact_phone', required: true)]
+#[ColumnDesc('ve_plate_no', required: true)]
 #[ColumnDesc('sc_no', required: true, unique: true)]
-#[ColumnDesc('sc_version', required: true, desc: '合同版本号')]
+#[ColumnDesc('sc_version', required: true)]
 #[ColumnDesc('sc_is_current_version', required: true, desc: '是否当前版本')]
 #[ColumnDesc('sc_start_date', type: ColumnType::DATE, required: true)]
 #[ColumnDesc('sc_rental_days', required: true)]
@@ -163,8 +164,8 @@ class SaleContract extends Model
     ];
 
     protected $attributes = [
-        'sc_version'            => 1,
-        'sc_is_current_version' => true,
+        //        'sc_version'            => 1,
+        //        'sc_is_current_version' => true,
     ];
 
     protected $appends = [
@@ -250,22 +251,23 @@ class SaleContract extends Model
         return true;
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $cu_id                 = $search['cu_id'] ?? null;
-        $sc_is_current_version = $search['sc_is_current_version'] ?? null;
+        //        $cu_id                 = $search['cu_id'] ?? null;
+        //        $sc_is_current_version = $search['sc_is_current_version'] ?? null;
 
         return DB::query()
             ->from('sale_contracts', 'sc')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('cu.cu_id', '=', $cu_id);
-            })
-            ->when(null !== $sc_is_current_version, function (Builder $query) use ($sc_is_current_version) {
-                $query->where('sc.sc_is_current_version', '=', $sc_is_current_version);
-            })
+//            ->where($where)
+//            ->when($cu_id, function (Builder $query) use ($cu_id) {
+//                $query->where('cu.cu_id', '=', $cu_id);
+//            })
+//            ->when(null !== $sc_is_current_version, function (Builder $query) use ($sc_is_current_version) {
+//                $query->where('sc.sc_is_current_version', '=', $sc_is_current_version);
+//            })
             ->orderByDesc('sc.sc_id')
             ->select('sc.*', 'cu.*', 've.*', '_vm.vm_brand_name', '_vm.vm_model_name')
             ->addSelect(
@@ -288,8 +290,8 @@ class SaleContract extends Model
             'SaleContract.sc_rental_type'                  => fn ($item) => $item->rental_type_label,
             'SaleContract.sc_payment_period'               => fn ($item) => $item->sc_payment_period_label,
             'Customer.cu_contact_name'                     => fn ($item) => $item->cu_contact_name,
-            'Customer.contact_phone'                       => fn ($item) => $item->contact_phone,
-            'Vehicle.plate_no'                             => fn ($item) => $item->plate_no,
+            'Customer.cu_contact_phone'                    => fn ($item) => $item->contact_phone,
+            'Vehicle.ve_plate_no'                          => fn ($item) => $item->ve_plate_no,
             'VehicleModel.brand_model'                     => fn ($item) => $item->vm_brand_name.'-'.$item->vm_model_name,
             'SaleContract.sc_no'                           => fn ($item) => $item->sc_no,
             'SaleContract.sc_version'                      => fn ($item) => $item->sc_version,
@@ -328,29 +330,31 @@ class SaleContract extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
 
         $value = static::options_value($where);
 
         return [$key => $value];
     }
 
-    public static function customerQuery(Controller $controller): Builder
-    {
-        $perPage = 20;
-
-        $controller->response()->withExtras(
-            ['perPage' => $perPage]
-        );
-
-        $auth = auth();
-
-        return static::indexQuery(['cu_id' => $auth->id(), 'sc_is_current_version' => true])
-            ->forPage(1, $perPage)
-        ;
-    }
+    //    public static function customerQuery(Controller $controller): Builder
+    //    {
+    //        $perPage = 20;
+    //
+    //        $controller->response()->withExtras(
+    //            ['perPage' => $perPage]
+    //        );
+    //
+    //        $auth = auth();
+    //
+    //        return static::indexQuery()
+    //            ->where('cu.cu_id', '=', $auth->id())
+    //            ->where('sc.sc_is_current_version', '=', true)
+    //            ->forPage(1, $perPage)
+    //        ;
+    //    }
 
     public static function options_value(?\Closure $where = null): array
     {
@@ -358,7 +362,6 @@ class SaleContract extends Model
             ->from('sale_contracts', 'sc')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->where('sc.sc_is_current_version', '=', true)
             ->when($where, function (Builder $builder) use ($where) {
                 $builder->where($where);
             })
@@ -378,7 +381,7 @@ class SaleContract extends Model
 
     public static function optionsVeReplace(?\Closure $where = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
 
         $value = DB::query()
             ->from('sale_contracts', 'sc')
@@ -502,24 +505,20 @@ class SaleContract extends Model
         $tp->setComplexBlock($rule_label, $table);
     }
 
-    public static function contractNumberKv(?string $sc_no = null)
+    public static function contractNumberKv(?string $sc_no_version = null)
     {
         static $kv = null;
 
         if (null === $kv) {
             $kv = DB::query()
                 ->from('sale_contracts')
-                ->select('sc_id', 'sc_no')
-                ->pluck('sc_id', 'sc_no')
+                ->select('sc_id', 'sc_no_version')
+                ->pluck('sc_id', 'sc_no_version')
                 ->toArray()
             ;
         }
 
-        if ($sc_no) {
-            return $kv[$sc_no] ?? null;
-        }
-
-        return $kv;
+        return $kv[$sc_no_version] ?? null;
     }
 
     public function Company(): BelongsTo
@@ -534,43 +533,46 @@ class SaleContract extends Model
     public static function importColumns(): array
     {
         return [
-            'sc_rental_type'                  => [SaleContract::class, 'sc_rental_type'],
-            'sc_payment_period'               => [SaleContract::class, 'sc_payment_period'],
-            'cu_contact_name'                 => [Customer::class, 'cu_contact_name'],
-            'contact_phone'                   => [Customer::class, 'contact_phone'],
-            'plate_no'                        => [Vehicle::class, 'plate_no'],
-            'sc_no'                           => [SaleContract::class, 'sc_no'],
-            'sc_start_date'                   => [SaleContract::class, 'sc_start_date'],
-            'installments'                    => [SaleContract::class, 'installments'],
-            'sc_end_date'                     => [SaleContract::class, 'sc_end_date'],
-            'deposit_amount'                  => [SaleContract::class, 'deposit_amount'],
-            'management_fee_amount'           => [SaleContract::class, 'management_fee_amount'],
-            'rent_amount'                     => [SaleContract::class, 'rent_amount'],
-            'payment_day'                     => [SaleContract::class, 'payment_day'],
-            'total_rent_amount'               => [SaleContract::class, 'total_rent_amount'],
-            'insurance_base_fee_amount'       => [SaleContract::class, 'insurance_base_fee_amount'],
-            'insurance_additional_fee_amount' => [SaleContract::class, 'insurance_additional_fee_amount'],
-            'other_fee_amount'                => [SaleContract::class, 'other_fee_amount'],
-            'total_amount'                    => [SaleContract::class, 'total_amount'],
-            'sc_status'                       => [SaleContract::class, 'sc_status'],
-            'order_at'                        => [SaleContract::class, 'order_at'],
-            'signed_at'                       => [SaleContract::class, 'signed_at'],
-            'canceled_at'                     => [SaleContract::class, 'canceled_at'],
-            'completed_at'                    => [SaleContract::class, 'completed_at'],
-            'early_termination_at'            => [SaleContract::class, 'early_termination_at'],
+            'sc_rental_type'                     => [SaleContract::class, 'sc_rental_type'],
+            'sc_payment_period'                  => [SaleContract::class, 'sc_payment_period'],
+            'cu_contact_name'                    => [Customer::class, 'cu_contact_name'],
+            'cu_contact_phone'                   => [Customer::class, 'cu_contact_phone'],
+            've_plate_no'                        => [Vehicle::class, 've_plate_no'],
+            'sc_no'                              => [SaleContract::class, 'sc_no'],
+            'sc_version'                         => [SaleContract::class, 'sc_version'],
+            'sc_start_date'                      => [SaleContract::class, 'sc_start_date'],
+            'sc_installments'                    => [SaleContract::class, 'sc_installments'],
+            'sc_end_date'                        => [SaleContract::class, 'sc_end_date'],
+            'sc_deposit_amount'                  => [SaleContract::class, 'sc_deposit_amount'],
+            'sc_management_fee_amount'           => [SaleContract::class, 'sc_management_fee_amount'],
+            'sc_rent_amount'                     => [SaleContract::class, 'sc_rent_amount'],
+            'sc_payment_day'                     => [SaleContract::class, 'sc_payment_day'],
+            'sc_total_rent_amount'               => [SaleContract::class, 'sc_total_rent_amount'],
+            'sc_insurance_base_fee_amount'       => [SaleContract::class, 'sc_insurance_base_fee_amount'],
+            'sc_insurance_additional_fee_amount' => [SaleContract::class, 'sc_insurance_additional_fee_amount'],
+            'sc_other_fee_amount'                => [SaleContract::class, 'sc_other_fee_amount'],
+            'sc_total_amount'                    => [SaleContract::class, 'sc_total_amount'],
+            'sc_status'                          => [SaleContract::class, 'sc_status'],
+            'sc_order_at'                        => [SaleContract::class, 'sc_order_at'],
+            'sc_signed_at'                       => [SaleContract::class, 'sc_signed_at'],
+            'sc_canceled_at'                     => [SaleContract::class, 'sc_canceled_at'],
+            'sc_completed_at'                    => [SaleContract::class, 'sc_completed_at'],
+            'sc_early_termination_at'            => [SaleContract::class, 'sc_early_termination_at'],
         ];
     }
 
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['ve_id']             = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['cu_id']             = Customer::plateNoKv($item['contact_phone'] ?? null);
+            $item['sc_ve_id']          = Vehicle::plateNoKv($item['ve_plate_no'] ?? null);
+            $item['sc_cu_id']          = Customer::contractPhoneKv($item['cu_contact_phone'] ?? null);
             $item['sc_rental_type']    = ScRentalType_Short::searchValue($item['sc_rental_type'] ?? null);
             $item['sc_payment_period'] = ScPaymentPeriod::searchValue($item['sc_payment_period'] ?? null);
             $item['sc_status']         = ScStatus::searchValue($item['sc_status'] ?? null);
 
-            static::$fields['sc_no'][] = $item['sc_no'] ?? null;
+            if (isset($item['sc_no']) && $item['sc_version']) {
+                static::$fields['sc_no_version'][] = $item['sc_no'].'#'.$item['sc_version'];
+            }
         };
     }
 
@@ -611,29 +613,30 @@ class SaleContract extends Model
         $sc_payment_period = $input2['sc_payment_period'] ?? null;
 
         $rules = [
-            'cu_id'         => ['bail', 'required', 'integer'],
-            've_id'         => ['bail', 'required', 'integer'],
-            'sc_no'         => ['bail', 'required', 'string', 'max:50', Rule::unique(SaleContract::class, 'sc_no')],
-            'free_days'     => ['bail', 'nullable', 'int:4'],
-            'sc_start_date' => ['bail', 'required', 'date', 'before_or_equal:sc_end_date'],
-            'installments'  => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', 'min:1'],
-            'sc_end_date'   => ['bail', 'required', 'date', 'after_or_equal:sc_start_date'],
+            'sc_cu_id'        => ['bail', 'required', 'integer'],
+            'sc_ve_id'        => ['bail', 'required', 'integer'],
+            'sc_no'           => ['bail', 'required', 'string', 'max:50'],
+            'sc_version'      => ['bail', 'required', 'string', 'max:50'],
+            'sc_free_days'    => ['bail', 'nullable', 'int:4'],
+            'sc_start_date'   => ['bail', 'required', 'date', 'before_or_equal:sc_end_date'],
+            'sc_installments' => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', 'min:1'],
+            'sc_end_date'     => ['bail', 'required', 'date', 'after_or_equal:sc_start_date'],
 
-            'deposit_amount'                  => ['bail', 'required', 'decimal:0,2', 'gte:0'],
-            'management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-            'rent_amount'                     => ['bail', 'required', 'numeric', 'min:0'],
-            'payment_day'                     => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', new PaymentDayCheck($sc_payment_period)],
-            'total_rent_amount'               => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-            'insurance_base_fee_amount'       => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-            'insurance_additional_fee_amount' => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-            'other_fee_amount'                => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
-            'total_amount'                    => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+            'sc_deposit_amount'                  => ['bail', 'required', 'decimal:0,2', 'gte:0'],
+            'sc_management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+            'sc_rent_amount'                     => ['bail', 'required', 'numeric', 'min:0'],
+            'sc_payment_day'                     => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', new PaymentDayCheck($sc_payment_period)],
+            'sc_total_rent_amount'               => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+            'sc_insurance_base_fee_amount'       => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+            'sc_insurance_additional_fee_amount' => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+            'sc_other_fee_amount'                => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
+            'sc_total_amount'                    => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'numeric', 'min:0'],
 
-            'cus_1'         => ['bail', 'nullable', 'max:255'],
-            'cus_2'         => ['bail', 'nullable', 'max:255'],
-            'cus_3'         => ['bail', 'nullable', 'max:255'],
-            'discount_plan' => ['bail', 'nullable', 'max:255'],
-            'sc_remark'     => ['bail', 'nullable', 'max:255'],
+            'sc_cus_1'         => ['bail', 'nullable', 'max:255'],
+            'sc_cus_2'         => ['bail', 'nullable', 'max:255'],
+            'sc_cus_3'         => ['bail', 'nullable', 'max:255'],
+            'sc_discount_plan' => ['bail', 'nullable', 'max:255'],
+            'sc_remark'        => ['bail', 'nullable', 'max:255'],
         ];
 
         $validator = \Illuminate\Support\Facades\Validator::make($item, $rules, [], $fieldAttributes);
@@ -646,10 +649,10 @@ class SaleContract extends Model
     public static function importAfterValidatorDo(): \Closure
     {
         return function () {
-            // sc_no
-            $sc_no = SaleContract::query()->whereIn('sc_no', static::$fields['sc_no'])->pluck('sc_no')->toArray();
-            if (count($sc_no) > 0) {
-                throw new ClientException('以下合同编号已存在：'.join(',', $sc_no));
+            // sc_no_version
+            $sc_no_version = SaleContract::query()->whereIn('sc_no_version', static::$fields['sc_no_version'])->pluck('sc_no_version')->toArray();
+            if (count($sc_no_version) > 0) {
+                throw new ClientException('以下合同编号已存在：'.join(',', $sc_no_version));
             }
         };
     }
@@ -659,7 +662,7 @@ class SaleContract extends Model
         return function ($input) {
             $saleContract = SaleContract::query()->create($input);
 
-            if (1 - 1) {
+            if (0) {
                 $subRequest = Request::create(
                     '',      // 仅是占位 URI，不会真的去路由
                     'GET',
@@ -746,7 +749,7 @@ class SaleContract extends Model
         return Attribute::make(
             get: fn () => join(' | ', array_filter([
                 $this->Customer?->getOriginal('sc_contact_name'),
-                substr($this->Customer?->getOriginal('sc_contact_phone'), -4),
+                substr($this->Customer?->getOriginal('cu_contact_phone'), -4),
                 $this->Vehicle?->getOriginal('ve_plate_no'),
                 $this->getOriginal('sc_rental_type_short_label'),
                 $this->getOriginal('sc_payment_period_label'),

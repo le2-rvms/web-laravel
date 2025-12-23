@@ -19,7 +19,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('文档模板')]
@@ -127,7 +126,7 @@ class DocTplController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?DocTpl $docTpl): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'dt_type'      => ['bail', 'required', Rule::in(DtType::label_keys())],
@@ -145,12 +144,8 @@ class DocTplController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input, &$docTpl) {
             if (null === $docTpl) {
@@ -177,7 +172,7 @@ class DocTplController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function status(Request $request, DocTpl $docTpl): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'dt_status' => ['bail', 'required', Rule::in(DtStatus::label_keys())],
@@ -190,12 +185,8 @@ class DocTplController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         $docTpl->update([
             'dt_status' => $input['dt_status'],

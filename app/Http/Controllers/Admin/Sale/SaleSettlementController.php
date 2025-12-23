@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AdmTeamLimit;
+use App\Enum\Admin\ATeamLimit;
 use App\Enum\Payment\PPtId;
 use App\Enum\Payment\SsDeleteOption;
 use App\Enum\Sale\DtExportType;
@@ -35,7 +35,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('退车结算')]
@@ -59,9 +58,9 @@ class SaleSettlementController extends Controller
         $columns = SaleSettlement::indexColumns();
 
         // 车队查询条件
-        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+        if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereIn('cu.cu_team_id', $admin->team_ids)->orWhereNull('cu.cu_team_id');
+                $query->whereIn('cu.cu_team_id', $admin->a_team_ids)->orWhereNull('cu.cu_team_id');
             });
         }
 
@@ -100,7 +99,7 @@ class SaleSettlementController extends Controller
 
         $saleContract = null;
 
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'sc_id' => ['required', 'integer'],
@@ -116,13 +115,8 @@ class SaleSettlementController extends Controller
                 /** @var SaleContract $saleContract */
                 $saleContract = SaleContract::query()->findOrFail($request->input('sc_id'));
             })
+            ->validate()
         ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         $saleSettlement = $saleContract->SaleSettlement;
         if (!$saleSettlement) { // 是新增
@@ -168,18 +162,17 @@ class SaleSettlementController extends Controller
 
         $this->response()->withExtras(
             ['saleContract' => $saleContract],
-            VehicleTmp::kvList(sc_id: $saleContract->sc_id),
-            VehicleInspection::kvList(sc_id: $saleContract->sc_id),
-            Payment::kvList(sc_id: $saleContract->sc_id),
-            Payment::kvStat(),
-            SaleSettlement::kvList(sc_id: $saleContract->sc_id),
-            VehicleUsage::kvList(sc_id: $saleContract->sc_id),
-            VehicleRepair::kvList(sc_id: $saleContract->sc_id),
-            VehicleRepair::kvStat(),
-            VehicleViolation::kvList(sc_id: $saleContract->sc_id),
-            VehicleViolation::kvStat(),
-            VehicleManualViolation::kvList(sc_id: $saleContract->sc_id),
-            VehicleManualViolation::kvStat(),
+            VehicleTmp::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleInspection::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            Payment::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            Payment::indexStat(),
+            SaleSettlement::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleUsage::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleRepair::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleRepair::indexStat(),
+            VehicleViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleManualViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleManualViolation::indexStat(),
         );
 
         return $this->response()->withData($saleSettlement)->respond();
@@ -216,6 +209,9 @@ class SaleSettlementController extends Controller
     public function edit(SaleSettlement $saleSettlement): Response
     {
         $this->options();
+        $this->response()->withExtras(
+            Admin::optionsWithRoles(),
+        );
 
         $saleContract = $saleSettlement->SaleContract;
 
@@ -223,18 +219,17 @@ class SaleSettlementController extends Controller
 
         $this->response()->withExtras(
             ['saleContract' => $saleContract],
-            VehicleTmp::kvList(sc_id: $saleContract->sc_id),
-            VehicleInspection::kvList(sc_id: $saleContract->sc_id),
-            Payment::kvList(sc_id: $saleContract->sc_id),
-            Payment::kvStat(),
-            SaleSettlement::kvList(sc_id: $saleContract->sc_id),
-            VehicleUsage::kvList(sc_id: $saleContract->sc_id),
-            VehicleRepair::kvList(sc_id: $saleContract->sc_id),
-            VehicleRepair::kvStat(),
-            VehicleViolation::kvList(sc_id: $saleContract->sc_id),
-            VehicleViolation::kvStat(),
-            VehicleManualViolation::kvList(sc_id: $saleContract->sc_id),
-            VehicleManualViolation::kvStat(),
+            VehicleTmp::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleInspection::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            Payment::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            Payment::indexStat(),
+            SaleSettlement::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleUsage::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleRepair::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleRepair::indexStat(),
+            VehicleViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleManualViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleManualViolation::indexStat(),
         );
 
         return $this->response()->withData($saleSettlement)->respond();
@@ -243,7 +238,7 @@ class SaleSettlementController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?SaleSettlement $saleSettlement): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'ss_sc_id'                      => ['required', 'integer'],
@@ -266,7 +261,7 @@ class SaleSettlementController extends Controller
                 'ss_refund_details'             => ['nullable', 'string'],
                 'ss_settlement_amount'          => ['nullable', 'numeric'],
                 'ss_deposit_return_amount'      => ['nullable', 'numeric'],
-                'ss_deposit_return_date'        => ['nullable', 'date'],
+                'ss_deposit_return_date'        => ['required', 'date'],
                 'ss_return_datetime'            => ['required', 'date'],
                 'ss_delete_option'              => ['required', Rule::in(SsDeleteOption::label_keys())],
                 'ss_remark'                     => ['nullable', 'string'],
@@ -321,17 +316,13 @@ class SaleSettlementController extends Controller
             if (!$pass) {
                 return;
             }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        })
+            ->validate()
+        ;
 
         DB::transaction(function () use (&$input, &$saleSettlement) {
             $_saleSettlement = SaleSettlement::query()->updateOrCreate(
-                array_intersect_key($input, array_flip(['sc_id'])),
+                array_intersect_key($input, array_flip(['ss_sc_id'])),
                 $input + ['ss_return_status' => SsReturnStatus::UNCONFIRMED],
             );
 

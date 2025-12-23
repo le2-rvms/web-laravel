@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer\Risk;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sale\SaleContract;
 use App\Models\Vehicle\VehicleSchedule;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +18,17 @@ class VehicleScheduleController extends Controller
 
     public function index(Request $request): Response
     {
-        $data = VehicleSchedule::customerQueryWithOrderVeId($this, $request)
+        $page = $request->input('page', 1);
+
+        $perPage = 20;
+
+        $this->response()->withExtras(
+            ['perPage' => $perPage]
+        );
+
+        $data = VehicleSchedule::indexQuery()
+            ->whereIn('ve.ve_id', SaleContract::CustomerHasVeId())
+            ->forPage($page, $perPage)
             ->get()
         ;
 

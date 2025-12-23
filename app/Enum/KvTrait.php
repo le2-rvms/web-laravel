@@ -6,18 +6,21 @@ trait KvTrait
 {
     public static function options(): array
     {
-        return
-            [
-                preg_replace('/^.*\\\/', '', get_called_class()).'Options' => array_map(
-                    fn ($k, $v) => ['value' => $k, 'text' => $v],
-                    array_keys(static::kv),
-                    static::kv
-                ),
-            ];
+        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $value = array_map(
+            fn ($k, $v) => ['value' => $k, 'text' => $v],
+            array_keys(static::kv),
+            static::kv
+        );
+
+        return [$key => $value];
     }
 
     public static function kv(): array
     {
-        return [preg_replace('/^.*\\\/', '', get_called_class()).'kv' => self::kv];
+        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'kv';
+        $value = self::kv;
+
+        return [$key => $value];
     }
 }

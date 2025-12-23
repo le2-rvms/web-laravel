@@ -19,7 +19,6 @@ use Illuminate\Validation\ValidationException;
 
 #[ClassName('车辆保险单', '信息')]
 #[ColumnDesc('vi_id')]
-#[ColumnDesc('vi_ve_id', required: true)]
 #[ColumnDesc('vi_plate_no', required: true)]
 #[ColumnDesc('vi_compulsory_policy_file')]
 #[ColumnDesc('vi_compulsory_policy_photos')]
@@ -123,127 +122,128 @@ class VehicleInsurance extends Model
         return $this->belongsTo(Vehicle::class, 'vi_ve_id', 've_id')->with('VehicleModel');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $vi_ve_id = $search['vi_ve_id'] ?? null;
+        //        $ve_id = $search['ve_id'] ?? null;
 
         return DB::query()
             ->from('vehicle_insurances', 'vi')
-            ->when(null === $vi_ve_id, function (Builder $query) {
-                return $query->joinSub(
-                    // 直接在 joinSub 中定义子查询
-                    DB::table('vehicle_insurances')
-                        ->select('vi_ve_id', DB::raw('MAX(vi_compulsory_start_date) as max_vi_compulsory_start_date'))
-                        ->groupBy('vi_ve_id'),
-                    'p2',
-                    function ($join) {
-                        $join->on('vi.vi_ve_id', '=', 'p2.vi_ve_id')
-                            ->on('vi.vi_compulsory_start_date', '=', 'p2.max_vi_compulsory_start_date')
-                        ;
-                    }
-                );
-            })
+//            ->when(null === $ve_id, function (Builder $query) {
+//                return $query->joinSub(
+//                    // 直接在 joinSub 中定义子查询
+//                    DB::table('vehicle_insurances')
+//                        ->select('vi_ve_id', DB::raw('MAX(vi_compulsory_start_date) as max_vi_compulsory_start_date'))
+//                        ->groupBy('vi_ve_id'),
+//                    'p2',
+//                    function ($join) {
+//                        $join->on('vi.vi_ve_id', '=', 'p2.vi_ve_id')
+//                            ->on('vi.vi_compulsory_start_date', '=', 'p2.max_vi_compulsory_start_date')
+//                        ;
+//                    }
+//                );
+//            })
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vi.vi_ve_id')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
-            ->when($vi_ve_id, function (Builder $query) use ($vi_ve_id) {
-                $query->where('vi.vi_ve_id', '=', $vi_ve_id);
-            })
-            ->when(
-                null === $vi_ve_id,
-                function (Builder $query) {
-                    $query->orderByDesc('vi.vi_id');
-                },
-                function (Builder $query) {
-                    $query->orderBy('vi.vi_id');
-                }
-            )
+//            ->when($ve_id, function (Builder $query) use ($ve_id) {
+//                $query->where('vi.vi_ve_id', '=', $ve_id);
+//            })
+//            ->when(
+//                null === $ve_id,
+//                function (Builder $query) {
+//                    $query->orderByDesc('vi.vi_id');
+//                },
+//                function (Builder $query) {
+//                    $query->orderBy('vi.vi_id');
+//                }
+//            )
             ->select('vi.*', 've.ve_plate_no', 'vm.vm_brand_name', 'vm.vm_model_name')
-            ->when(null === $vi_ve_id, function (Builder $query) {
-                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_compulsory_end_date) / 86400.0 AS integer ) as vi_compulsory_interval_day'));
-                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_commercial_end_date) / 86400.0 AS integer ) as vi_commercial_interval_day'));
-                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_carrier_liability_end_date) / 86400.0 AS integer ) as vi_carrier_liability_interval_day'));
-            })
+            ->addSelect(
+                [
+                    DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_compulsory_end_date) / 86400.0 AS integer ) as vi_compulsory_interval_day'),
+                    DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_commercial_end_date) / 86400.0 AS integer ) as vi_commercial_interval_day'),
+                    DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_carrier_liability_end_date) / 86400.0 AS integer ) as vi_carrier_liability_interval_day'), ]
+            )
         ;
     }
 
     public static function importColumns(): array
     {
         return [
-            'plate_no' => [VehicleInsurance::class, 'plate_no'],
+            'vi_plate_no' => [Vehicle::class, 've_plate_no'],
             //                'compulsory_plate_no',
-            'compulsory_policy_number'     => [VehicleInsurance::class, 'compulsory_policy_number'],
-            'compulsory_start_date'        => [VehicleInsurance::class, 'compulsory_start_date'],
-            'compulsory_end_date'          => [VehicleInsurance::class, 'compulsory_end_date'],
-            'compulsory_premium'           => [VehicleInsurance::class, 'compulsory_premium'],
-            'compulsory_insured_company'   => [VehicleInsurance::class, 'compulsory_insured_company'],
-            'compulsory_org_code'          => [VehicleInsurance::class, 'compulsory_org_code'],
-            'compulsory_insurance_company' => [VehicleInsurance::class, 'compulsory_insurance_company'],
+            'vi_compulsory_policy_number'     => [VehicleInsurance::class, 'vi_compulsory_policy_number'],
+            'vi_compulsory_start_date'        => [VehicleInsurance::class, 'vi_compulsory_start_date'],
+            'vi_compulsory_end_date'          => [VehicleInsurance::class, 'vi_compulsory_end_date'],
+            'vi_compulsory_premium'           => [VehicleInsurance::class, 'vi_compulsory_premium'],
+            'vi_compulsory_insured_company'   => [VehicleInsurance::class, 'vi_compulsory_insured_company'],
+            'vi_compulsory_org_code'          => [VehicleInsurance::class, 'vi_compulsory_org_code'],
+            'vi_compulsory_insurance_company' => [VehicleInsurance::class, 'vi_compulsory_insurance_company'],
             //                'carrier_liability_plate_no',
-            'carrier_liability_policy_number'     => [VehicleInsurance::class, 'carrier_liability_policy_number'],
-            'carrier_liability_start_date'        => [VehicleInsurance::class, 'carrier_liability_start_date'],
-            'carrier_liability_end_date'          => [VehicleInsurance::class, 'carrier_liability_end_date'],
-            'carrier_liability_premium'           => [VehicleInsurance::class, 'carrier_liability_premium'],
-            'carrier_liability_insured_company'   => [VehicleInsurance::class, 'carrier_liability_insured_company'],
-            'carrier_liability_org_code'          => [VehicleInsurance::class, 'carrier_liability_org_code'],
-            'carrier_liability_insurance_company' => [VehicleInsurance::class, 'carrier_liability_insurance_company'],
+            'vi_carrier_liability_policy_number'     => [VehicleInsurance::class, 'vi_carrier_liability_policy_number'],
+            'vi_carrier_liability_start_date'        => [VehicleInsurance::class, 'vi_carrier_liability_start_date'],
+            'vi_carrier_liability_end_date'          => [VehicleInsurance::class, 'vi_carrier_liability_end_date'],
+            'vi_carrier_liability_premium'           => [VehicleInsurance::class, 'vi_carrier_liability_premium'],
+            'vi_carrier_liability_insured_company'   => [VehicleInsurance::class, 'vi_carrier_liability_insured_company'],
+            'vi_carrier_liability_org_code'          => [VehicleInsurance::class, 'vi_carrier_liability_org_code'],
+            'vi_carrier_liability_insurance_company' => [VehicleInsurance::class, 'vi_carrier_liability_insurance_company'],
             //                'commercial_plate_no',
-            'commercial_policy_number'     => [VehicleInsurance::class, 'commercial_policy_number'],
-            'commercial_start_date'        => [VehicleInsurance::class, 'commercial_start_date'],
-            'commercial_end_date'          => [VehicleInsurance::class, 'commercial_end_date'],
-            'commercial_premium'           => [VehicleInsurance::class, 'commercial_premium'],
-            'commercial_insured_company'   => [VehicleInsurance::class, 'commercial_insured_company'],
-            'commercial_org_code'          => [VehicleInsurance::class, 'commercial_org_code'],
-            'commercial_insurance_company' => [VehicleInsurance::class, 'commercial_insurance_company'],
-            'is_company_borne'             => [VehicleInsurance::class, 'is_company_borne'],
-            'vi_remark'                    => [VehicleInsurance::class, 'vi_remark'],
+            'vi_commercial_policy_number'     => [VehicleInsurance::class, 'vi_commercial_policy_number'],
+            'vi_commercial_start_date'        => [VehicleInsurance::class, 'vi_commercial_start_date'],
+            'vi_commercial_end_date'          => [VehicleInsurance::class, 'vi_commercial_end_date'],
+            'vi_commercial_premium'           => [VehicleInsurance::class, 'vi_commercial_premium'],
+            'vi_commercial_insured_company'   => [VehicleInsurance::class, 'vi_commercial_insured_company'],
+            'vi_commercial_org_code'          => [VehicleInsurance::class, 'vi_commercial_org_code'],
+            'vi_commercial_insurance_company' => [VehicleInsurance::class, 'vi_commercial_insurance_company'],
+            'vi_is_company_borne'             => [VehicleInsurance::class, 'vi_is_company_borne'],
+            'vi_remark'                       => [VehicleInsurance::class, 'vi_remark'],
         ];
     }
 
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['ve_id']                      = Vehicle::plateNoKv($item['plate_no'] ?? null);
-            $item['compulsory_plate_no']        = $item['plate_no'] ?? null;
-            $item['carrier_liability_plate_no'] = $item['plate_no'] ?? null;
-            $item['commercial_plate_no']        = $item['plate_no'] ?? null;
+            $item['vi_ve_id']                      = Vehicle::plateNoKv($item['vi_plate_no'] ?? null);
+            $item['vi_compulsory_plate_no']        = $item['vi_plate_no'] ?? null;
+            $item['vi_carrier_liability_plate_no'] = $item['vi_plate_no'] ?? null;
+            $item['vi_commercial_plate_no']        = $item['vi_plate_no'] ?? null;
         };
     }
 
     public static function importValidatorRule(array $item, array $fieldAttributes): void
     {
         $rules = [
-            've_id' => ['required', 'integer'],
+            'vi_ve_id' => ['required', 'integer'],
             // 交强险字段
-            'compulsory_plate_no'          => ['nullable', 'string', 'max:50'],
-            'compulsory_policy_number'     => ['nullable', 'string', 'max:50'],
-            'compulsory_start_date'        => ['nullable', 'date'],
-            'compulsory_end_date'          => ['nullable', 'date', 'after:compulsory_start_date'],
-            'compulsory_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
-            'compulsory_insured_company'   => ['nullable', 'string', 'max:255'],
-            'compulsory_org_code'          => ['nullable', 'string', 'max:50'],
-            'compulsory_insurance_company' => ['nullable', 'string', 'max:255'],
+            'vi_compulsory_plate_no'          => ['nullable', 'string', 'max:50'],
+            'vi_compulsory_policy_number'     => ['nullable', 'string', 'max:50'],
+            'vi_compulsory_start_date'        => ['nullable', 'date'],
+            'vi_compulsory_end_date'          => ['nullable', 'date', 'after:compulsory_start_date'],
+            'vi_compulsory_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
+            'vi_compulsory_insured_company'   => ['nullable', 'string', 'max:255'],
+            'vi_compulsory_org_code'          => ['nullable', 'string', 'max:50'],
+            'vi_compulsory_insurance_company' => ['nullable', 'string', 'max:255'],
             // 承运人责任险字段
-            'carrier_liability_plate_no'          => ['nullable', 'string', 'max:50'],
-            'carrier_liability_policy_number'     => ['nullable', 'string', 'max:50'],
-            'carrier_liability_start_date'        => ['nullable', 'date'],
-            'carrier_liability_end_date'          => ['nullable', 'date', 'after:carrier_liability_start_date'],
-            'carrier_liability_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
-            'carrier_liability_insured_company'   => ['nullable', 'string', 'max:255'],
-            'carrier_liability_org_code'          => ['nullable', 'string', 'max:50'],
-            'carrier_liability_insurance_company' => ['nullable', 'string', 'max:255'],
+            'vi_carrier_liability_plate_no'          => ['nullable', 'string', 'max:50'],
+            'vi_carrier_liability_policy_number'     => ['nullable', 'string', 'max:50'],
+            'vi_carrier_liability_start_date'        => ['nullable', 'date'],
+            'vi_carrier_liability_end_date'          => ['nullable', 'date', 'after:carrier_liability_start_date'],
+            'vi_carrier_liability_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
+            'vi_carrier_liability_insured_company'   => ['nullable', 'string', 'max:255'],
+            'vi_carrier_liability_org_code'          => ['nullable', 'string', 'max:50'],
+            'vi_carrier_liability_insurance_company' => ['nullable', 'string', 'max:255'],
             // 商业险字段
-            'commercial_plate_no'          => ['nullable', 'string', 'max:50'],
-            'commercial_policy_number'     => ['nullable', 'string', 'max:50'],
-            'commercial_start_date'        => ['nullable', 'date'],
-            'commercial_end_date'          => ['nullable', 'date', 'after:commercial_start_date'],
-            'commercial_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
-            'commercial_insured_company'   => ['nullable', 'string', 'max:255'],
-            'commercial_org_code'          => ['nullable', 'string', 'max:50'],
-            'commercial_insurance_company' => ['nullable', 'string', 'max:255'],
+            'vi_commercial_plate_no'          => ['nullable', 'string', 'max:50'],
+            'vi_commercial_policy_number'     => ['nullable', 'string', 'max:50'],
+            'vi_commercial_start_date'        => ['nullable', 'date'],
+            'vi_commercial_end_date'          => ['nullable', 'date', 'after:commercial_start_date'],
+            'vi_commercial_premium'           => ['nullable', 'decimal:0,2', 'gte:0'],
+            'vi_commercial_insured_company'   => ['nullable', 'string', 'max:255'],
+            'vi_commercial_org_code'          => ['nullable', 'string', 'max:50'],
+            'vi_commercial_insurance_company' => ['nullable', 'string', 'max:255'],
 
             // 其他字段
-            'is_company_borne' => ['nullable', 'boolean'],
-            'vi_remark'        => ['nullable', 'string'],
+            'vi_is_company_borne' => ['nullable', 'boolean'],
+            'vi_remark'           => ['nullable', 'string'],
         ];
 
         $validator = Validator::make($item, $rules, [], $fieldAttributes);
@@ -265,7 +265,7 @@ class VehicleInsurance extends Model
         };
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

@@ -13,7 +13,6 @@ use App\Services\PaginateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('122账号')]
@@ -85,7 +84,7 @@ class OneAccountController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?OneAccount $oneAccount): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'oa_type'                    => ['required', Rule::in(OaType::label_keys())],
@@ -102,13 +101,9 @@ class OneAccountController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
         if (null === $oneAccount) {
             $oneAccount = OneAccount::query()->create($input);
         } else {

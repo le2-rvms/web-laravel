@@ -18,13 +18,23 @@ class VehicleViolationController extends Controller
 
     public function index(Request $request): Response
     {
-        $data = VehicleViolation::customerQuery($this)
+        $perPage = 20;
+
+        $this->response()->withExtras(
+            ['perPage' => $perPage]
+        );
+
+        $auth = auth();
+
+        $data = VehicleViolation::indexQuery()
+            ->where('sc.sc_cu_id', '=', $auth->id())
             ->when(
-                $request->get('last_id'),
+                $request->query('last_id'),
                 function (Builder $query) use ($request) {
-                    $query->where('vv.vv_id', '<', $request->get('last_id'));
+                    $query->where('vv.vv_id', '<', $request->query('last_id'));
                 }
             )
+            ->forPage(1, $perPage)
             ->get()
         ;
 

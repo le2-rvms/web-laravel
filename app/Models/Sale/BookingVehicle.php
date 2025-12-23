@@ -65,7 +65,7 @@ class BookingVehicle extends Model
         return $this->belongsTo(Vehicle::class, 'bv_plate_no', 've_plate_no')->withDefault()->with('VehicleModel');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('booking_vehicles', 'bv')
@@ -79,10 +79,9 @@ class BookingVehicle extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class())
-            .'Options';
+        $key = static::getOptionKey($key);
 
         $value = DB::query()
             ->from('booking_vehicles', 'bv')

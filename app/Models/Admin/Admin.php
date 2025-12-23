@@ -3,8 +3,8 @@
 namespace App\Models\Admin;
 
 use App\Attributes\ClassName;
-use App\Enum\Admin\AdmTeamLimit;
-use App\Enum\Admin\AdmUserType;
+use App\Enum\Admin\ATeamLimit;
+use App\Enum\Admin\AUserType;
 use App\Models\_\ModelTrait;
 use App\Models\Vehicle\Vehicle;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -19,21 +19,21 @@ use Spatie\Permission\Traits\HasRoles;
 
 #[ClassName('员工')]
 /**
- * @property int              $id                    序号
- * @property string           $name                  姓名
- * @property string           $email                 邮件地址
- * @property string           $wecom_name            企业微信账号
- * @property null|Carbon      $email_verified_at
- * @property string           $password              密码
- * @property null|string      $remember_token
- * @property string           $password_confirmation 确认密码
- * @property array            $roles_                角色
- * @property array            $team_ids              关联车队
- * @property AdmTeamLimit|int $team_limit            是否限制车队
- * @property AdmUserType|int  $user_type             账号类型
- * @property null|Carbon      $expires_at            账号过期时间；当为 null 的时候，永不过期
- * @property null|bool        $is_mock
- *                                                   -- relation
+ * @property int            $id                    序号
+ * @property string         $name                  姓名
+ * @property string         $email                 邮件地址
+ * @property null|Carbon    $email_verified_at
+ * @property string         $password              密码
+ * @property null|string    $remember_token
+ * @property string         $password_confirmation 确认密码
+ * @property array          $roles_                角色
+ * @property string         $a_wecom_name          企业微信账号
+ * @property array          $a_team_ids            关联车队
+ * @property ATeamLimit|int $a_team_limit          是否限制车队
+ * @property AUserType|int  $a_user_type           账号类型
+ * @property null|Carbon    $a_expires_at          账号过期时间；当为 null 的时候，永不过期
+ * @property null|bool      $_is_mock
+ *                                                 -- relation
  */
 class Admin extends Authenticatable
 {
@@ -51,8 +51,8 @@ class Admin extends Authenticatable
     protected $attributes = [];
 
     protected $appends = [
-        'team_limit_label',
-        'expires_status_label',
+        'a_team_limit_label',
+        'a_expires_status_label',
     ];
 
     protected $guarded = [
@@ -69,16 +69,17 @@ class Admin extends Authenticatable
         return route('profile.edit');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
-            ->from('admins as adm')
+            ->from('admins as a')
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
+
         $value = static::query()
             ->where($where)
             ->orderBy('id')
@@ -88,13 +89,14 @@ class Admin extends Authenticatable
         return [$key => $value];
     }
 
-    public static function optionsWithRoles(?\Closure $where = null): array
+    public static function optionsWithRoles(?\Closure $where = null, ?string $key = null): array
     {
-        $key    = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
+
         $admins = static::query()
             ->where($where)
             ->orderBy('id')
-            ->where('user_type', '!=', AdmUserType::TEMP)
+            ->where('a_user_type', '!=', AUserType::TEMP)
             ->with('roles')->get()
         ;
 
@@ -130,20 +132,20 @@ class Admin extends Authenticatable
         return [
             'email_verified_at' => 'datetime:Y-m-d H:i:s',
             'password'          => 'hashed',
-            'expires_at'        => 'datetime:Y-m-d H:i:s',
-            'user_type'         => AdmUserType::class,
-            'team_limit'        => AdmTeamLimit::class,
+            'a_expires_at'      => 'datetime:Y-m-d H:i:s',
+            'a_user_type'       => AUserType::class,
+            'a_team_limit'      => ATeamLimit::class,
         ];
     }
 
-    protected function teamLimitLabel(): Attribute
+    protected function aTeamLimitLabel(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->getAttribute('team_limit')?->label
+            get: fn () => $this->getAttribute('a_team_limit')?->label
         );
     }
 
-    protected function teamIds(): Attribute
+    protected function aTeamIds(): Attribute
     {
         return Attribute::make(
             get: function ($value) {
@@ -155,14 +157,14 @@ class Admin extends Authenticatable
         );
     }
 
-    protected function expiresStatus(): Attribute
+    protected function aExpiresStatus(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->expires_at && $this->expires_at->lt(\Carbon\Carbon::now())
+            get: fn () => $this->a_expires_at && $this->a_expires_at->lt(\Carbon\Carbon::now())
         );
     }
 
-    protected function expiresStatusLabel(): Attribute
+    protected function aExpiresStatusLabel(): Attribute
     {
         return Attribute::make(
             get: fn () => $this->expiresStatus ? '过期' : '正常'

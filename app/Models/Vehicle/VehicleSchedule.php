@@ -74,91 +74,83 @@ class VehicleSchedule extends Model
         return $this->belongsTo(Vehicle::class, 'vs_ve_id', 've_id')->with('VehicleModel');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $ve_id = $search['ve_id'] ?? null;
-
         return DB::query()
             ->from('vehicle_schedules', 'vs')
-            ->when(null === $ve_id, function (Builder $query) {
-                return $query->joinSub(
-                    // 直接在 joinSub 中定义子查询
-                    DB::table('vehicle_schedules')
-                        ->select('vs_ve_id', 'vs_inspection_type', DB::raw('MAX(vs_next_inspection_date) as max_vs_next_inspection_date'))
-                        ->groupBy('vs_ve_id', 'vs_inspection_type'),
-                    'p2',
-                    function ($join) {
-                        $join->on('vs.vs_ve_id', '=', 'p2.vs_ve_id')
-                            ->on('vs.vs_inspection_type', '=', 'p2.vs_inspection_type')
-                            ->on('vs.vs_next_inspection_date', '=', 'p2.max_vs_next_inspection_date')
-                        ;
-                    }
-                );
-            })
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vs.vs_ve_id')
-            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
-            ->when($ve_id, function (Builder $query) use ($ve_id) {
-                $query->where('vs.vs_ve_id', '=', $ve_id);
-            })
-            ->when(
-                null === $ve_id,
-                function (Builder $query) {
-                    $query->whereRaw(
-                        'EXTRACT(EPOCH FROM now() - vs.vs_next_inspection_date) / 86400.0 >= ?',
-                        ['-'.Configuration::fetch('risk.vs_interval_day.less')]
-                    );
-                },
-            )
-            ->when(
-                null === $ve_id,
-                function (Builder $query) {
-                    $query->orderByDesc('vs.vs_next_inspection_date');
-                },
-                function (Builder $query) {
-                    $query->orderBy('vs.vs_id');
+            ->joinSub(
+                // 直接在 joinSub 中定义子查询
+                DB::table('vehicle_schedules')
+                    ->select('vs_ve_id', 'vs_inspection_type', DB::raw('MAX(vs_next_inspection_date) as max_vs_next_inspection_date'))
+                    ->groupBy('vs_ve_id', 'vs_inspection_type'),
+                'p2',
+                function ($join) {
+                    $join->on('vs.vs_ve_id', '=', 'p2.vs_ve_id')
+                        ->on('vs.vs_inspection_type', '=', 'p2.vs_inspection_type')
+                        ->on('vs.vs_next_inspection_date', '=', 'p2.max_vs_next_inspection_date')
+                    ;
                 }
             )
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vs.vs_ve_id')
+            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
+            ->whereRaw(
+                'EXTRACT(EPOCH FROM now() - vs.vs_next_inspection_date) / 86400.0 >= ?',
+                ['-'.Configuration::fetch('risk.vs_interval_day.less')]
+            )
+            ->orderByDesc('vs.vs_next_inspection_date')
+            ->select('vs.*', 've.ve_plate_no', 'vm.vm_brand_name', 'vm.vm_model_name')
+            ->addSelect(
+                DB::raw(VsInspectionType::toCaseSQL()),
+                DB::raw('CAST(EXTRACT(EPOCH FROM now() - vs.vs_next_inspection_date) / 86400.0 AS INTEGER) as vs_interval_day')
+            )
+        ;
+    }
+
+    public static function detailQuery(): Builder
+    {
+        return DB::query()
+            ->from('vehicle_schedules', 'vs')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vs.vs_ve_id')
+            ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->select('vs.*', 've.ve_plate_no', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
                 DB::raw(VsInspectionType::toCaseSQL()),
             )
-            ->when(null === $ve_id, function (Builder $query) {
-                $query->addSelect(DB::raw('CAST(EXTRACT(EPOCH FROM now() - vs.vs_next_inspection_date) / 86400.0 AS INTEGER) as vs_interval_day'));
-            })
+            ->orderBy('vs.vs_id')
         ;
     }
 
     public static function importColumns(): array
     {
         return [
-            'inspection_type'      => [VehicleSchedule::class, 'inspection_type'],
-            'plate_no'             => [Vehicle::class, 'plate_no'],
-            'inspector'            => [VehicleSchedule::class, 'inspector'],
-            'inspection_date'      => [VehicleSchedule::class, 'inspection_date'],
-            'inspection_amount'    => [VehicleSchedule::class, 'inspection_amount'],
-            'next_inspection_date' => [VehicleSchedule::class, 'next_inspection_date'],
-            'vs_remark'            => [VehicleSchedule::class, 'vs_remark'],
+            'vs_inspection_type'      => [VehicleSchedule::class, 'vs_inspection_type'],
+            'vs_plate_no'             => [Vehicle::class, 've_plate_no'],
+            'vs_inspector'            => [VehicleSchedule::class, 'vs_inspector'],
+            'vs_inspection_date'      => [VehicleSchedule::class, 'vs_inspection_date'],
+            'vs_inspection_amount'    => [VehicleSchedule::class, 'vs_inspection_amount'],
+            'vs_next_inspection_date' => [VehicleSchedule::class, 'vs_next_inspection_date'],
+            'vs_remark'               => [VehicleSchedule::class, 'vs_remark'],
         ];
     }
 
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['inspection_type'] = VsInspectionType::searchValue($item['inspection_type'] ?? null);
-            $item['ve_id']           = Vehicle::plateNoKv($item['plate_no'] ?? null);
+            $item['vs_inspection_type'] = VsInspectionType::searchValue($item['vs_inspection_type'] ?? null);
+            $item['vs_ve_id']           = Vehicle::plateNoKv($item['vs_plate_no'] ?? null);
         };
     }
 
     public static function importValidatorRule(array $item, array $fieldAttributes): void
     {
         $rules = [
-            'inspection_type'      => ['required', 'string', Rule::in(VsInspectionType::label_keys())],
-            've_id'                => ['required', 'integer'],
-            'inspector'            => ['required', 'string', 'max:255'],
-            'inspection_date'      => ['required', 'date'],
-            'next_inspection_date' => ['required', 'date', 'after:inspection_date'],
-            'inspection_amount'    => ['required', 'decimal:0,2', 'gte:0'],
-            'vs_remark'            => ['nullable', 'string'],
+            'vs_inspection_type'      => ['required', 'string', Rule::in(VsInspectionType::label_keys())],
+            'vs_ve_id'                => ['required', 'integer'],
+            'vs_inspector'            => ['required', 'string', 'max:255'],
+            'vs_inspection_date'      => ['required', 'date'],
+            'vs_next_inspection_date' => ['required', 'date', 'after:inspection_date'],
+            'vs_inspection_amount'    => ['required', 'decimal:0,2', 'gte:0'],
+            'vs_remark'               => ['nullable', 'string'],
         ];
 
         $validator = Validator::make($item, $rules, [], $fieldAttributes);
@@ -180,7 +172,7 @@ class VehicleSchedule extends Model
         };
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

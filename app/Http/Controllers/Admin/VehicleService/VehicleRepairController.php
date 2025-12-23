@@ -33,7 +33,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('维修')]
@@ -187,7 +186,7 @@ class VehicleRepairController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleRepair $vehicleRepair = null): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'vr_ve_id'              => ['bail', 'required', 'integer'],
@@ -266,13 +265,9 @@ class VehicleRepairController extends Controller
                     }
                 }
             })
+            ->validate()
         ;
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input         = $validator->validated();
         $input_payment = $input['payment'];
 
         $input_payment['p_sc_id'] = $input['vr_sc_id'];
@@ -317,21 +312,6 @@ class VehicleRepairController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleRepair $vehicleRepair): Response
     {
-        $validator = Validator::make(
-            [],
-            []
-        )
-            ->after(function (\Illuminate\Validation\Validator $validator) {
-                if ($validator->failed()) {
-                    return;
-                }
-            })
-        ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
         $vehicleRepair->delete();
 
         return $this->response()->withData($vehicleRepair)->respond();
@@ -340,18 +320,14 @@ class VehicleRepairController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function saleContractsOption(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 've_id' => ['bail', 'required', 'integer'],
             ]
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         $this->response()->withExtras(
             SaleContract::options(

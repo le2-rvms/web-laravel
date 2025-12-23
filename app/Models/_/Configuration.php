@@ -61,7 +61,7 @@ class Configuration extends Model
         ;
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query();
     }
@@ -116,7 +116,7 @@ class Configuration extends Model
         return $configValueArr[$currentPerPageKey] ?? $configValueArr[$globalPerPageKey] ?? static::perpage_num_default;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

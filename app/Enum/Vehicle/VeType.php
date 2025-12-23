@@ -19,19 +19,19 @@ class VeType extends EnumLikeBase
     public static function options(): array
     {
         $class = get_called_class();
+        $key   = preg_replace('/^.*\\\/', '', $class).'Enums';
 
-        return
-            [
-                preg_replace('/^.*\\\/', '', $class).'Options' => array_map(
-                    function ($k, $v) use ($class) {
-                        $text = $v.((static::$options_groups[$class] ?? null) ? ('('.(static::$options_groups[$class][$k] ?? 0).')') : '');
+        return [
+            $key => array_map(
+                function ($k, $v) use ($class) {
+                    $text = $v.((static::$options_groups[$class] ?? null) ? ('('.(static::$options_groups[$class][$k] ?? 0).')') : '');
 
-                        return ['text' => $text, 'value' => $k];
-                    },
-                    //  static fn ($k, $v) => ['text' => $v, 'value' => $k],
-                    static::KEYS,
-                    static::LABELS
-                ),
-            ];
+                    return ['text' => $text, 'value' => $k];
+                },
+                //  static fn ($k, $v) => ['text' => $v, 'value' => $k],
+                static::KEYS,
+                static::LABELS
+            ),
+        ];
     }
 }

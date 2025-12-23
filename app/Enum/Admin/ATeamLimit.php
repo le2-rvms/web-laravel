@@ -4,7 +4,7 @@ namespace App\Enum\Admin;
 
 use App\Enum\EnumLikeBase;
 
-class AdmTeamLimit extends EnumLikeBase
+class ATeamLimit extends EnumLikeBase
 {
     public const int NOT_LIMITED = 0;
     public const int LIMITED     = 1;

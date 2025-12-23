@@ -32,7 +32,7 @@ return [
     'SaleContractVehicleChange'        => '租车合同',
     'SaleContractVehicleChangePayment' => '合同换车缴费',
     'SaleContractCancel'               => '取消租车合同',
-    'VehicleReplacement'               => '临时车',
+    'VehicleTmp'                       => '临时车',
     'SaleSettlement'                   => '退车结算',
     'SaleSettlementApprove'            => '退车结算审核',
     'BookingVehicle'                   => '预定车辆',

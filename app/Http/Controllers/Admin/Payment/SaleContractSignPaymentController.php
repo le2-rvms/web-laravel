@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Payment;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Payment\PaStatus;
+use App\Enum\Payment\PIsValid;
 use App\Enum\Payment\PPayStatus;
 use App\Enum\Payment\PPtId;
 use App\Enum\SaleContract\ScRentalType;
@@ -19,7 +20,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('签约收款')]
@@ -43,7 +43,10 @@ class SaleContractSignPaymentController extends Controller
             PPayStatus::options(),
             SaleContract::options(
                 where: function (Builder $builder) {
-                    $builder->whereIn('sc.sc_status', [ScStatus::PENDING]);
+                    $builder
+                        ->whereIn('sc.sc_status', [ScStatus::PENDING])
+//                        ->where('sc.sc_is_current_version', '=', true)
+                    ;
                 }
             ),
         );
@@ -66,6 +69,21 @@ class SaleContractSignPaymentController extends Controller
                 $saleContract->sc_deposit_amount_true    = $saleContract->sc_deposit_amount ?? '0.00';
             }
             $saleContract->sc_actual_pay_date = now()->format('Y-m-d');
+
+            // 押金支付
+            if ($saleContract->sc_version > 1) {
+                $saleContractPre = SaleContract::query()->where('sc_no', $saleContract->sc_no)->where('sc_version', '=', $saleContract->sc_version - 1)->firstOrFail();
+
+                $payment_refund_deposit = Payment::indexQuery()
+                    ->where('p_sc_id', '=', $saleContractPre->sc_id)
+                    ->where('p_pt_id', '=', PPtId::REFUND_DEPOSIT)
+                    ->where('p_is_valid', '=', PIsValid::VALID)
+                    ->where('p_pay_status', '=', PPayStatus::UNPAID)
+                    ->first()
+                ;
+
+                $saleContract->payment_refund_deposit = $payment_refund_deposit;
+            }
         } else {
             $saleContract = [];
         }
@@ -79,7 +97,10 @@ class SaleContractSignPaymentController extends Controller
         $is_long_term  = ScRentalType::LONG_TERM === $saleContract->sc_rental_type->value;
         $is_short_term = ScRentalType::SHORT_TERM === $saleContract->sc_rental_type->value;
 
-        $validator = Validator::make(
+        /** @var Payment $payment_refund_deposit */
+        $payment_refund_deposit = null;
+
+        $input = Validator::make(
             $request->all(),
             [
                 'sc_deposit_amount'                  => ['bail', 'required', 'numeric'],
@@ -92,34 +113,54 @@ class SaleContractSignPaymentController extends Controller
                 'sc_insurance_additional_fee_amount' => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
                 'sc_other_fee_amount'                => ['bail', Rule::requiredIf($is_short_term), Rule::excludeIf($is_long_term), 'decimal:0,2', 'gte:0'],
                 'sc_actual_pay_date'                 => ['bail', 'required', 'date'],
-                'sc_pa_id'                           => ['bail', 'required', Rule::exists(PaymentAccount::class, 'pa_id')->where('pa_status', PaStatus::ENABLED)],
+                'p_pa_id'                            => ['bail', 'required', Rule::exists(PaymentAccount::class, 'pa_id')->where('pa_status', PaStatus::ENABLED)],
+                'payment_refund_deposit'             => ['bail', 'nullable', 'array'],
+                'payment_refund_deposit.p_id'        => ['bail', 'required', Rule::exists(Payment::class, 'p_id')],
             ],
             [],
             trans_property(SaleContract::class) + trans_property(Payment::class),
         )
-            ->after(function (\Illuminate\Validation\Validator $validator) use ($saleContract, &$vehicle, &$customer) {
+            ->after(function (\Illuminate\Validation\Validator $validator) use ($request, $saleContract, &$vehicle, &$customer, &$payment_refund_deposit) {
                 if ($validator->failed()) {
                     return;
                 }
                 if (!$saleContract->check_status([ScStatus::PENDING], $validator)) {
                     return;
                 }
+
+                // 押金支付
+                if ($saleContract->sc_version > 1) {
+                    $saleContractPre = SaleContract::query()->where('sc_no', $saleContract->sc_no)->where('sc_version', '=', $saleContract->sc_version - 1)->firstOrFail();
+
+                    $payment_refund_deposit = Payment::query()
+                        ->where('p_sc_id', '=', $saleContractPre->sc_id)
+                        ->where('p_pt_id', '=', PPtId::REFUND_DEPOSIT)
+                        ->where('p_is_valid', '=', PIsValid::VALID)
+                        ->where('p_pay_status', '=', PPayStatus::UNPAID)
+                        ->first()
+                    ;
+
+                    if ($payment_refund_deposit && $request->json('payment_refund_deposit.p_id') !== $payment_refund_deposit->p_id) {
+                        $validator->errors()->add('payment_refund_deposit.p_id', '押金转移支付错误');
+                    }
+                }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
 
-        $input = $validator->validated();
+        DB::transaction(function () use (&$payment_refund_deposit, $saleContract, &$input) {
+            if ($payment_refund_deposit) {
+                $payment_refund_deposit->update([
+                    'p_pay_status'        => PPayStatus::PAID,
+                    'p_actual_pay_date'   => $saleContract->sc_start_date,
+                    'p_actual_pay_amount' => $payment_refund_deposit->p_should_pay_amount,
+                ]);
+            }
 
-        DB::transaction(function () use ($saleContract, &$input) {
             foreach (PPtId::getFeeTypes($saleContract->sc_rental_type->value) as $label => $pt_id) {
                 $should_pay_amount = $input[$label];
                 $actual_pay_amount = $input[$label.'_true'] ?? null;
-                if (
-                    (null !== $actual_pay_amount && bccomp($actual_pay_amount, '0', 2) > 0)
-                    || (null === $actual_pay_amount && bccomp($should_pay_amount, '0', 2) > 0)
-                ) {
+                if ((null !== $actual_pay_amount && bccomp($actual_pay_amount, '0', 2) > 0) || (null === $actual_pay_amount && bccomp($should_pay_amount, '0', 2) > 0)) {
                     Payment::query()->updateOrCreate([
                         'p_sc_id' => $saleContract->sc_id,
                         'p_pt_id' => $pt_id,
@@ -129,7 +170,7 @@ class SaleContractSignPaymentController extends Controller
                         'p_pay_status'        => PPayStatus::PAID,
                         'p_actual_pay_date'   => $input['sc_actual_pay_date'],
                         'p_actual_pay_amount' => $actual_pay_amount ?? $should_pay_amount,
-                        'p_pa_id'             => $input['sc_pa_id'],
+                        'p_pa_id'             => $input['p_pa_id'],
                     ]);
                 }
             }

@@ -68,7 +68,7 @@ class SaleContractTpl extends Model
         'sct_payment_day_label',
     ];
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('sale_contract_tpls', 'sct')
@@ -83,9 +83,10 @@ class SaleContractTpl extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
+
         $value = DB::query()
             ->from('sale_contract_tpls', 'sct')
             ->where('sct.sct_status', '=', SctStatus::ENABLED)

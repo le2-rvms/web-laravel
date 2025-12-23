@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Vehicle;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AdmTeamLimit;
+use App\Enum\Admin\ATeamLimit;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
@@ -29,7 +29,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('车辆')]
@@ -64,9 +63,9 @@ class VehicleController extends Controller
         /** @var Admin $admin */
         $admin = auth()->user();
 
-        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+        if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereIn('ve.ve_team_id', $admin->team_ids)->orwhereNull('ve.ve_team_id');
+                $query->whereIn('ve.ve_team_id', $admin->a_team_ids)->orwhereNull('ve.ve_team_id');
             });
         }
 
@@ -114,14 +113,14 @@ class VehicleController extends Controller
     #[PermissionAction(PermissionAction::READ)]
     public function show(Vehicle $vehicle): Response
     {
-        $this->response()->withExtras(
-            VehicleInspection::kvList(ve_id: $vehicle->ve_id),
-            VehicleUsage::kvList(ve_id: $vehicle->ve_id),
-            VehicleRepair::kvList(ve_id: $vehicle->ve_id),
-            VehicleViolation::kvList(ve_id: $vehicle->ve_id),
-            VehicleManualViolation::kvList(ve_id: $vehicle->ve_id),
-            VehicleSchedule::kvList(ve_id: $vehicle->ve_id),
-        );
+        //        $this->response()->withExtras(
+        //            VehicleInspection::kvList(ve_id: $vehicle->ve_id),
+        //            VehicleUsage::kvList(ve_id: $vehicle->ve_id),
+        //            VehicleRepair::kvList(ve_id: $vehicle->ve_id),
+        //            VehicleViolation::kvList(ve_id: $vehicle->ve_id),
+        //            VehicleManualViolation::kvList(ve_id: $vehicle->ve_id),
+        //            VehicleSchedule::kvList(ve_id: $vehicle->ve_id),
+        //        );
 
         return $this->response()->withData($vehicle)->respond();
     }
@@ -129,7 +128,7 @@ class VehicleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?Vehicle $vehicle): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 've_plate_no'                 => ['required', 'string', 'max:64', Rule::unique(Vehicle::class, 've_plate_no')->ignore($vehicle)],
@@ -168,13 +167,8 @@ class VehicleController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input, &$vehicle) {
             if (null === $vehicle) {
@@ -231,12 +225,26 @@ class VehicleController extends Controller
         );
 
         $this->response()->withExtras(
-            VehicleInspection::kvList(ve_id: $vehicle->ve_id),
-            VehicleUsage::kvList(ve_id: $vehicle->ve_id),
-            VehicleRepair::kvList(ve_id: $vehicle->ve_id),
-            VehicleViolation::kvList(ve_id: $vehicle->ve_id),
-            VehicleManualViolation::kvList(ve_id: $vehicle->ve_id),
-            VehicleSchedule::kvList(ve_id: $vehicle->ve_id),
+            VehicleInspection::indexList(function ($query) use ($vehicle) {
+                $query->where('vi.vi_ve_id', '=', $vehicle->ve_id);
+            }),
+            VehicleUsage::indexList(function (Builder $query) use ($vehicle) {
+                $query->where('vu.vu_ve_id', '=', $vehicle->ve_id);
+            }),
+            VehicleRepair::indexList(function (Builder $query) use ($vehicle) {
+                $query->where('vr.vr_ve_id', '=', $vehicle->ve_id);
+            }),
+            VehicleViolation::indexList(function (Builder $query) use ($vehicle) {
+                $query->where('vv.vv_ve_id', '=', $vehicle->ve_id);
+            }),
+            VehicleManualViolation::indexList(function (Builder $query) use ($vehicle) {
+                $query->where('vv.vv_ve_id', '=', $vehicle->ve_id);
+            }),
+            VehicleSchedule::detailList(
+                function (Builder $query) use ($vehicle) {
+                    $query->where('vs.vs_ve_id', '=', $vehicle->ve_id);
+                }
+            ),
         );
 
         return $this->response()->withData($vehicle)->respond();

@@ -129,10 +129,10 @@ class Payment extends Model
         return $this->belongsTo(VehicleInspection::class, 'p_vi_id', 'vi_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
-        $sc_id = $search['sc_id'] ?? null;
-        $cu_id = $search['cu_id'] ?? null;
+        //        $sc_id = $search['sc_id'] ?? null;
+        //        $cu_id = $search['cu_id'] ?? null;
 
         return DB::query()
             ->from('payments', 'p')
@@ -142,21 +142,22 @@ class Payment extends Model
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
-            ->when($sc_id, function (Builder $query) use ($sc_id) {
-                $query->where('p.p_sc_id', '=', $sc_id);
-            })
-            ->when($cu_id, function (Builder $query) use ($cu_id) {
-                $query->where('sc.sc_cu_id', '=', $cu_id);
-            })
-            ->when(
-                null === $sc_id && null === $cu_id,
-                function (Builder $query) {
-                    $query->orderByDesc('p.p_sc_id')->orderby('p.p_id');
-                },
-                function (Builder $query) {
-                    $query->orderBy('p.p_sc_id')->orderby('p.p_should_pay_date')->orderby('p.p_id');
-                }
-            )
+//            ->where($where)
+//            ->when($sc_id, function (Builder $query) use ($sc_id) {
+//                $query->where('p.p_sc_id', '=', $sc_id);
+//            })
+//            ->when($cu_id, function (Builder $query) use ($cu_id) {
+//                $query->where('sc.sc_cu_id', '=', $cu_id);
+//            })
+//            ->when(
+//                null === $sc_id && null === $cu_id,
+//                function (Builder $query) {
+//                    $query->orderByDesc('p.p_sc_id')->orderby('p.p_id');
+//                },
+//                function (Builder $query) {
+//                    $query->orderBy('p.p_sc_id')->orderby('p.p_should_pay_date')->orderby('p.p_id');
+//                }
+//            )
             ->select('*')
             ->addSelect(
                 DB::raw(ScStatus::toCaseSQL()),
@@ -179,6 +180,7 @@ class Payment extends Model
     {
         return [
             'SaleContract.sc_no'           => fn ($item) => $item->sc_no,
+            'SaleContract.sc_version'      => fn ($item) => $item->sc_version,
             'Vehicle.plate_no'             => fn ($item) => $item->plate_no,
             'VehicleModel.brand_model'     => fn ($item) => $item->vm_brand_name.'-'.$item->vm_model_name,
             'Customer.cu_contact_name'     => fn ($item) => $item->cu_contact_name,
@@ -194,7 +196,7 @@ class Payment extends Model
         ];
     }
 
-    public static function indexStat($list): array
+    public static function indexStatValue($list): array
     {
         $accounts_receivable_amount = $actual_received_amount = $pending_receivable_amount = $pending_receivable_size = $less_receivable_amount = '0';
         foreach ($list as $key => $value) {
@@ -218,8 +220,10 @@ class Payment extends Model
 
     public static function option(Collection $Payments): array
     {
+        $key = static::getOptionKey($key);
+
         return [
-            preg_replace('/^.*\\\/', '', get_called_class()).'Options' => (function () use ($Payments) {
+            $key => (function () use ($Payments) {
                 $value = [];
                 foreach ($Payments as $key => $rp) {
                     $value[] = ['text' => $rp->p_remark, 'value' => $key];
@@ -235,6 +239,7 @@ class Payment extends Model
     {
         return [
             'sc_no'               => [SaleContract::class, 'sc_no'],
+            'sc_version'          => [SaleContract::class, 'sc_version'],
             'p_pt_id'             => [Payment::class, 'p_pt_id'],
             'p_should_pay_date'   => [Payment::class, 'p_should_pay_date'],
             'p_should_pay_amount' => [Payment::class, 'p_should_pay_amount'],
@@ -252,7 +257,7 @@ class Payment extends Model
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['p_sc_id']      = SaleContract::contractNumberKv($item['sc_no'] ?? null);
+            $item['p_sc_id']      = SaleContract::contractNumberKv(($item['sc_no'] ?? null).'#'.($item['sc_version'] ?? null));
             $item['p_pay_status'] = PPayStatus::searchValue($item['p_pay_status'] ?? null);
             $item['p_pt_id']      = PPtId::searchValue($item['p_pt_id'] ?? null);
 
@@ -292,7 +297,7 @@ class Payment extends Model
             }
 
             // p_pa_id
-            $missing = array_diff(static::$fields['p_pa_id'], PaymentAccount::query()->pluck('p_pa_id')->toArray());
+            $missing = array_diff(static::$fields['p_pa_id'], PaymentAccount::query()->pluck('pa_id')->toArray());
             if (count($missing) > 0) {
                 throw new ClientException('以下支付账户序号不存在：'.join(',', $missing));
             }
@@ -306,7 +311,7 @@ class Payment extends Model
         };
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

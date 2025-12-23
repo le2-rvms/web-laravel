@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands\Dev;
 
-use App\Enum\Admin\AdmUserType;
+use App\Enum\Admin\AUserType;
 use App\Enum\Customer\CuType;
 use App\Enum\Payment\PPtId;
 use App\Enum\SaleContract\ScRentalType;
@@ -40,6 +40,7 @@ use App\Models\Vehicle\VehicleViolation;
 use App\Services\ProgressDisplay;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Console\Attribute\AsCommand;
 
@@ -92,10 +93,22 @@ class MockDataGenerate extends Command
 
             //            Vehicle::query()->update(['ve_status_service' => VeStatusService::YES, 've_status_rental' => VeStatusRental::LISTED, 've_status_dispatch' => VeStatusDispatch::NOT_DISPATCHED]);
 
-            Admin::query()->where('user_type', '=', AdmUserType::COMMON)->delete();
+            Admin::query()->where('a_user_type', '=', AUserType::COMMON)->delete();
             DB::table(config('permission.table_names.model_has_roles'))->whereRaw('model_id not in (select id from admins)')->delete();
 
             DB::statement('call reset_identity_sequences(?)', ['public']);
+        });
+
+        DB::transaction(function () {
+            $auditSchema = config('setting.dblog.schema');
+
+            foreach (config('setting.dblog.models') as $class_name => $pk) {
+                /** @var Model $model */
+                $model = new $class_name();
+                $table = $model->getTable();
+
+                DB::table("{$auditSchema}.{$table}")->delete();
+            }
         });
 
         DB::transaction(function () {

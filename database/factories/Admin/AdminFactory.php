@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Admin;
 
-use App\Enum\Admin\AdmUserType;
+use App\Enum\Admin\AUserType;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
 use Database\Factories\UsesJsonFixture;
@@ -32,8 +32,8 @@ class AdminFactory extends Factory
             'email_verified_at' => now(),
             'password'          => static::$password ??= Hash::make('password'),
             'remember_token'    => Str::random(10),
-            'user_type'         => AdmUserType::COMMON,
-            'expires_at'        => $this->faker->boolean(20) ? $this->faker->dateTimeBetween('now', '+1 years') : null,
+            'a_user_type'       => AUserType::COMMON,
+            'a_expires_at'      => $this->faker->boolean(20) ? $this->faker->dateTimeBetween('now', '+1 years') : null,
         ];
     }
 

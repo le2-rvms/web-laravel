@@ -61,7 +61,7 @@ class DeliveryChannel extends Model
         'dc_status_label',
     ];
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('delivery_channels', 'dc')
@@ -77,9 +77,9 @@ class DeliveryChannel extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
 
         $value = DB::query()
             ->from('doc_tpls', 'dt')
@@ -215,9 +215,9 @@ class DeliveryChannel extends Model
             ->chunk(100, function ($vehicleInsurances) {
                 /** @var array<VehicleInsurance> $vehicleInsurances */
                 foreach ($vehicleInsurances as $vehicleInsurance) {
-                    $wecom_name = $vehicleInsurance?->Vehicle?->VehicleManager?->wecom_name;
-                    if (!$wecom_name) {
-                        Log::channel('console')->info("wecom_name,跳过{$this->dc_key}类型通知。", [$vehicleInsurance?->Vehicle?->ve_plate_no, $vehicleInsurance?->Vehicle?->VehicleManager?->name]);
+                    $a_wecom_name = $vehicleInsurance?->Vehicle?->VehicleManager?->a_wecom_name;
+                    if (!$a_wecom_name) {
+                        Log::channel('console')->info("a_wecom_name,跳过{$this->dc_key}类型通知。", [$vehicleInsurance?->Vehicle?->ve_plate_no, $vehicleInsurance?->Vehicle?->VehicleManager?->name]);
 
                         continue;
                     }
@@ -241,7 +241,7 @@ class DeliveryChannel extends Model
                         'dc_tn'         => $dc_tn,
                         'dl_key'        => $dl_key,
                         'vi_id'         => $vehicleInsurance->vi_id,
-                        'recipients'    => json_encode([$wecom_name]),
+                        'recipients'    => json_encode([$a_wecom_name]),
                         'content_title' => $this->dc_title,
                         'content_body'  => Blade::render($this->dc_template, $vehicleInsurance),
                         'send_status'   => DlSendStatus::ST_PENDING,
@@ -265,9 +265,9 @@ class DeliveryChannel extends Model
             ->chunk(100, function ($vehicleSchedules) {
                 /** @var VehicleSchedule $vehicleSchedule */
                 foreach ($vehicleSchedules as $vehicleSchedule) {
-                    $wecom_name = $vehicleSchedule?->Vehicle?->VehicleManager?->wecom_name;
-                    if (!$wecom_name) {
-                        Log::channel('console')->info("wecom_name,跳过{$this->dc_key}类型通知。", [$vehicleSchedule?->Vehicle?->ve_plate_no, $vehicleSchedule?->Vehicle?->VehicleManager?->name]);
+                    $a_wecom_name = $vehicleSchedule?->Vehicle?->VehicleManager?->a_wecom_name;
+                    if (!$a_wecom_name) {
+                        Log::channel('console')->info("a_wecom_name,跳过{$this->dc_key}类型通知。", [$vehicleSchedule?->Vehicle?->ve_plate_no, $vehicleSchedule?->Vehicle?->VehicleManager?->name]);
 
                         continue;
                     }
@@ -290,7 +290,7 @@ class DeliveryChannel extends Model
                         'dc_tn'         => $dc_tn,
                         'dl_key'        => $dl_key,
                         'vs_id'         => $vehicleSchedule->vs_id,
-                        'recipients'    => json_encode([$wecom_name]),
+                        'recipients'    => json_encode([$a_wecom_name]),
                         'content_title' => $this->dc_title,
                         'content_body'  => Blade::render($this->dc_template, $vehicleSchedule),
                         'send_status'   => DlSendStatus::ST_PENDING,

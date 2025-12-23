@@ -17,7 +17,6 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('预定车辆')]
@@ -100,7 +99,7 @@ class BookingVehicleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?BookingVehicle $bookingVehicle)
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'bv_type'               => ['bail', Rule::excludeIf(null !== $bookingVehicle), 'required', Rule::in(BvType::label_keys())],
@@ -126,12 +125,8 @@ class BookingVehicleController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         if (null === $bookingVehicle) {
             $bookingVehicle = BookingVehicle::query()->create($input + ['bv_is_listed' => BvIsListed::LISTED, 'bv_listed_at' => now()]);
@@ -155,7 +150,7 @@ class BookingVehicleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function status(Request $request, BookingVehicle $bookingVehicle): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'bv_is_listed' => ['bail', 'required', Rule::in(BvIsListed::label_keys())],
@@ -168,12 +163,8 @@ class BookingVehicleController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         $bookingVehicle->update($input);
 

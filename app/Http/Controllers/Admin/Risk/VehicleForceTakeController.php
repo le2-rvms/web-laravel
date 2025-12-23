@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('风控收车')]
@@ -103,7 +102,7 @@ class VehicleForceTakeController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleForceTake $vehicleForceTake = null): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'vft_ve_id'  => ['required', 'integer'],
@@ -136,13 +135,8 @@ class VehicleForceTakeController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input, &$vehicle, &$vehicleForceTake) {
             if (null === $vehicleForceTake) {
@@ -158,21 +152,6 @@ class VehicleForceTakeController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleForceTake $vehicleForceTake): Response
     {
-        $validator = Validator::make(
-            [],
-            []
-        )
-            ->after(function (\Illuminate\Validation\Validator $validator) {
-                if ($validator->failed()) {
-                    return;
-                }
-            })
-        ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
         $vehicleForceTake->delete();
 
         return $this->response()->withData($vehicleForceTake)->respond();

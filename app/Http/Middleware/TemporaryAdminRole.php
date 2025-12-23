@@ -50,8 +50,8 @@ class TemporaryAdminRole
         // 构造临时用户对象
         $tempUser = new Admin();
         $tempUser->forceFill([
-            'is_mock' => true,
-            'name'    => $roleCached['name'],
+            '_is_mock' => true,
+            'name'     => $roleCached['name'],
         ]);
 
         $tempUser->exists = true;

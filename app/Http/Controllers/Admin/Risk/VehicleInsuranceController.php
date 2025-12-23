@@ -16,7 +16,6 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('待续保')]
@@ -99,7 +98,7 @@ class VehicleInsuranceController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleInsurance $vehicleInsurance = null): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'vi_ve_id' => ['required', 'integer'],
@@ -166,13 +165,8 @@ class VehicleInsuranceController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input, &$vehicle, &$vehicleInsurance) {
             if (null === $vehicleInsurance) {
@@ -190,21 +184,6 @@ class VehicleInsuranceController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleInsurance $vehicleInsurance): Response
     {
-        $validator = Validator::make(
-            [],
-            []
-        )
-            ->after(function (\Illuminate\Validation\Validator $validator) {
-                if ($validator->failed()) {
-                    return;
-                }
-            })
-        ;
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
         $vehicleInsurance->delete();
 
         return $this->response()->withData($vehicleInsurance)->respond();

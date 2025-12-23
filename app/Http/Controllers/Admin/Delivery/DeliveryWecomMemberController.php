@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('企业微信机器人')]
@@ -31,8 +30,8 @@ class DeliveryWecomMemberController extends Controller
         );
 
         $items = Admin::indexQuery()
-            ->select('id', 'name', 'wecom_name')
-            ->orderByDesc('adm.id')
+            ->select('id', 'name', 'a_wecom_name')
+            ->orderByDesc('a.id')
             ->get()
         ;
 
@@ -42,12 +41,12 @@ class DeliveryWecomMemberController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
-                'items'              => ['bail', 'nullable', 'array'],
-                'items.*.id'         => ['bail', 'required', 'integer', Rule::exists(Admin::class, 'id')],
-                'items.*.wecom_name' => ['bail', 'nullable', 'max:255'],
+                'items'                => ['bail', 'nullable', 'array'],
+                'items.*.id'           => ['bail', 'required', 'integer', Rule::exists(Admin::class, 'id')],
+                'items.*.a_wecom_name' => ['bail', 'nullable', 'max:255'],
             ],
             [],
             trans_property(SaleContractExt::class)
@@ -57,12 +56,8 @@ class DeliveryWecomMemberController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
 
         DB::transaction(function () use (&$input) {
             foreach ($input['items'] as $item) {

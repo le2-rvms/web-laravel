@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 abstract class ConfigurationController extends Controller
@@ -155,7 +154,7 @@ abstract class ConfigurationController extends Controller
 
     private function validatedCreateRequest(Request $request): array
     {
-        $validator = Validator::make(
+        return Validator::make(
             $request->all(),
             [
                 'cfg_key'    => ['required', 'max:255', Rule::unique(Configuration::class, 'cfg_key')],
@@ -165,18 +164,14 @@ abstract class ConfigurationController extends Controller
             ],
             [],
             trans_property(Configuration::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        return $validator->validated();
+        )
+            ->validate()
+        ;
     }
 
     private function validatedEditRequest(Request $request, Configuration $configuration): array
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'cfg_key'    => ['required', 'max:255', Rule::unique(Configuration::class, 'cfg_key')->ignore($configuration, 'cfg_key')],
@@ -192,12 +187,9 @@ abstract class ConfigurationController extends Controller
                     return;
                 }
             })
+            ->validate()
         ;
 
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        return $validator->validated();
+        return $input;
     }
 }

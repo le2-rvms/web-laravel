@@ -119,7 +119,7 @@ class OneAccount extends Model
         return "cookie/{$this->oa_id}.json";
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('one_accounts', 'oa')
@@ -131,9 +131,9 @@ class OneAccount extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
 
         $value = static::query()
             ->when($where, fn ($query) => $query->where($where))

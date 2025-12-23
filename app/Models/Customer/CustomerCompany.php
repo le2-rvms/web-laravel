@@ -45,12 +45,12 @@ class CustomerCompany extends Model
         return $this->belongsTo(Customer::class, 'cuc_cu_id', 'cu_id');
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query();
     }
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
         return [];
     }

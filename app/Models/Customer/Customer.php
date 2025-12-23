@@ -86,9 +86,10 @@ class Customer extends Authenticatable
         'cu_type_label',
     ];
 
-    public static function options(?\Closure $where = null): array
+    public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key   = preg_replace('/^.*\\\/', '', get_called_class()).'Options';
+        $key = static::getOptionKey($key);
+
         $value = static::query()->toBase()
             ->select(DB::raw("CONCAT(cu_contact_name,' | ',cu_contact_phone) as text,cu_id as value"))
             ->get()
@@ -97,7 +98,7 @@ class Customer extends Authenticatable
         return [$key => $value];
     }
 
-    public static function plateNoKv(?string $contact_phone = null)
+    public static function contractPhoneKv(?string $contact_phone = null)
     {
         static $kv = null;
 
@@ -110,11 +111,7 @@ class Customer extends Authenticatable
             ;
         }
 
-        if ($contact_phone) {
-            return $kv[$contact_phone] ?? null;
-        }
-
-        return $kv;
+        return $kv[$contact_phone] ?? null;
     }
 
     public function CustomerIndividual(): HasOne
@@ -127,7 +124,7 @@ class Customer extends Authenticatable
         return $this->hasOne(CustomerCompany::class, 'cuc_cu_id', 'cu_id')->withDefault();
     }
 
-    public static function indexQuery(array $search = []): Builder
+    public static function indexQuery(): Builder
     {
         return DB::query()
             ->from('customers', 'cu')
@@ -214,12 +211,12 @@ class Customer extends Authenticatable
         return [
             'cu_type'                        => [Customer::class, 'cu_type'],
             'cu_contact_name'                => [Customer::class, 'cu_contact_name'],
-            'contact_phone'                  => [Customer::class, 'contact_phone'],
-            'contact_email'                  => [Customer::class, 'contact_email'],
-            'contact_wechat'                 => [Customer::class, 'contact_wechat'],
-            'contact_live_city'              => [Customer::class, 'contact_live_city'],
-            'contact_live_address'           => [Customer::class, 'contact_live_address'],
-            'cu_team_id'                     => [Customer::class, 'cu_team_id'],
+            'cu_contact_phone'               => [Customer::class, 'cu_contact_phone'],
+            'cu_contact_email'               => [Customer::class, 'cu_contact_email'],
+            'cu_contact_wechat'              => [Customer::class, 'cu_contact_wechat'],
+            'cu_contact_live_city'           => [Customer::class, 'cu_contact_live_city'],
+            'cu_contact_live_address'        => [Customer::class, 'cu_contact_live_address'],
+            'cu_team_id'                     => [AdminTeam::class, 'at_name'],
             'cu_cert_no'                     => [Customer::class, 'cu_cert_no'],
             'cu_cert_valid_to'               => [Customer::class, 'cu_cert_valid_to'],
             'cu_remark'                      => [Customer::class, 'cu_remark'],
@@ -242,10 +239,12 @@ class Customer extends Authenticatable
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['cu_type']                      = CuType::searchValue($item['cu_type']);
+            $item['cu_type']                      = CuType::searchValue($item['cu_type'] ?? null);
             $item['cu_cui_gender']                = CuiGender::searchValue($item['cu_cui_gender'] ?? null);
             static::$fields['cu_contact_phone'][] = $item['cu_contact_phone'] ?? null;
             static::$fields['cu_contact_email'][] = $item['cu_contact_email'] ?? null;
+
+            $item['cu_team_id'] = AdminTeam::nameKv($item['cu_team_id'] ?? null);
         };
     }
 
@@ -253,17 +252,17 @@ class Customer extends Authenticatable
     {
         $rules = [
             // customer
-            'cu_type'              => ['required', 'string', Rule::in(CuType::label_keys())],
-            'cu_contact_name'      => ['required', 'string', 'max:255'],
-            'contact_phone'        => ['required', 'regex:/^\d{11}$/'],
-            'contact_email'        => ['nullable', 'email'],
-            'contact_wechat'       => ['nullable', 'string', 'max:255'],
-            'contact_live_city'    => ['nullable', 'string', 'max:64'],
-            'contact_live_address' => ['nullable', 'string', 'max:255'],
-            'cu_team_id'           => ['nullable', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
-            'cu_cert_no'           => ['nullable', 'string', 'max:50'],
-            'cu_cert_valid_to'     => ['nullable', 'date'],
-            'cu_remark'            => ['nullable', 'string', 'max:255'],
+            'cu_type'                 => ['required', 'string', Rule::in(CuType::label_keys())],
+            'cu_contact_name'         => ['required', 'string', 'max:255'],
+            'cu_contact_phone'        => ['required', 'regex:/^\d{11}$/'],
+            'cu_contact_email'        => ['nullable', 'email'],
+            'cu_contact_wechat'       => ['nullable', 'string', 'max:255'],
+            'cu_contact_live_city'    => ['nullable', 'string', 'max:64'],
+            'cu_contact_live_address' => ['nullable', 'string', 'max:255'],
+            'cu_team_id'              => ['nullable', 'integer', Rule::exists(AdminTeam::class, 'at_id')],
+            'cu_cert_no'              => ['nullable', 'string', 'max:50'],
+            'cu_cert_valid_to'        => ['nullable', 'date'],
+            'cu_remark'               => ['nullable', 'string', 'max:255'],
             // customer_individuals
             'cui_name'                       => ['nullable', 'string', 'max:255'],
             'cui_gender'                     => ['nullable', Rule::in(CuiGender::label_keys())],
@@ -290,13 +289,13 @@ class Customer extends Authenticatable
     {
         return function () {
             // contact_phone
-            $contact_phone = Customer::query()->whereIn('contact_phone', static::$fields['contact_phone'])->pluck('contact_phone')->toArray();
+            $contact_phone = Customer::query()->whereIn('cu_contact_phone', static::$fields['cu_contact_phone'])->pluck('cu_contact_phone')->toArray();
             if (count($contact_phone) > 0) {
                 throw new ClientException('以下联系电话已经存在：'.join(',', $contact_phone));
             }
 
             // contact_email
-            $contact_email = Customer::query()->whereIn('contact_email', static::$fields['contact_email'])->pluck('contact_email')->toArray();
+            $contact_email = Customer::query()->whereIn('cu_contact_email', static::$fields['cu_contact_email'])->pluck('cu_contact_email')->toArray();
             if (count($contact_email) > 0) {
                 throw new ClientException('以下联系邮箱已经存在：'.join(',', $contact_email));
             }
@@ -312,7 +311,7 @@ class Customer extends Authenticatable
                 case CuType::INDIVIDUAL:
                     $customer->CustomerIndividual()->updateOrCreate(
                         [
-                            'cu_id' => $customer->cu_id,
+                            'cui_cu_id' => $customer->cu_id,
                         ],
                         $input,
                     );
@@ -322,7 +321,7 @@ class Customer extends Authenticatable
                 case CuType::COMPANY:
                     $customer->CustomerCompany()->updateOrCreate(
                         [
-                            'cu_id' => $customer->cu_id,
+                            'cuc_cu_id' => $customer->cu_id,
                         ],
                         $input,
                     );

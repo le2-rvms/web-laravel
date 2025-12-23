@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\Sale;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
-use App\Enum\Admin\AdmTeamLimit;
+use App\Enum\Admin\ATeamLimit;
 use App\Enum\Payment\PPtId;
 use App\Enum\Sale\DtExportType;
 use App\Enum\Sale\DtStatus;
@@ -82,9 +82,9 @@ class SaleContractController extends Controller
         $admin = auth()->user();
 
         // 车队查询条件
-        if (($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids) {
+        if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
             $query->where(function (Builder $query) use ($admin) {
-                $query->whereIn('cu.cu_team_id', $admin->team_ids)->orWhereNull('cu.cu_team_id');
+                $query->whereIn('cu.cu_team_id', $admin->a_team_ids)->orWhereNull('cu.cu_team_id');
             });
         }
 
@@ -143,9 +143,9 @@ class SaleContractController extends Controller
                         ->whereIn('ve_status_rental', [VeStatusRental::LISTED])
                         ->whereIn('ve_status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
                         ->when(
-                            ($admin->team_limit->value ?? null) === AdmTeamLimit::LIMITED && $admin->team_ids,
+                            ($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids,
                             function ($query) use ($admin) {
-                                $query->whereIn('ve.ve_team_id', $admin->team_ids)->orwhereNull('ve.ve_team_id');
+                                $query->whereIn('ve.ve_team_id', $admin->a_team_ids)->orwhereNull('ve.ve_team_id');
                             }
                         )
                     ;
@@ -172,16 +172,16 @@ class SaleContractController extends Controller
         $saleContract->load('Customer', 'Vehicle', 'Payments');
 
         $this->response()->withExtras(
-            VehicleTmp::kvList(sc_id: $saleContract->sc_id),
-            VehicleInspection::kvList(sc_id: $saleContract->sc_id),
-            Payment::kvList(sc_id: $saleContract->sc_id),
-            Payment::kvStat(),
-            SaleSettlement::kvList(sc_id: $saleContract->sc_id),
-            VehicleUsage::kvList(sc_id: $saleContract->sc_id),
-            VehicleRepair::kvList(sc_id: $saleContract->sc_id),
-            VehicleRepair::kvStat(),
-            VehicleViolation::kvList(sc_id: $saleContract->sc_id),
-            VehicleManualViolation::kvList(sc_id: $saleContract->sc_id),
+            VehicleTmp::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleInspection::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            Payment::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            Payment::indexStat(),
+            SaleSettlement::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleUsage::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleRepair::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleRepair::indexStat(),
+            VehicleViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleManualViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
         );
 
         return $this->response()->withData($saleContract)->respond();
@@ -211,18 +211,18 @@ class SaleContractController extends Controller
         );
 
         $this->response()->withExtras(
-            VehicleTmp::kvList(sc_id: $saleContract->sc_id),
-            VehicleInspection::kvList(sc_id: $saleContract->sc_id),
-            Payment::kvList(sc_id: $saleContract->sc_id),
-            Payment::kvStat(),
-            SaleSettlement::kvList(sc_id: $saleContract->sc_id),
-            VehicleUsage::kvList(sc_id: $saleContract->sc_id),
-            VehicleRepair::kvList(sc_id: $saleContract->sc_id),
-            VehicleRepair::kvStat(),
-            VehicleViolation::kvList(sc_id: $saleContract->sc_id),
-            VehicleViolation::kvStat(),
-            VehicleManualViolation::kvList(sc_id: $saleContract->sc_id),
-            VehicleManualViolation::kvStat(),
+            VehicleTmp::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleInspection::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            Payment::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            Payment::indexStat(),
+            SaleSettlement::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleUsage::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleRepair::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleRepair::indexStat(),
+            VehicleViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleViolation::indexStat(),
+            VehicleManualViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleManualViolation::indexStat(),
             DocTpl::options(function (Builder $query) {
                 $query->where('dt.dt_type', '=', DtType::SALE_CONTRACT);
             }),
@@ -273,7 +273,7 @@ class SaleContractController extends Controller
 
         $sc_payment_period = $input2['sc_payment_period'] ?? null;
 
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'sc_cu_id'        => ['bail', 'required', 'integer'],
@@ -374,12 +374,10 @@ class SaleContractController extends Controller
                     }
                 }
             })
+            ->validate()
         ;
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
 
-        $input = $input1 + $input2 + $validator->validated();
+        $input = $input1 + $input2 + $input;
 
         // input数据修正
         if (ScRentalType::LONG_TERM === $input['sc_rental_type']) {
@@ -441,7 +439,7 @@ class SaleContractController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function paymentsOption(Request $request): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'sc_rental_type'           => ['bail', 'required', Rule::in([ScRentalType::LONG_TERM])],
@@ -455,13 +453,9 @@ class SaleContractController extends Controller
             ],
             [],
             trans_property(SaleContract::class)
-        );
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $input = $validator->validated();
+        )
+            ->validate()
+        ;
 
         // 创建数字到星期名称的映射
         $daysOfWeek = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
