@@ -16,7 +16,7 @@ class PPayStatus extends EnumLikeBase
     ];
 
     public const array colors = [
-        self::UNPAID => Color::ERROR,
+        self::UNPAID => Color::WARNING,
         self::PAID   => Color::SUCCESS,
     ];
 }

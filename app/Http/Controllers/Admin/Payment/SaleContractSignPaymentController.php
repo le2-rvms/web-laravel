@@ -79,6 +79,7 @@ class SaleContractSignPaymentController extends Controller
                     ->where('p_pt_id', '=', PPtId::REFUND_DEPOSIT)
                     ->where('p_is_valid', '=', PIsValid::VALID)
                     ->where('p_pay_status', '=', PPayStatus::UNPAID)
+                    ->addSelect(DB::raw('1 as checked')) // 默认选中
                     ->first()
                 ;
 
@@ -115,6 +116,7 @@ class SaleContractSignPaymentController extends Controller
                 'sc_actual_pay_date'                 => ['bail', 'required', 'date'],
                 'p_pa_id'                            => ['bail', 'required', Rule::exists(PaymentAccount::class, 'pa_id')->where('pa_status', PaStatus::ENABLED)],
                 'payment_refund_deposit'             => ['bail', 'nullable', 'array'],
+                'payment_refund_deposit.checked'     => ['bail', 'required', 'boolean'],
                 'payment_refund_deposit.p_id'        => ['bail', 'required', Rule::exists(Payment::class, 'p_id')],
             ],
             [],
@@ -129,7 +131,13 @@ class SaleContractSignPaymentController extends Controller
                 }
 
                 // 押金支付
-                if ($saleContract->sc_version > 1) {
+                if ($request->boolean('payment_refund_deposit.checked')) {
+                    if (1 === $saleContract->sc_version) {
+                        $validator->errors()->add('payment_refund_deposit.checked', '押金转移支付选择错误');
+
+                        return;
+                    }
+
                     $saleContractPre = SaleContract::query()->where('sc_no', $saleContract->sc_no)->where('sc_version', '=', $saleContract->sc_version - 1)->firstOrFail();
 
                     $payment_refund_deposit = Payment::query()
@@ -142,6 +150,8 @@ class SaleContractSignPaymentController extends Controller
 
                     if ($payment_refund_deposit && $request->json('payment_refund_deposit.p_id') !== $payment_refund_deposit->p_id) {
                         $validator->errors()->add('payment_refund_deposit.p_id', '押金转移支付错误');
+
+                        return;
                     }
                 }
             })
@@ -149,7 +159,7 @@ class SaleContractSignPaymentController extends Controller
         ;
 
         DB::transaction(function () use (&$payment_refund_deposit, $saleContract, &$input) {
-            if ($payment_refund_deposit) {
+            if ($input['payment_refund_deposit']['checked']) {
                 $payment_refund_deposit->update([
                     'p_pay_status'        => PPayStatus::PAID,
                     'p_actual_pay_date'   => $saleContract->sc_start_date,

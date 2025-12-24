@@ -164,6 +164,7 @@ class Payment extends Model
                 DB::raw(PPayStatus::toCaseSQL()),
                 DB::raw(PPayStatus::toColorSQL()),
                 DB::raw(PIsValid::toCaseSQL()),
+                DB::raw(PIsValid::toColorSQL()),
                 DB::raw(PShouldPayDate_DDD::toCaseSQL(true, 'p.p_should_pay_date')),
                 DB::raw((function () {
                     return sprintf(
