@@ -41,7 +41,6 @@ use App\Http\Controllers\Admin\Sale\SaleContractCancelController;
 use App\Http\Controllers\Admin\Sale\SaleContractController;
 use App\Http\Controllers\Admin\Sale\SaleContractTplController;
 use App\Http\Controllers\Admin\Sale\SaleContractVehicleChangeController;
-use App\Http\Controllers\Admin\Sale\SaleContractVehicleChangePaymentController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementApproveController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementController;
 use App\Http\Controllers\Admin\Sale\VehiclePreparationController;
@@ -158,7 +157,6 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
     Route::resource('sale-contracts', SaleContractController::class);
 
     Route::apiSingleton('sale-contracts.vehicle-changes', SaleContractVehicleChangeController::class);
-    Route::resource('sale-contract-vehicle-change-payments', SaleContractVehicleChangePaymentController::class)->only(['store']);
 
     Route::apiSingleton('sale-contracts.cancel', SaleContractCancelController::class);
 

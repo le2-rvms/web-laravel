@@ -46,15 +46,18 @@ trait ModelTrait
         return !empty($attributes) ? $attributes : (object) [];
     }
 
-    public static function indexList(?\Closure $where = null): array
+    public static function indexList(?\Closure $callback = null): array
     {
         //        $query = array_filter($query);
         $key = preg_replace('/^.*\\\/', '', get_called_class()).'IndexList';
 
-        static::$indexValue = $value = static::indexQuery()
-            ->where($where)
-            ->get()
-        ;
+        $query = static::indexQuery();
+
+        if ($callback) {
+            $callback($query); // 注意：这里是对主查询操作
+        }
+
+        static::$indexValue = $value = $query->get();
 
         return [$key => $value];
     }

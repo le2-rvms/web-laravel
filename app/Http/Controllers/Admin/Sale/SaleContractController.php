@@ -172,16 +172,16 @@ class SaleContractController extends Controller
         $saleContract->load('Customer', 'Vehicle', 'Payments');
 
         $this->response()->withExtras(
-            VehicleTmp::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleInspection::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            Payment::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleTmp::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleInspection::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            Payment::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
             Payment::indexStat(),
-            SaleSettlement::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleUsage::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleRepair::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            SaleSettlement::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleUsage::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleRepair::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
             VehicleRepair::indexStat(),
-            VehicleViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleManualViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleViolation::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleManualViolation::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
         );
 
         return $this->response()->withData($saleContract)->respond();
@@ -211,17 +211,17 @@ class SaleContractController extends Controller
         );
 
         $this->response()->withExtras(
-            VehicleTmp::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleInspection::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            Payment::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleTmp::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleInspection::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            Payment::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id)->orderby('p.p_id'); }),
             Payment::indexStat(),
-            SaleSettlement::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleUsage::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleRepair::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            SaleSettlement::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleUsage::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleRepair::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
             VehicleRepair::indexStat(),
-            VehicleViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleViolation::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
             VehicleViolation::indexStat(),
-            VehicleManualViolation::indexList(where: function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleManualViolation::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
             VehicleManualViolation::indexStat(),
             DocTpl::options(function (Builder $query) {
                 $query->where('dt.dt_type', '=', DtType::SALE_CONTRACT);

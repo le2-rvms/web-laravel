@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
-#[PermissionType('租车合同变更-车辆变更')]
+#[PermissionType('租车合同变更-车辆变更（废弃）')]
 class SaleContractVehicleChangeController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -94,7 +94,7 @@ class SaleContractVehicleChangeController extends Controller
                 }
             ),
             Customer::options(),
-            Payment::indexList(where: function (Builder $query) use ($saleContract) {
+            Payment::indexList(function (Builder $query) use ($saleContract) {
                 $query->where('p.p_sc_id', '=', $saleContract->sc_id)
                     ->where('p.p_is_valid', '=', PIsValid::VALID)
                 ;
