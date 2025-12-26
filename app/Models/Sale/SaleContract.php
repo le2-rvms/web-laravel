@@ -16,7 +16,6 @@ use App\Enum\SaleContract\ScRentalType_ShortOnlyShort;
 use App\Enum\SaleContract\ScStatus;
 use App\Exceptions\ClientException;
 use App\Http\Controllers\Admin\Sale\SaleContractController;
-use App\Http\Controllers\Controller;
 use App\Models\_\Company;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
@@ -51,8 +50,8 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
 #[ColumnDesc('cu_contact_phone', required: true)]
 #[ColumnDesc('ve_plate_no', required: true)]
 #[ColumnDesc('sc_no', required: true, unique: true)]
-#[ColumnDesc('sc_version', required: true)]
-#[ColumnDesc('sc_is_current_version', required: true, desc: '是否当前版本')]
+#[ColumnDesc('sc_group_no', required: true, )]
+#[ColumnDesc('sc_group_seq', required: true, )]
 #[ColumnDesc('sc_start_date', type: ColumnType::DATE, required: true)]
 #[ColumnDesc('sc_rental_days', required: true)]
 #[ColumnDesc('sc_installments', required: true)]
@@ -82,8 +81,8 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
  * @property int                                    $sc_cu_id                               客户序号；指向客户表
  * @property int                                    $sc_ve_id                               车辆序号；指向车辆表
  * @property null|int                               $sc_ve_id_tmp                           临时车辆序号
- * @property int                                    $sc_version                             合同版本号
- * @property bool                                   $sc_is_current_version                  是否当前版本
+ * @property null|int                               $sc_group_no                            ;续租分组No
+ * @property int                                    $sc_group_seq                           ;分组内顺序
  * @property string                                 $sc_no                                  合同编号
  * @property int                                    $sc_free_days                           免租天数
  * @property Carbon                                 $sc_start_date                          合同开始日期
@@ -159,13 +158,11 @@ class SaleContract extends Model
         'sc_rental_type'          => ScRentalType::class,
         'sc_payment_period'       => ScPaymentPeriod::class,
         'sc_status'               => ScStatus::class,
-        'sc_version'              => 'integer',
-        'sc_is_current_version'   => 'boolean',
+        //        'sc_group_no'             => 'integer',
+        //        'sc_group_seq'            => 'integer',
     ];
 
     protected $attributes = [
-        //        'sc_version'            => 1,
-        //        'sc_is_current_version' => true,
     ];
 
     protected $appends = [
@@ -235,6 +232,13 @@ class SaleContract extends Model
         ;
     }
 
+    public function GroupContracts(): HasMany
+    {
+        return $this->hasMany(self::class, 'sc_group_no', 'sc_group_no')
+            ->orderBy('sc_group_seq')
+        ;
+    }
+
     public function SaleSettlement(): HasOne
     {
         return $this->hasOne(SaleSettlement::class, 'ss_sc_id', 'sc_id');
@@ -251,10 +255,21 @@ class SaleContract extends Model
         return true;
     }
 
+    public function latestGroupSeq(): int
+    {
+        return (int) (self::query()->where('sc_group_no', '=', $this->sc_group_no)->max('sc_group_seq') ?? 1);
+    }
+
+    public function isLatestInGroup(): bool
+    {
+        $latestGroupSeq = $this->latestGroupSeq();
+
+        return $this->sc_group_seq >= $latestGroupSeq;
+    }
+
     public static function indexQuery(): Builder
     {
         //        $cu_id                 = $search['cu_id'] ?? null;
-        //        $sc_is_current_version = $search['sc_is_current_version'] ?? null;
 
         return DB::query()
             ->from('sale_contracts', 'sc')
@@ -264,9 +279,6 @@ class SaleContract extends Model
 //            ->where($where)
 //            ->when($cu_id, function (Builder $query) use ($cu_id) {
 //                $query->where('cu.cu_id', '=', $cu_id);
-//            })
-//            ->when(null !== $sc_is_current_version, function (Builder $query) use ($sc_is_current_version) {
-//                $query->where('sc.sc_is_current_version', '=', $sc_is_current_version);
 //            })
             ->orderByDesc('sc.sc_id')
             ->select('sc.*', 'cu.*', 've.*', '_vm.vm_brand_name', '_vm.vm_model_name')
@@ -294,8 +306,6 @@ class SaleContract extends Model
             'Vehicle.ve_plate_no'                          => fn ($item) => $item->ve_plate_no,
             'VehicleModel.brand_model'                     => fn ($item) => $item->vm_brand_name.'-'.$item->vm_model_name,
             'SaleContract.sc_no'                           => fn ($item) => $item->sc_no,
-            'SaleContract.sc_version'                      => fn ($item) => $item->sc_version,
-            'SaleContract.sc_is_current_version'           => fn ($item) => $item->is_current_version,
             'SaleContract.sc_start_date'                   => fn ($item) => $item->sc_start_date,
             'SaleContract.installments'                    => fn ($item) => $item->installments,
             'SaleContract.sc_end_date'                     => fn ($item) => $item->sc_end_date,
@@ -324,7 +334,6 @@ class SaleContract extends Model
         return DB::query()
             ->from('sale_contracts', 'sc')
             ->where('sc.sc_cu_id', '=', $cu_id)
-            ->where('sc.sc_is_current_version', '=', true)
             ->whereIn('sc.sc_status', [ScStatus::SIGNED])
             ->select('sc.sc_ve_id')
         ;
@@ -338,23 +347,6 @@ class SaleContract extends Model
 
         return [$key => $value];
     }
-
-    //    public static function customerQuery(Controller $controller): Builder
-    //    {
-    //        $perPage = 20;
-    //
-    //        $controller->response()->withExtras(
-    //            ['perPage' => $perPage]
-    //        );
-    //
-    //        $auth = auth();
-    //
-    //        return static::indexQuery()
-    //            ->where('cu.cu_id', '=', $auth->id())
-    //            ->where('sc.sc_is_current_version', '=', true)
-    //            ->forPage(1, $perPage)
-    //        ;
-    //    }
 
     public static function options_value(?\Closure $where = null): array
     {
@@ -387,7 +379,6 @@ class SaleContract extends Model
             ->from('sale_contracts', 'sc')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id_tmp')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->where('sc.sc_is_current_version', '=', true)
             ->when($where, function (Builder $builder) use ($where) {
                 $builder->where($where);
             })
@@ -505,20 +496,20 @@ class SaleContract extends Model
         $tp->setComplexBlock($rule_label, $table);
     }
 
-    public static function contractNumberKv(?string $sc_no_version = null)
+    public static function contractNumberKv(?string $sc_no = null)
     {
         static $kv = null;
 
         if (null === $kv) {
             $kv = DB::query()
                 ->from('sale_contracts')
-                ->select('sc_id', 'sc_no_version')
-                ->pluck('sc_id', 'sc_no_version')
+                ->select('sc_id', 'sc_no')
+                ->pluck('sc_id', 'sc_no')
                 ->toArray()
             ;
         }
 
-        return $kv[$sc_no_version] ?? null;
+        return $kv[$sc_no] ?? null;
     }
 
     public function Company(): BelongsTo
@@ -539,7 +530,6 @@ class SaleContract extends Model
             'cu_contact_phone'                   => [Customer::class, 'cu_contact_phone'],
             've_plate_no'                        => [Vehicle::class, 've_plate_no'],
             'sc_no'                              => [SaleContract::class, 'sc_no'],
-            'sc_version'                         => [SaleContract::class, 'sc_version'],
             'sc_start_date'                      => [SaleContract::class, 'sc_start_date'],
             'sc_installments'                    => [SaleContract::class, 'sc_installments'],
             'sc_end_date'                        => [SaleContract::class, 'sc_end_date'],
@@ -570,8 +560,8 @@ class SaleContract extends Model
             $item['sc_payment_period'] = ScPaymentPeriod::searchValue($item['sc_payment_period'] ?? null);
             $item['sc_status']         = ScStatus::searchValue($item['sc_status'] ?? null);
 
-            if (isset($item['sc_no']) && $item['sc_version']) {
-                static::$fields['sc_no_version'][] = $item['sc_no'].'#'.$item['sc_version'];
+            if (isset($item['sc_no'])) {
+                static::$fields['sc_no'][] = $item['sc_no'];
             }
         };
     }
@@ -616,7 +606,6 @@ class SaleContract extends Model
             'sc_cu_id'        => ['bail', 'required', 'integer'],
             'sc_ve_id'        => ['bail', 'required', 'integer'],
             'sc_no'           => ['bail', 'required', 'string', 'max:50'],
-            'sc_version'      => ['bail', 'required', 'string', 'max:50'],
             'sc_free_days'    => ['bail', 'nullable', 'int:4'],
             'sc_start_date'   => ['bail', 'required', 'date', 'before_or_equal:sc_end_date'],
             'sc_installments' => ['bail', Rule::requiredIf($is_long_term), Rule::excludeIf($is_short_term), 'integer', 'min:1'],
@@ -649,10 +638,10 @@ class SaleContract extends Model
     public static function importAfterValidatorDo(): \Closure
     {
         return function () {
-            // sc_no_version
-            $sc_no_version = SaleContract::query()->whereIn('sc_no_version', static::$fields['sc_no_version'])->pluck('sc_no_version')->toArray();
-            if (count($sc_no_version) > 0) {
-                throw new ClientException('以下合同编号已存在：'.join(',', $sc_no_version));
+            // sc_no
+            $sc_no = SaleContract::query()->whereIn('sc_no', static::$fields['sc_no'])->pluck('sc_no')->toArray();
+            if (count($sc_no) > 0) {
+                throw new ClientException('以下合同编号已存在：'.join(',', $sc_no));
             }
         };
     }

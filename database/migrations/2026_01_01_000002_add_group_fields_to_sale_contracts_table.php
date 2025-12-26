@@ -8,15 +8,16 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('sale_contracts', function (Blueprint $table) {
-            $table->unsignedTinyInteger('sc_version')->default(1)->after('sc_ve_id_tmp')->comment('合同版本号');
-            $table->unsignedTinyInteger('sc_is_current_version')->default(1)->after('sc_version')->comment('是否当前版本');
+            $table->unsignedBigInteger('sc_group_no')->nullable()->after('sc_id')->comment('续租合同分组');
+            $table->unsignedInteger('sc_group_seq')->default(1)->after('sc_group_no')->comment('分组内顺序');
         });
     }
 
     public function down(): void
     {
         Schema::table('sale_contracts', function (Blueprint $table) {
-            $table->dropColumn(['sc_version', 'sc_is_current_version']);
+            $table->dropIndex(['sc_group_no']);
+            $table->dropColumn(['sc_group_no', 'sc_group_seq']);
         });
     }
 };

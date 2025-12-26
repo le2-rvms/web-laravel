@@ -158,7 +158,7 @@ class VehicleTmpController extends Controller
             /** @var Vehicle $vehicle */
             $vehicle = Vehicle::query()->find($request->input('vt_new_ve_id'));
             if (!$vehicle) {
-                $validator->errors()->add('vt_ve_id', 'The vehicle does not exist.');
+                $validator->errors()->add('vt_ve_id', '车辆不存在');
 
                 return;
             }

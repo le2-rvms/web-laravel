@@ -138,7 +138,7 @@ class VehicleAccidentController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleAccident $vehicleAccident = null): Response
     {
-        $validator = Validator::make(
+        $input = Validator::make(
             $request->all(),
             [
                 'va_ve_id'                         => ['bail', 'required', 'integer'],
@@ -183,7 +183,7 @@ class VehicleAccidentController extends Controller
                 /** @var Vehicle $vehicle */
                 $vehicle = Vehicle::query()->find($ve_id);
                 if (!$vehicle) {
-                    $validator->errors()->add('va_ve_id', 'The vehicle does not exist.');
+                    $validator->errors()->add('va_ve_id', '车辆不存在');
 
                     return;
                 }
@@ -199,7 +199,7 @@ class VehicleAccidentController extends Controller
                     /** @var SaleContract $saleContract */
                     $saleContract = SaleContract::query()->find($sc_id);
                     if (!$saleContract) {
-                        $validator->errors()->add('va_sc_id', 'The sale_contract does not exist.');
+                        $validator->errors()->add('va_sc_id', '合同不存在');
 
                         return;
                     }

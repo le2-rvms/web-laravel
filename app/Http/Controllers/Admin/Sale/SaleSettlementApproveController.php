@@ -13,6 +13,7 @@ use App\Enum\SaleContract\ScStatus;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Http\Controllers\Controller;
 use App\Models\Payment\Payment;
+use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleSettlement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,8 +40,10 @@ class SaleSettlementApproveController extends Controller
                 if ($validator->failed()) {
                     return;
                 }
-                if (SsReturnStatus::CONFIRMED === $saleSettlement->ss_return_status) {
+                if (SsReturnStatus::CONFIRMED === $saleSettlement->ss_return_status->value) {
                     $validator->errors()->add('ss_return_status', '不能重复审核');
+
+                    return;
                 }
             })
             ->validate()
@@ -48,26 +51,37 @@ class SaleSettlementApproveController extends Controller
 
         $saleContract = $saleSettlement->SaleContract;
 
+        $groupContractIds = SaleContract::query()
+            ->where('sc_group_no', '=', $saleContract->sc_group_no)
+            ->pluck('sc_id')
+            ->toArray()
+        ;
+
         $unPayCount = Payment::query()
-            ->where('p_sc_id', '=', $saleContract->sc_id)
+            ->whereIn('p_sc_id', $groupContractIds)
             ->where('p_is_valid', '=', PIsValid::VALID)
             ->where('p_pay_status', '=', PPayStatus::UNPAID)
             ->where('p_pt_id', '!=', PPtId::VEHICLE_RETURN_SETTLEMENT_FEE)
             ->count()
         ;
 
-        DB::transaction(function () use ($saleContract, $unPayCount, $saleSettlement) {
-            $saleContract->update([
+        DB::transaction(function () use ($saleContract, $unPayCount, $saleSettlement, $groupContractIds) {
+            $statusPayload = [
                 'sc_status'                                                     => $unPayCount > 0 ? ScStatus::EARLY_TERMINATION : ScStatus::COMPLETED,
                 $unPayCount > 0 ? 'sc_early_termination_at' : 'sc_completed_at' => now(),
-            ]);
+            ];
+
+            SaleContract::query()
+                ->whereIn('sc_id', $groupContractIds)
+                ->update($statusPayload)
+            ;
 
             $saleContract->Vehicle->updateStatus(ve_status_rental: VeStatusRental::PENDING);
 
             switch ($saleSettlement->ss_delete_option->value) {
                 case SsDeleteOption::DELETE:
                     Payment::query()
-                        ->where('p_sc_id', '=', $saleContract->sc_id)
+                        ->whereIn('p_sc_id', $groupContractIds)
                         ->where('p_pay_status', '=', PPayStatus::UNPAID)
                         ->where('p_pt_id', '!=', PPtId::VEHICLE_RETURN_SETTLEMENT_FEE)
                         ->update([

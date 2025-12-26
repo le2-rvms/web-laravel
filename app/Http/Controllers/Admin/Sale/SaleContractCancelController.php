@@ -38,7 +38,7 @@ class SaleContractCancelController extends Controller
                 }
 
                 if (!$vehicle = $saleContract->Vehicle) {
-                    $validator->errors()->add('sc_ve_id', 'The vehicle does not exist.');
+                    $validator->errors()->add('sc_ve_id', '车辆不存在');
 
                     return;
                 }

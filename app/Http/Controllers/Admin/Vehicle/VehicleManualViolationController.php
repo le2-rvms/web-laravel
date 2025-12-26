@@ -130,7 +130,7 @@ class VehicleManualViolationController extends Controller
                 /** @var Vehicle $vehicle */
                 $vehicle = Vehicle::query()->find($ve_id);
                 if (!$vehicle) {
-                    $validator->errors()->add('vv_ve_id', 'The vehicle does not exist.');
+                    $validator->errors()->add('vv_ve_id', '车辆不存在');
 
                     return;
                 }

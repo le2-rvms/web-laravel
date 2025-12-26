@@ -123,7 +123,7 @@ class MockDataGenerate extends Command
             /** @var Collection $customers */
             $customers = Customer::factory()->count(20)->create();
             foreach ($customers as $customer) {
-                if (CuType::INDIVIDUAL === $customer->cu_type) {
+                if (CuType::INDIVIDUAL === $customer->cu_type->value) {
                     CustomerIndividual::factory()->for($customer)->create();
                 }
             }
@@ -199,7 +199,7 @@ class MockDataGenerate extends Command
                             break;
                     }
 
-                    if (ScStatus::PENDING === $saleContract->sc_status) {
+                    if (ScStatus::PENDING === $saleContract->sc_status->value) {
                         VehicleTmp::factory()->for($saleContract)->for($Vehicle, 'CurrentVehicle')->for($Vehicles->random(), 'NewVehicle')->create();
                     }
 

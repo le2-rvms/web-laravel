@@ -61,10 +61,12 @@ class SaleContractFactory extends Factory
         }
         $sc_status = ScStatus::label_key_random();
 
+        $sc_no = strtoupper($this->faker->unique()->bothify('CN##########'));
+
         return [
             'sc_rental_type'                     => $rental_type,
             'sc_payment_period'                  => $sc_payment_period ?? null,
-            'sc_no'                              => strtoupper($this->faker->unique()->bothify('CN##########')),
+            'sc_no'                              => $sc_no,
             'sc_free_days'                       => $free_days,
             'sc_start_date'                      => $sc_start_date,
             'sc_installments'                    => $installments ?? null,
@@ -79,14 +81,14 @@ class SaleContractFactory extends Factory
             'sc_insurance_additional_fee_amount' => $insurance_additional_fee_amount ?? null,
             'sc_other_fee_amount'                => $other_fee_amount ?? null,
             'sc_total_amount'                    => $total_amount,
-            'sc_version'                         => 1,
-            'sc_is_current_version'              => true,
             'sc_status'                          => $sc_status,
             'sc_order_at'                        => fake_current_period_dt(),
             'sc_signed_at'                       => ScStatus::SIGNED === $sc_status ? fake_current_period_dt() : null,
             'sc_canceled_at'                     => ScStatus::CANCELLED === $sc_status ? fake_current_period_dt() : null,
             'sc_completed_at'                    => ScStatus::COMPLETED === $sc_status ? fake_current_period_dt() : null,
             'sc_early_termination_at'            => ScStatus::EARLY_TERMINATION === $sc_status ? fake_current_period_dt() : null,
+            'sc_group_no'                        => $sc_no,
+            'sc_group_seq'                       => 1,
         ];
     }
 }

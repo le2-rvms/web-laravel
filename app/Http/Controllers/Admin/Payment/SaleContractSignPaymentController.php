@@ -45,7 +45,6 @@ class SaleContractSignPaymentController extends Controller
                 where: function (Builder $builder) {
                     $builder
                         ->whereIn('sc.sc_status', [ScStatus::PENDING])
-//                        ->where('sc.sc_is_current_version', '=', true)
                     ;
                 }
             ),
@@ -71,8 +70,6 @@ class SaleContractSignPaymentController extends Controller
             $saleContract->sc_actual_pay_date = now()->format('Y-m-d');
 
             // 押金转移支付
-            //            if ($saleContract->sc_version > 1) {
-            //                $saleContractPre = SaleContract::query()->where('sc_no', $saleContract->sc_no)->where('sc_version', '=', $saleContract->sc_version - 1)->firstOrFail();
 
             $payment_refund_deposit = Payment::indexQuery()
 //                    ->where('p_sc_id', '=', $saleContractPre->sc_id)
@@ -134,14 +131,6 @@ class SaleContractSignPaymentController extends Controller
 
                 // 押金支付
                 if ($request->boolean('payment_refund_deposit.checked')) {
-                    //                    if (1 === $saleContract->sc_version) {
-                    //                        $validator->errors()->add('payment_refund_deposit.checked', '押金转移支付选择错误');
-                    //
-                    //                        return;
-                    //                    }
-
-                    //                    $saleContractPre = SaleContract::query()->where('sc_no', $saleContract->sc_no)->where('sc_version', '=', $saleContract->sc_version - 1)->firstOrFail();
-
                     $payment_refund_deposit = Payment::query()
                         ->whereHas('SaleContract', function (\Illuminate\Database\Eloquent\Builder $query) use ($saleContract) {
                             $query->where('sc_cu_id', '=', $saleContract->sc_cu_id);

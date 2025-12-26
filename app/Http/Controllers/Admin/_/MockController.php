@@ -33,7 +33,7 @@ class MockController extends Controller
 
     public function update(Request $request, Admin $mock): Response
     {
-        if (AUserType::COMMON === $mock->a_user_type) {
+        if (AUserType::COMMON === $mock->a_user_type->value) {
             throw ValidationException::withMessages([
                 'mock' => ['该用户不能被体验'],
             ]);

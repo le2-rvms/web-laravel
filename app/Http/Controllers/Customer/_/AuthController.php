@@ -84,6 +84,8 @@ class AuthController extends Controller
 
             if ($cachedCode != $request->input('code')) {
                 $validator->errors()->add('code', '验证码不正确');
+
+                return;
             }
         })
             ->validate()

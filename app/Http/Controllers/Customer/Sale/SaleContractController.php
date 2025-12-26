@@ -28,7 +28,6 @@ class SaleContractController extends Controller
 
         $data = SaleContract::indexQuery()
             ->where('cu.cu_id', '=', $auth->id())
-            ->where('sc.sc_is_current_version', '=', true)
             ->when(
                 $request->query('last_id'),
                 function (Builder $query) use ($request) {

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin\Sale;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Admin\ATeamLimit;
+use App\Enum\Payment\PIsValid;
+use App\Enum\Payment\PPayStatus;
 use App\Enum\Payment\PPtId;
 use App\Enum\Payment\SsDeleteOption;
 use App\Enum\Sale\DtExportType;
@@ -53,6 +55,9 @@ class SaleSettlementController extends Controller
         $this->options(true);
         $this->response()->withExtras(
         );
+
+        /** @var Admin $admin */
+        $admin = auth()->user();
 
         $query   = SaleSettlement::indexQuery();
         $columns = SaleSettlement::indexColumns();
@@ -114,19 +119,69 @@ class SaleSettlementController extends Controller
 
                 /** @var SaleContract $saleContract */
                 $saleContract = SaleContract::query()->findOrFail($request->input('sc_id'));
+
+                $saleSettlement = $saleContract->SaleSettlement;
+                if ($saleSettlement) {
+                    $validator->errors()->add('sc_id', '退车结算已存在');
+
+                    return;
+                }
+
+                // group
+                $groupSaleContractList = SaleContract::query()
+                    ->where('sc_group_no', '=', $saleContract->sc_group_no)
+                    ->orderByDesc('sc_group_seq')
+//                    ->whereNotIn('sc_status', [ScStatus::SIGNED])
+                    ->get()
+                ;
+
+                /** @var SaleContract $groupSaleContract */
+                foreach ($groupSaleContractList as $groupSaleContract) {
+                    if (ScStatus::SIGNED !== $groupSaleContract->sc_status->value) {
+                        $validator->errors()->add('sc_id', '存在非已签约的续租，不能退车。');
+
+                        return;
+                    }
+                }
+
+                /** @var SaleContract $first */
+                $first = $groupSaleContractList->first();
+                if ($first->sc_id !== $saleContract->sc_id) {
+                    $validator->errors()->add('sc_id', '当前合同已有续租，请在最新的续租合同上办理结算');
+                }
             })
             ->validate()
         ;
 
+        $groupContractIds = SaleContract::query()
+            ->where('sc_group_no', '=', $saleContract->sc_group_no)
+            ->pluck('sc_id')
+            ->toArray()
+        ;
+
         $saleSettlement = $saleContract->SaleSettlement;
         if (!$saleSettlement) { // 是新增
-            /** @var Payment $payment */
-            $payment = $saleContract->Payments()->where('p_pt_id', '=', PPtId::DEPOSIT)->first();
+            $depositPayments = Payment::query()
+                ->whereIn('p_sc_id', $groupContractIds)
+                ->where('p_pt_id', '=', PPtId::DEPOSIT)
+                ->where('p_is_valid', '=', PIsValid::VALID)
+                ->get()
+            ;
+
+            $depositAmount = $depositPayments->reduce(function ($carry, Payment $payment) {
+                return bcadd($carry, $payment->p_should_pay_amount ?? '0', 2);
+            }, '0');
+
+            $receivedDeposit = $depositPayments->filter(function (Payment $payment) {
+                return PPayStatus::PAID === $payment->p_pay_status->value;
+            })->reduce(function ($carry, Payment $payment) {
+                return bcadd($carry, $payment->p_actual_pay_amount ?? '0', 2);
+            }, '0');
 
             $saleSettlement = new SaleSettlement([
                 'ss_sc_id'                      => $saleContract->sc_id,
-                'ss_deposit_amount'             => $payment->p_should_pay_amount ?? 0, // 押金应收金额
-                'ss_received_deposit'           => $payment->p_actual_pay_amount ?? 0, // 押金实收金额
+                'ss_deposit_amount'             => $depositAmount, // 押金应收金额
+                'ss_received_deposit'           => $receivedDeposit, // 押金实收金额
                 'ss_early_return_penalty'       => '0',
                 'ss_overdue_inspection_penalty' => '0',
                 'ss_overdue_rent'               => '0',
@@ -162,16 +217,35 @@ class SaleSettlementController extends Controller
 
         $this->response()->withExtras(
             ['saleContract' => $saleContract],
-            VehicleTmp::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleInspection::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            Payment::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            SaleContract::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            VehicleTmp::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            VehicleInspection::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            Payment::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
             Payment::indexStat(),
-            SaleSettlement::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleUsage::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleRepair::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            SaleSettlement::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            VehicleUsage::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            VehicleRepair::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
             VehicleRepair::indexStat(),
-            VehicleViolation::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleManualViolation::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleViolation::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            VehicleManualViolation::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
             VehicleManualViolation::indexStat(),
         );
 
@@ -215,20 +289,45 @@ class SaleSettlementController extends Controller
 
         $saleContract = $saleSettlement->SaleContract;
 
+        $groupContractIds = SaleContract::query()
+            ->where('sc_group_no', '=', $saleContract->sc_group_no)
+            ->pluck('sc_id')
+            ->toArray()
+        ;
+
         $saleContract->load('Customer', 'Vehicle', 'Payments');
 
         $this->response()->withExtras(
             ['saleContract' => $saleContract],
-            VehicleTmp::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleInspection::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            Payment::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            SaleContract::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            VehicleTmp::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            VehicleInspection::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            Payment::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
             Payment::indexStat(),
-            SaleSettlement::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleUsage::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleRepair::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            SaleSettlement::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            VehicleUsage::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            VehicleRepair::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
             VehicleRepair::indexStat(),
-            VehicleViolation::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
-            VehicleManualViolation::indexList(function (Builder $query) use ($saleContract) { $query->where('sc.sc_id', '=', $saleContract->sc_id); }),
+            VehicleViolation::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
+            VehicleManualViolation::indexList(function (Builder $query) use ($groupContractIds) {
+                $query->whereIn('sc.sc_id', $groupContractIds);
+            }),
             VehicleManualViolation::indexStat(),
         );
 
@@ -238,6 +337,8 @@ class SaleSettlementController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?SaleSettlement $saleSettlement): Response
     {
+        $saleContract = null;
+
         $input = Validator::make(
             $request->all(),
             [
@@ -298,8 +399,10 @@ class SaleSettlementController extends Controller
             }
 
             if ($saleSettlement) { // 修改的时候
-                if (SsReturnStatus::CONFIRMED === $saleSettlement->ss_return_status) {
+                if (SsReturnStatus::CONFIRMED === $saleSettlement->ss_return_status->value) {
                     $validator->errors()->add('ss_return_status', '已审核，不能被修改');
+
+                    return;
                 }
             }
 
@@ -316,13 +419,38 @@ class SaleSettlementController extends Controller
             if (!$pass) {
                 return;
             }
+
+            // sc_group_no
+            $groupSaleContractList = SaleContract::query()
+                ->where('sc_group_no', '=', $saleContract->sc_group_no)
+                ->orderByDesc('sc_group_seq')
+//                    ->whereNotIn('sc_status', [ScStatus::SIGNED])
+                ->get()
+            ;
+
+            /** @var SaleContract $groupSaleContract */
+            foreach ($groupSaleContractList as $groupSaleContract) {
+                if (ScStatus::SIGNED !== $groupSaleContract->sc_status->value) {
+                    $validator->errors()->add('sc_id', '存在非已签约的续租，不能退车。');
+
+                    return;
+                }
+            }
+
+            /** @var SaleContract $first */
+            $first = $groupSaleContractList->first();
+            if ($first->sc_id !== $saleContract->sc_id) {
+                $validator->errors()->add('sc_id', '当前合同已有续租，请在最新的续租合同上办理结算');
+
+                return;
+            }
         })
             ->validate()
         ;
 
         DB::transaction(function () use (&$input, &$saleSettlement) {
             $_saleSettlement = SaleSettlement::query()->updateOrCreate(
-                array_intersect_key($input, array_flip(['ss_sc_id'])),
+                ['ss_sc_id' => $input['ss_sc_id']],
                 $input + ['ss_return_status' => SsReturnStatus::UNCONFIRMED],
             );
 

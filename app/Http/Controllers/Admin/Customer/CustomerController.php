@@ -293,10 +293,10 @@ class CustomerController extends Controller
         );
 
         $this->response()->withExtras(
-            VehicleInspection::indexList(function (Builder $query) use ($customer) {
-                $query->where('cu.cu_id', '=', $customer->cu_id);
-            }),
             SaleContract::indexList(function (Builder $query) use ($customer) {
+                $query->where('sc.sc_cu_id', '=', $customer->cu_id);
+            }),
+            VehicleInspection::indexList(function (Builder $query) use ($customer) {
                 $query->where('cu.cu_id', '=', $customer->cu_id);
             }),
             Payment::indexList(function (Builder $query) use ($customer) {

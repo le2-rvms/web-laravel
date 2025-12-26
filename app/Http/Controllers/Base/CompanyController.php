@@ -71,6 +71,8 @@ class CompanyController extends Controller
 
             if ($attempts > 3) {
                 $validator->errors()->add('company_name', '超过注册次数限制，请联系客服。');
+
+                return;
             }
         })
             ->validate()

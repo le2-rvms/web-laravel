@@ -157,6 +157,8 @@ class BookingOrderController extends Controller
                         || $bookingVehicle->bv_note != $request->input('bo_note')
                     ) {
                         $validator->errors()->add('bv_id', '信息已经更新，请重新下单');
+
+                        return;
                     }
                 }
             })

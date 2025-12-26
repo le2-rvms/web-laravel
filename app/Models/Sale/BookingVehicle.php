@@ -124,11 +124,7 @@ class BookingVehicle extends Model
         return Attribute::make(
             get: function ($value) {
                 if (!$value) {
-                    $datetime = \DateTime::createFromFormat('U.u', sprintf('%.6f', microtime(true)));
-                    $datetime->setTimezone(new \DateTimeZone(date_default_timezone_get()));  // 转换为目标时区
-                    $sc_no = $datetime->format('ymdHisv'); // todo
-
-                    return 'BK'.$sc_no;
+                    return 'BK'.gen_sc_no();
                 }
             }
         );

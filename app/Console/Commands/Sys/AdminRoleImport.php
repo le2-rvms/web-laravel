@@ -36,7 +36,6 @@ use App\Http\Controllers\Admin\Sale\BookingVehicleController;
 use App\Http\Controllers\Admin\Sale\SaleContractCancelController;
 use App\Http\Controllers\Admin\Sale\SaleContractController;
 use App\Http\Controllers\Admin\Sale\SaleContractTplController;
-use App\Http\Controllers\Admin\Sale\SaleContractVehicleChangeController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementApproveController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementController;
 use App\Http\Controllers\Admin\Sale\VehiclePreparationController;
@@ -63,13 +62,64 @@ class AdminRoleImport extends Command
 
     /** 导入的内置角色清单 */
     private array $builtinRoles = [
-        AdminRole::role_vehicle_mgr     => [GpsDataController::class => [PermissionAction::READ], IotDeviceBindingController::class => [PermissionAction::READ, PermissionAction::WRITE], ExpiryDriverController::class => [PermissionAction::READ], ExpiryVehicleController::class => [PermissionAction::READ], VehicleForceTakeController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleInsuranceController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleScheduleController::class => [PermissionAction::READ, PermissionAction::WRITE], ViolationCountController::class => [PermissionAction::READ], VehicleCenterController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleAccidentController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleMaintenanceController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleRepairController::class => [PermissionAction::READ, PermissionAction::WRITE], OneAccountController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleInspectionController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleManualViolationController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleModelController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleViolationController::class => [PermissionAction::READ, PermissionAction::WRITE], VehiclePreparationController::class => [PermissionAction::READ, PermissionAction::WRITE]],
-        AdminRole::role_driver_mgr      => [],
-        AdminRole::role_payment         => [InoutController::class => [PermissionAction::READ], PaymentController::class => [PermissionAction::READ, PermissionAction::WRITE], PaymentTypeController::class => [PermissionAction::WRITE], SaleContractRentPaymentController::class => [PermissionAction::WRITE], SaleContractSignPaymentController::class => [PermissionAction::WRITE], VehiclePreparationController::class => [PermissionAction::READ, PermissionAction::WRITE], SaleSettlementApproveController::class => [PermissionAction::WRITE]],
-        AdminRole::role_sales           => [BookingOrderController::class => [PermissionAction::READ, PermissionAction::WRITE], BookingVehicleController::class => [PermissionAction::READ, PermissionAction::WRITE], SaleContractController::class => [PermissionAction::READ, PermissionAction::WRITE], SaleContractCancelController::class => [PermissionAction::WRITE], SaleContractTplController::class => [PermissionAction::READ, PermissionAction::WRITE], SaleContractVehicleChangeController::class => [PermissionAction::WRITE], SaleSettlementController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleTmpController::class => [PermissionAction::READ, PermissionAction::WRITE], CustomerController::class => [PermissionAction::READ, PermissionAction::WRITE]],
-        AdminRole::role_vehicle_service => [VehicleAccidentController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleMaintenanceController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleRepairController::class => [PermissionAction::READ, PermissionAction::WRITE]],
-        AdminRole::role_manager         => [ConfigurationAppController::class => [PermissionAction::READ, PermissionAction::WRITE], AdminController::class => [PermissionAction::READ, PermissionAction::WRITE], AdminRoleController::class => [PermissionAction::READ, PermissionAction::WRITE], VehicleCenterController::class => [PermissionAction::READ, PermissionAction::WRITE], DeliveryWecomGroupController::class => [PermissionAction::READ, PermissionAction::WRITE], DeliveryWecomMemberController::class => [PermissionAction::READ, PermissionAction::WRITE], DocTplController::class => [PermissionAction::READ, PermissionAction::WRITE], DeliveryChannelController::class => [PermissionAction::READ, PermissionAction::WRITE], DeliveryLogController::class => [PermissionAction::READ], AdminTeamController::class => [PermissionAction::READ, PermissionAction::WRITE]],
-        AdminRole::role_system          => [ConfigurationSysController::class => [PermissionAction::READ, PermissionAction::WRITE], ImportController::class => [PermissionAction::WRITE], AdminPermissionController::class => [PermissionAction::READ]],
+        AdminRole::role_vehicle_mgr => [
+            GpsDataController::class                => [PermissionAction::READ],
+            IotDeviceBindingController::class       => [PermissionAction::READ, PermissionAction::WRITE],
+            ExpiryDriverController::class           => [PermissionAction::READ],
+            ExpiryVehicleController::class          => [PermissionAction::READ],
+            VehicleForceTakeController::class       => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleInsuranceController::class       => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleScheduleController::class        => [PermissionAction::READ, PermissionAction::WRITE],
+            ViolationCountController::class         => [PermissionAction::READ],
+            VehicleCenterController::class          => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleAccidentController::class        => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleMaintenanceController::class     => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleRepairController::class          => [PermissionAction::READ, PermissionAction::WRITE],
+            OneAccountController::class             => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleController::class                => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleInspectionController::class      => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleManualViolationController::class => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleModelController::class           => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleViolationController::class       => [PermissionAction::READ, PermissionAction::WRITE],
+            VehiclePreparationController::class     => [PermissionAction::READ, PermissionAction::WRITE]],
+
+        AdminRole::role_driver_mgr => [],
+
+        AdminRole::role_payment => [InoutController::class => [PermissionAction::READ],
+            PaymentController::class                       => [PermissionAction::READ, PermissionAction::WRITE],
+            PaymentTypeController::class                   => [PermissionAction::WRITE],
+            SaleContractRentPaymentController::class       => [PermissionAction::WRITE],
+            SaleContractSignPaymentController::class       => [PermissionAction::WRITE],
+            VehiclePreparationController::class            => [PermissionAction::READ, PermissionAction::WRITE],
+            SaleSettlementApproveController::class         => [PermissionAction::WRITE]],
+
+        AdminRole::role_sales => [BookingOrderController::class => [PermissionAction::READ, PermissionAction::WRITE],
+            BookingVehicleController::class                     => [PermissionAction::READ, PermissionAction::WRITE],
+            SaleContractController::class                       => [PermissionAction::READ, PermissionAction::WRITE],
+            SaleContractCancelController::class                 => [PermissionAction::WRITE],
+            SaleContractTplController::class                    => [PermissionAction::READ, PermissionAction::WRITE],
+            SaleSettlementController::class                     => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleTmpController::class                         => [PermissionAction::READ, PermissionAction::WRITE],
+            CustomerController::class                           => [PermissionAction::READ, PermissionAction::WRITE]],
+
+        AdminRole::role_vehicle_service => [VehicleAccidentController::class => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleMaintenanceController::class                              => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleRepairController::class                                   => [PermissionAction::READ, PermissionAction::WRITE]],
+
+        AdminRole::role_manager => [ConfigurationAppController::class => [PermissionAction::READ, PermissionAction::WRITE],
+            AdminController::class                                    => [PermissionAction::READ, PermissionAction::WRITE],
+            AdminRoleController::class                                => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleCenterController::class                            => [PermissionAction::READ, PermissionAction::WRITE],
+            DeliveryWecomGroupController::class                       => [PermissionAction::READ, PermissionAction::WRITE],
+            DeliveryWecomMemberController::class                      => [PermissionAction::READ, PermissionAction::WRITE],
+            DocTplController::class                                   => [PermissionAction::READ, PermissionAction::WRITE],
+            DeliveryChannelController::class                          => [PermissionAction::READ, PermissionAction::WRITE],
+            DeliveryLogController::class                              => [PermissionAction::READ],
+            AdminTeamController::class                                => [PermissionAction::READ, PermissionAction::WRITE]],
+
+        AdminRole::role_system => [ConfigurationSysController::class => [PermissionAction::READ, PermissionAction::WRITE],
+            ImportController::class                                  => [PermissionAction::WRITE],
+            AdminPermissionController::class                         => [PermissionAction::READ]],
     ];
 
     private array $mock_admins = [

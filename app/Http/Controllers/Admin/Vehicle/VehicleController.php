@@ -14,6 +14,7 @@ use App\Models\Admin\Admin;
 use App\Models\Admin\AdminRole;
 use App\Models\Admin\AdminTeam;
 use App\Models\One\OneAccount;
+use App\Models\Sale\SaleContract;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleManualViolation;
@@ -225,6 +226,9 @@ class VehicleController extends Controller
         );
 
         $this->response()->withExtras(
+            SaleContract::indexList(function (Builder $query) use ($vehicle) {
+                $query->where('sc.sc_ve_id', '=', $vehicle->ve_id);
+            }),
             VehicleInspection::indexList(function ($query) use ($vehicle) {
                 $query->where('vi.vi_ve_id', '=', $vehicle->ve_id);
             }),

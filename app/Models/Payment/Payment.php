@@ -181,7 +181,6 @@ class Payment extends Model
     {
         return [
             'SaleContract.sc_no'           => fn ($item) => $item->sc_no,
-            'SaleContract.sc_version'      => fn ($item) => $item->sc_version,
             'Vehicle.plate_no'             => fn ($item) => $item->plate_no,
             'VehicleModel.brand_model'     => fn ($item) => $item->vm_brand_name.'-'.$item->vm_model_name,
             'Customer.cu_contact_name'     => fn ($item) => $item->cu_contact_name,
@@ -240,7 +239,6 @@ class Payment extends Model
     {
         return [
             'sc_no'               => [SaleContract::class, 'sc_no'],
-            'sc_version'          => [SaleContract::class, 'sc_version'],
             'p_pt_id'             => [Payment::class, 'p_pt_id'],
             'p_should_pay_date'   => [Payment::class, 'p_should_pay_date'],
             'p_should_pay_amount' => [Payment::class, 'p_should_pay_amount'],
@@ -258,7 +256,7 @@ class Payment extends Model
     public static function importBeforeValidateDo(): \Closure
     {
         return function (&$item) {
-            $item['p_sc_id']      = SaleContract::contractNumberKv(($item['sc_no'] ?? null).'#'.($item['sc_version'] ?? null));
+            $item['p_sc_id']      = SaleContract::contractNumberKv($item['sc_no'] ?? null);
             $item['p_pay_status'] = PPayStatus::searchValue($item['p_pay_status'] ?? null);
             $item['p_pt_id']      = PPtId::searchValue($item['p_pt_id'] ?? null);
 

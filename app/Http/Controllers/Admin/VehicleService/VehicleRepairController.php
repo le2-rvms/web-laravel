@@ -233,7 +233,7 @@ class VehicleRepairController extends Controller
                 /** @var Vehicle $vehicle */
                 $vehicle = Vehicle::query()->find($ve_id);
                 if (!$vehicle) {
-                    $validator->errors()->add('ve_id', 'The vehicle does not exist.');
+                    $validator->errors()->add('ve_id', '车辆不存在');
 
                     return;
                 }
@@ -249,7 +249,7 @@ class VehicleRepairController extends Controller
                     /** @var SaleContract $saleContract */
                     $saleContract = SaleContract::query()->find($sc_id);
                     if (!$saleContract) {
-                        $validator->errors()->add('vr_sc_id', 'The sale_contract does not exist.');
+                        $validator->errors()->add('vr_sc_id', '合同不存在');
 
                         return;
                     }
@@ -261,6 +261,8 @@ class VehicleRepairController extends Controller
                     if ($Payment->exists && PPayStatus::PAID === $Payment->p_pay_status->value) {
                         if (!$request->boolean('add_should_pay')) {
                             $validator->errors()->add('Payment', '关联的支付已经支付，不能关闭财务记录。');
+
+                            return;
                         }
                     }
                 }

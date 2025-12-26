@@ -248,7 +248,7 @@ class VehicleInspectionController extends Controller
                             break;
                     }
                     if (!$vehicle) {
-                        $validator->errors()->add('vi_ve_id', 'The vehicle does not exist.');
+                        $validator->errors()->add('vi_ve_id', '车辆不存在');
 
                         return;
                     }
@@ -265,6 +265,8 @@ class VehicleInspectionController extends Controller
                     if ($Payment->exists && PPayStatus::PAID === $Payment->p_pay_status->value) {
                         if (!$request->boolean('add_should_pay')) {
                             $validator->errors()->add('Payment', '关联的支付已经支付，不能关闭财务记录。');
+
+                            return;
                         }
                     }
                 }

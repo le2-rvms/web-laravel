@@ -106,7 +106,7 @@ class VehiclePreparationController extends Controller
                 $ve_id   = $request->input('vp_ve_id');
                 $vehicle = Vehicle::query()->find($ve_id);
                 if (!$vehicle) {
-                    $validator->errors()->add('vp_ve_id', 'The vehicle does not exist.');
+                    $validator->errors()->add('vp_ve_id', '车辆不存在');
 
                     return;
                 }

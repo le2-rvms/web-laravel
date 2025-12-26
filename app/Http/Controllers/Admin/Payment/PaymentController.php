@@ -234,6 +234,8 @@ class PaymentController extends Controller
                 if (PPayStatus::UNPAID === $request->input('p_pay_status')) {
                     if ($request->input('p_actual_pay_date') || $request->input('p_actual_pay_amount') || $request->input('p_pa_id')) {
                         $validator->errors()->add('p_pay_status', '支付状态为「未支付」时，实际收付金额、日期、收支账户不允许填入。');
+
+                        return;
                     }
                 }
 
@@ -241,6 +243,8 @@ class PaymentController extends Controller
                     if (PPayStatus::PAID == $payment->p_pay_status->value) {
                         if (PPayStatus::UNPAID === $request->input('p_pay_status')) {
                             $validator->errors()->add('p_pay_status', '「已支付」状态不能改为「未支付」状态，应该使用「退回」');
+
+                            return;
                         }
                     }
                 }
