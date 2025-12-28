@@ -189,6 +189,7 @@ class VehicleMaintenance extends Model
                 DB::raw(VmSettlementStatus::toCaseSQL()),
                 DB::raw("to_char(vm_entry_datetime, 'YYYY-MM-DD HH24:MI') as vm_entry_datetime_"),
                 DB::raw("to_char(vm_departure_datetime, 'YYYY-MM-DD HH24:MI') as vm_departure_datetime_"),
+                // 在厂天数按出厂时间减进厂时间计算，用于展示维修周期。
                 DB::raw('EXTRACT(EPOCH FROM vm_departure_datetime - vm_entry_datetime) / 86400.0 as vm_interval_day'),
             )
         ;

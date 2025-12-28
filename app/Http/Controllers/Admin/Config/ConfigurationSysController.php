@@ -15,6 +15,7 @@ class ConfigurationSysController extends ConfigurationController
 {
     public function __construct()
     {
+        // 系统配置使用 SYSTEM 分类。
         $this->usageCategory = CfgUsageCategory::SYSTEM;
 
         parent::__construct();
@@ -23,6 +24,7 @@ class ConfigurationSysController extends ConfigurationController
     #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
+        // 仅补充权限控制，复用基类配置列表逻辑。
         return parent::index($request);
     }
 

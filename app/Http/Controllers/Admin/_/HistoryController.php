@@ -48,6 +48,7 @@ class HistoryController extends Controller
 
         $table = $model->getTable();
 
+        // 关联模型的审计记录合并配置。
         $unions = $this->config['union'][$class_name] ?? [];
         if ($unions) {
             foreach ($unions as $key => &$union) {
@@ -105,6 +106,7 @@ class HistoryController extends Controller
             //            $rec->changed = array_udiff_assoc($rec->new_data, $rec->old_data, 'shallow_diff');
         });
 
+        // 注入字段翻译，供前端显示。
         $properties = trans('property.'.$class_basename);
         $this->response()->withLang($properties);
 
@@ -126,6 +128,7 @@ class HistoryController extends Controller
         $controller_class = getNamespaceByComposerMap($class_basename.'Controller', 'Admin');
 
         try {
+            // 尝试加载对应控制器的 labelOptions 补充枚举选项。
             $controller_class::{'labelOptions'}($this);
         } catch (\Throwable $e) {
             report($e);

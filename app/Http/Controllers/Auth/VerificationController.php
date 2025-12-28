@@ -33,7 +33,9 @@ class VerificationController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        // Signed links ensure verification URLs are not tampered with.
         $this->middleware('signed')->only('verify');
+        // Limit verification/resend attempts to reduce abuse.
         $this->middleware('throttle:6,1')->only('verify', 'resend');
     }
 

@@ -26,11 +26,14 @@ class VehicleRepairController extends Controller
 
         $auth = auth();
 
+        // 按当前客户筛选维修记录，使用游标分页。
         $data = VehicleRepair::indexQuery()
+            // 仅查询当前客户的维修记录。
             ->where('sc.sc_cu_id', '=', $auth->id())
             ->when(
                 $request->query('last_id'),
                 function (Builder $query) use ($request) {
+                    // 基于 last_id 的游标分页。
                     $query->where('vr.vr_id', '<', $request->query('last_id'));
                 }
             )

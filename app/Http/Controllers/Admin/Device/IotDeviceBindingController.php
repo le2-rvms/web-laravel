@@ -37,6 +37,7 @@ class IotDeviceBindingController extends Controller
 
         $paginate = new PaginateService(
             [],
+            // 默认按最新绑定记录排序。
             [['db.db_id', 'desc']],
             [],
             []
@@ -74,6 +75,7 @@ class IotDeviceBindingController extends Controller
         );
 
         if (null === $iotDeviceBinding) {
+            // 新建时预填开始时间与处理人。
             $iotDeviceBinding = new IotDeviceBinding([
                 'start_at'     => now(),
                 'processed_by' => Auth::id(),
@@ -95,7 +97,8 @@ class IotDeviceBindingController extends Controller
         $input = Validator::make(
             $request->all(),
             [
-                'd_id'         => ['required', 'integer', Rule::exists(IotDevice::class)],
+                'd_id' => ['required', 'integer', Rule::exists(IotDevice::class)],
+                // 仅允许绑定在役车辆。
                 've_id'        => ['required', 'integer', Rule::exists(Vehicle::class, 've_id')->where('ve_status_service', VeStatusService::YES)],
                 'db_start_at'  => ['required', 'date'],
                 'db_end_at'    => ['nullable', 'date', 'after:db_start_at'],
@@ -107,12 +110,15 @@ class IotDeviceBindingController extends Controller
             if ($validator->failed()) {
                 return;
             }
-            // 如果当前数据结束时间为空，则要判断，其他数据结束时间都不为空。
+            // 如果当前绑定未结束，则同设备不能有其他未结束绑定。
             if (!$request->input('db_end_at')) {
                 $count = IotDeviceBinding::query()
                     ->where('d_id', $request->input('d_id'))
                     ->whereNull('db_end_at')
-                    ->when($iotDeviceBinding, function (Builder $query) use ($iotDeviceBinding) {$query->where($iotDeviceBinding->getKeyName(), '!=', $iotDeviceBinding->db_id); })
+                    ->when($iotDeviceBinding, function (Builder $query) use ($iotDeviceBinding) {
+                        // 编辑时排除当前记录，避免误判重复绑定。
+                        $query->where($iotDeviceBinding->getKeyName(), '!=', $iotDeviceBinding->db_id);
+                    })
                     ->count()
                 ;
                 if ($count > 0) {

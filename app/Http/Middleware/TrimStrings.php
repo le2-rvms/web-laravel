@@ -12,6 +12,7 @@ class TrimStrings extends Middleware
      * @var array<int, string>
      */
     protected $except = [
+        // Preserve intentional whitespace in password fields.
         'current_password',
         'password',
         'password_confirmation',

@@ -53,6 +53,7 @@ class BookingOrder extends Model
 {
     use ModelTrait;
 
+    // 使用自定义时间戳字段。
     public const CREATED_AT = 'bo_created_at';
     public const UPDATED_AT = 'bo_updated_at';
     public const UPDATED_BY = 'bo_updated_by';
@@ -62,6 +63,7 @@ class BookingOrder extends Model
     protected $guarded = ['bo_id'];
 
     protected $casts = [
+        // 枚举字段统一 cast 为类枚举。
         'bo_props'             => 'array',
         'bo_type'              => BoType::class,
         'bo_source'            => BoSource::class,
@@ -73,6 +75,7 @@ class BookingOrder extends Model
     ];
 
     protected $appends = [
+        // 追加枚举 label 便于前端展示。
         'bo_type_label',
         'bo_source_label',
         'bo_payment_status_label',
@@ -82,11 +85,13 @@ class BookingOrder extends Model
 
     public function Vehicle(): BelongsTo
     {
+        // 通过车牌号关联车辆信息。
         return $this->belongsTo(Vehicle::class, 'bo_plate_no', 've_plate_no')->with('VehicleModel');
     }
 
     public function Customer(): BelongsTo
     {
+        // 通过客户 ID 关联客户信息。
         return $this->belongsTo(Customer::class, 'bo_cu_id', 'cu_id')->withDefault();
     }
 
@@ -94,11 +99,13 @@ class BookingOrder extends Model
     {
         return DB::query()
             ->from('booking_orders', 'bo')
+            // 拼装车辆/客户信息，供列表展示。
             ->leftJoin('vehicles as ve', 'bo.bo_plate_no', '=', 've.ve_plate_no')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'bo.bo_cu_id')
             ->select('bo.*', 've.*', 'vm.*', 'cu.*')
             ->addSelect(
+                // 附加枚举 label 与格式化时间字段。
                 DB::raw(BoType::toCaseSQL()),
                 DB::raw(BoSource::toCaseSQL()),
                 DB::raw(BoPaymentStatus::toCaseSQL()),

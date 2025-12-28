@@ -72,6 +72,7 @@ class BookingOrderController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
+        // 新建订单默认未支付/未处理/未退款。
         $bookingOrder = new BookingOrder([
             'bo_no'             => '',
             'bo_source'         => BoSource::STORE,
@@ -112,6 +113,7 @@ class BookingOrderController extends Controller
             $request->all(),
             (null === $bookingOrder  // 新增的时候
                 ? [
+                    // 仅允许使用已上架的预定车辆下单。
                     'bo_bv_id'              => ['bail', 'required', 'integer', Rule::exists(BookingVehicle::class, 'bv_id')->where('bv_is_listed', BvIsListed::LISTED)],
                     'bo_no'                 => ['bail', 'required', 'string', 'max:64', Rule::unique(BookingOrder::class)->ignore($bookingOrder)],
                     'bo_source'             => ['bail', 'required', Rule::in(BoSource::label_keys())],
@@ -144,6 +146,7 @@ class BookingOrderController extends Controller
                 }
                 if (null === $bookingOrder) { // 添加的时候
                     $bookingVehicle = BookingVehicle::query()->find($request->input('bo_bv_id'));
+                    // 防止下单时车辆信息被更新，需与当前预定车辆信息一致。
                     if ($bookingVehicle->bv_type->value != $request->input('bo_type')
                         || $bookingVehicle->bv_plate_no != $request->input('bo_plate_no')
                         || $bookingVehicle->bv_pickup_date != $request->input('bo_pickup_date')
@@ -187,6 +190,7 @@ class BookingOrderController extends Controller
     #[PermissionAction(PermissionAction::READ)]
     public function generate(Request $request, BookingVehicle $bookingVehicle): Response
     {
+        // 根据预定车辆生成订单草稿数据。
         $bookingVehicle->append('bo_no'); // todo 可以不需要编号？
         $bookingVehicle->load(['Vehicle']);
 

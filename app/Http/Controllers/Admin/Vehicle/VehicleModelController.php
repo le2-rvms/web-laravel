@@ -31,6 +31,7 @@ class VehicleModelController extends Controller
         $this->response()->withExtras();
 
         $vehicleModel = new VehicleModel([
+            // 新建车型默认启用。
             'vm_status' => VmStatus::ENABLED,
         ]);
 
@@ -44,7 +45,8 @@ class VehicleModelController extends Controller
         $this->response()->withExtras(
         );
 
-        $query  = VehicleModel::indexQuery();
+        $query = VehicleModel::indexQuery();
+        // 列表列由模型定义，便于统一展示字段。
         $column = VehicleModel::indexColumns();
 
         $paginate = new PaginateService(
@@ -89,6 +91,7 @@ class VehicleModelController extends Controller
             [
                 'vm_id'         => ['nullable', Rule::exists(VehicleModel::class, 'vm_id')],
                 'vm_brand_name' => ['required', 'string', 'max:50'],
+                // 同一品牌下车型名称唯一。
                 'vm_model_name' => ['required', 'string', 'max:50',
                     Rule::unique(VehicleModel::class)->where('vm_brand_name', $request->input('vm_brand_name'))->ignore($vehicleModel),
                 ],

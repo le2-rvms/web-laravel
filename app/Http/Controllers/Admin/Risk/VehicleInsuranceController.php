@@ -160,6 +160,7 @@ class VehicleInsuranceController extends Controller
                     return;
                 }
 
+                // 续保登记仅允许在役车辆。
                 $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
                 if (!$pass) {
                     return;

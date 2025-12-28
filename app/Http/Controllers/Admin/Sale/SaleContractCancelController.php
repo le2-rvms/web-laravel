@@ -51,11 +51,13 @@ class SaleContractCancelController extends Controller
         ;
 
         DB::transaction(function () use (&$saleContract) {
+            // 加锁避免并发取消导致状态回滚或重复作废。
             $saleContract = $saleContract->newQuery()->useWritePdo()
                 ->whereKey($saleContract->getKey())->lockForUpdate()->firstOrFail()
             ;
 
             match ($saleContract->sc_status->value) {
+                // 待签约取消：车辆回到可上架，订单收付全部作废。
                 ScStatus::PENDING => (function () use ($saleContract) {
                     $saleContract->Vehicle->updateStatus(
                         ve_status_rental: VeStatusRental::LISTED,
@@ -65,6 +67,7 @@ class SaleContractCancelController extends Controller
                         'p_is_valid' => PIsValid::INVALID,
                     ]);
                 })(),
+                // 已签约取消：车辆退回待整备，相关收付作废。
                 ScStatus::SIGNED => (function () use ($saleContract) {
                     $saleContract->Vehicle->updateStatus(
                         ve_status_rental: VeStatusRental::PENDING,

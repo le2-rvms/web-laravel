@@ -65,6 +65,7 @@ class VehiclePreparationController extends Controller
         /** @var Admin $admin */
         $admin = auth()->user();
 
+        // 车辆/证件整备权限由不同角色控制。
         $has_role_prep_vehicle  = $admin->hasRole(AdminRole::role_vehicle_mgr) || $admin->hasRole(config('setting.super_role.name'));
         $has_role_prep_document = $admin->hasRole(AdminRole::role_payment) || $admin->hasRole(config('setting.super_role.name'));
 
@@ -88,9 +89,11 @@ class VehiclePreparationController extends Controller
                 'vp_ve_id' => ['bail', 'required', 'integer'],
             ]
            + ($role_prep_vehicle ? [
+               // 车辆整备角色需完成车辆检查项。
                'vp_vehicle_check_is' => ['required', Rule::in(YesNo::YES)],
            ] : [])
             + ($role_prep_document ? [
+                // 证件整备角色需完成证照检查项。
                 'vp_annual_check_is'   => ['required', Rule::in(YesNo::YES)],
                 'vp_insured_check_is'  => ['required', Rule::in(YesNo::YES)],
                 'vp_document_check_is' => ['required', Rule::in(YesNo::YES)],
@@ -119,6 +122,7 @@ class VehiclePreparationController extends Controller
             ->validate()
         ;
 
+        // 记录各检查项完成时间。
         if ($input['vp_annual_check_is']) {
             $input['vp_annual_check_dt'] = now();
         }
@@ -146,6 +150,7 @@ class VehiclePreparationController extends Controller
                     }
                 )->first()
             ;
+            // 若已有未完成记录则更新，否则创建新记录。
             if (null === $vehiclePreparation) {
                 $vehiclePreparation = VehiclePreparation::query()->create($input);
             } else {
@@ -156,6 +161,7 @@ class VehiclePreparationController extends Controller
                 && YesNo::YES == $vehiclePreparation->vp_insured_check_is
                 && YesNo::YES == $vehiclePreparation->vp_vehicle_check_is
                 && YesNo::YES == $vehiclePreparation->vp_document_check_is) {
+                // 全部检查完成后，车辆进入可上架状态。
                 $vehiclePreparation->Vehicle->updateStatus(ve_status_rental: VeStatusRental::LISTED);
             }
         });

@@ -12,5 +12,6 @@ class EncryptCookies extends Middleware
      * @var array<int, string>
      */
     protected $except = [
+        // Leave empty to encrypt all cookies by default.
     ];
 }

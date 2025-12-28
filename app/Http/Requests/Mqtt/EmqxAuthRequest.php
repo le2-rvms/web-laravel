@@ -33,6 +33,7 @@ class EmqxAuthRequest extends FormRequest
 
     protected function failedValidation(Validator $validator)
     {
+        // 返回 EMQX 认证接口期望的错误格式。
         $response = response()->json([
             'result'  => 'ignore',
             'message' => 'Validation failed',

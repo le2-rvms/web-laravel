@@ -25,6 +25,7 @@ class ConfirmPasswordController extends Controller
      *
      * @var string
      */
+    // Fallback target if the intended URL is missing or expired.
     protected $redirectTo = '/web-admin/home';
 
     /**

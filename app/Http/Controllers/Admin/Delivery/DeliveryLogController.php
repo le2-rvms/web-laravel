@@ -33,6 +33,7 @@ class DeliveryLogController extends Controller
 
         $paginate = new PaginateService(
             [],
+            // 按最新发送记录排序。
             [['dl.dl_id', 'desc']],
             ['kw'],
             []
@@ -41,6 +42,7 @@ class DeliveryLogController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
+                    // 根据消息标题关键字搜索发送记录。
                     $builder->where('dc.dc_title', 'like', '%'.$value.'%');
                 });
             },
@@ -85,6 +87,7 @@ class DeliveryLogController extends Controller
 
     public function update(Request $request, ?DeliveryLog $deliveryLog): Response
     {
+        // 日志只读，保留资源路由占位。
         return $this->response()->withData($deliveryLog)->respond();
     }
 

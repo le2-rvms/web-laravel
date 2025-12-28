@@ -57,6 +57,7 @@ class SaleSettlementApproveController extends Controller
             ->toArray()
         ;
 
+        // 统计未支付费用（排除退车结算费本身），用于判定合同状态。
         $unPayCount = Payment::query()
             ->whereIn('p_sc_id', $groupContractIds)
             ->where('p_is_valid', '=', PIsValid::VALID)
@@ -66,6 +67,7 @@ class SaleSettlementApproveController extends Controller
         ;
 
         DB::transaction(function () use ($saleContract, $unPayCount, $saleSettlement, $groupContractIds) {
+            // 同组合同统一更新状态与时间。
             $statusPayload = [
                 'sc_status'                                                     => $unPayCount > 0 ? ScStatus::EARLY_TERMINATION : ScStatus::COMPLETED,
                 $unPayCount > 0 ? 'sc_early_termination_at' : 'sc_completed_at' => now(),
@@ -80,6 +82,7 @@ class SaleSettlementApproveController extends Controller
 
             switch ($saleSettlement->ss_delete_option->value) {
                 case SsDeleteOption::DELETE:
+                    // 按结算选项作废未支付费用（保留结算费项）。
                     Payment::query()
                         ->whereIn('p_sc_id', $groupContractIds)
                         ->where('p_pay_status', '=', PPayStatus::UNPAID)
@@ -97,6 +100,7 @@ class SaleSettlementApproveController extends Controller
             }
 
             if ($saleSettlement->ss_settlement_amount > 0 || $saleSettlement->ss_deposit_return_amount > 0) {
+                // 生成结算费/退押金收支记录，并附带费用项汇总备注。
                 Payment::query()->updateOrCreate([
                     'p_sc_id' => $saleContract->sc_id,
                     'p_pt_id' => $saleSettlement->ss_deposit_return_amount > 0 ? PPtId::REFUND_DEPOSIT : PPtId::VEHICLE_RETURN_SETTLEMENT_FEE,

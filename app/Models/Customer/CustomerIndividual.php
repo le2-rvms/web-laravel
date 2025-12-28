@@ -54,6 +54,7 @@ class CustomerIndividual extends Model
 {
     use ModelTrait;
 
+    // 使用自定义时间戳字段。
     public const CREATED_AT = 'cui_created_at';
     public const UPDATED_AT = 'cui_updated_at';
     public const UPDATED_BY = 'cui_updated_by';
@@ -63,6 +64,7 @@ class CustomerIndividual extends Model
     protected $guarded = ['cui_id'];
 
     protected $appends = [
+        // 追加枚举中文标签，便于前端展示。
         'cui_gender_label',
     ];
 
@@ -94,6 +96,7 @@ class CustomerIndividual extends Model
 
     protected function cuiId1Photo(): Attribute
     {
+        // 统一走上传文件访问器。
         return $this->uploadFile();
     }
 

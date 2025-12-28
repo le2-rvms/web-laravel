@@ -22,6 +22,7 @@ class CompanyController extends Controller
 
     public function show()
     {
+        // 公司信息为单例记录，没有则创建空对象。
         $company = Company::query()->firstOrNew();
 
         return $this->response()->withData($company)->respond();
@@ -29,6 +30,7 @@ class CompanyController extends Controller
 
     public function edit(Request $request)
     {
+        // 公司信息为单例记录，没有则创建空对象。
         $company = Company::query()->firstOrNew();
 
         return $this->response()->withData($company)->respond();
@@ -61,6 +63,7 @@ class CompanyController extends Controller
         ;
 
         DB::transaction(function () use (&$input, &$company) {
+            // 统一更新单例公司信息。
             $company = Company::query()->firstOrNew();
             $company->update($input);
         });

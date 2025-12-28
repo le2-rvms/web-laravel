@@ -44,6 +44,7 @@ class VehicleViolationController extends Controller
         $admin = auth()->user();
 
         if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
+            // 车队受限时仅看本车队或未分配车队的车辆违章。
             $query->where(function (Builder $query) use ($admin) {
                 $query->whereIn('ve.ve_team_id', $admin->a_team_ids)->orwhereNull('ve.ve_team_id');
             });
@@ -107,6 +108,7 @@ class VehicleViolationController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?VehicleViolation $vehicleViolation): Response
     {
+        // 违章记录只允许补充备注，其他字段由外部来源维护。
         $input = Validator::make(
             $request->all(),
             [

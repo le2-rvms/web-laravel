@@ -71,6 +71,7 @@ class VehicleMaintenanceController extends Controller
         if ($admin->hasRole(AdminRole::role_vehicle_service)) {
             $vc_id_array = VehicleCenter::query()->whereJsonContains('vc_permitted', $admin->id)->pluck('vc_id')->toArray();
 
+            // 维修厂角色只看自己被授权的中心记录。
             $query->whereIn('vm.vm_vc_id', $vc_id_array);
         }
 
@@ -241,6 +242,7 @@ class VehicleMaintenanceController extends Controller
                 $sc_id = $request->input('vm_sc_id');
 
                 if ($sc_id) {
+                    // 需要收付时必须能关联到有效合同。
                     /** @var SaleContract $saleContract */
                     $saleContract = SaleContract::query()->find($sc_id);
                     if (!$saleContract) {
@@ -273,6 +275,7 @@ class VehicleMaintenanceController extends Controller
             if (null === $vehicleMaintenance) {
                 $vehicleMaintenance = VehicleMaintenance::query()->create($input);
 
+                // 新建时按需生成应收款。
                 if ($vehicleMaintenance->add_should_pay) {
                     $vehicleMaintenance->Payment()->create($input_payment);
                 }
@@ -283,6 +286,7 @@ class VehicleMaintenanceController extends Controller
                     $Payment = $vehicleMaintenance->Payment;
                     if ($Payment && $Payment->exists) {
                         if (PPayStatus::PAID === $Payment->p_pay_status->value) {
+                            // 已支付的财务记录仅允许无变更提交。
                             $Payment->fill($input_payment);
                             if ($Payment->isDirty()) {
                                 throw new ClientException('财务信息已支付，不能做修改。'); // 不能修改财务记录的判断：修改状态 + 收款数据存在 + 收款记录为已支付 + 收款记录要做更新($model->isDirty()) =>
@@ -294,6 +298,7 @@ class VehicleMaintenanceController extends Controller
                         $vehicleMaintenance->Payment()->create($input_payment);
                     }
                 } else {
+                    // 关闭财务记录时，只作废未支付款项。
                     $vehicleMaintenance->Payment()->where('p_pay_status', '=', PPayStatus::UNPAID)->update(
                         [
                             'p_is_valid' => PIsValid::INVALID,

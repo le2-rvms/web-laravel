@@ -14,6 +14,7 @@ class FileController extends Controller
 
     public function __construct()
     {
+        // 默认使用 s3 磁盘（可对接 MinIO/S3）。
         static::$drive = Storage::disk('s3');
     }
 
@@ -26,6 +27,7 @@ class FileController extends Controller
     public static function getDrive(): Filesystem
     {
         if (!isset(self::$drive)) {
+            // 延迟初始化，避免静态属性未就绪。
             static::$drive = Storage::disk('s3');
         }
 
@@ -36,6 +38,7 @@ class FileController extends Controller
     {
         $path = $request->query('path');
 
+        // 列出目录与文件，返回大小与访问链接。
         $dir = static::$drive->directories($path);
 
         $files = [];
@@ -62,6 +65,7 @@ class FileController extends Controller
 
         $filename = $file->getClientOriginalName();
 
+        // 按原文件名保存到指定目录。
         $filepath = static::$drive->putFileAs($upload_path, $file, $filename);
 
         //        $url = static::$drive->url($filepath);
@@ -76,6 +80,7 @@ class FileController extends Controller
 
     public function show(string $id)
     {
+        // 生成 minio 临时访问链接。
         $filePath = 'uploads/'.$filename;
 
         if (Storage::disk('minio')->exists($filePath)) {

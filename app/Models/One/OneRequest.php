@@ -21,6 +21,7 @@ class OneRequest extends Model
 {
     use ModelTrait;
 
+    // 记录 122 平台请求日志。
     public const CREATED_AT = 'or_created_at';
     public const UPDATED_AT = 'or_updated_at';
     public const UPDATED_BY = 'or_updated_by';
@@ -42,6 +43,7 @@ class OneRequest extends Model
     protected function casts()
     {
         return [
+            // 响应体按数组存储，便于查询与解析。
             'or_response' => 'array',
         ];
     }

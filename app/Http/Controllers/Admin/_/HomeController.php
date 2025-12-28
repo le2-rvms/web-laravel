@@ -13,6 +13,7 @@ class HomeController extends Controller
      */
     public function __construct()
     {
+        // Admin home must be protected behind auth.
         $this->middleware('auth');
     }
 

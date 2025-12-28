@@ -18,6 +18,7 @@ class ForgotPasswordController extends Controller
     |
     */
 
+    // Default Laravel flow for sending reset links.
     use SendsPasswordResetEmails;
 
     public static function labelOptions(Controller $controller): void

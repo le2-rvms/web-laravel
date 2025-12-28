@@ -25,6 +25,7 @@ class ResetPasswordController extends Controller
      *
      * @var string
      */
+    // Keep post-reset navigation within the admin area.
     protected $redirectTo = '/web-admin/home';
 
     public static function labelOptions(Controller $controller): void

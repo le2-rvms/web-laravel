@@ -91,6 +91,7 @@ class PasswordResetController extends Controller
                 return;
             }
 
+            // 校验邮箱对应的验证码缓存。
             $cacheKey = 'password_reset_code_'.$request->input('email');
             if (Cache::get($cacheKey) !== $request->input('code')) {
                 $validator->errors()->add('code', '验证码无效或已过期');

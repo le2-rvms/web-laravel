@@ -127,7 +127,7 @@ class SaleSettlementController extends Controller
                     return;
                 }
 
-                // group
+                // 续租链路校验：全部合同须已签约，且只能在最新合同上结算。
                 $groupSaleContractList = SaleContract::query()
                     ->where('sc_group_no', '=', $saleContract->sc_group_no)
                     ->orderByDesc('sc_group_seq')
@@ -161,6 +161,7 @@ class SaleSettlementController extends Controller
 
         $saleSettlement = $saleContract->SaleSettlement;
         if (!$saleSettlement) { // 是新增
+            // 汇总合同组押金，作为结算默认值（应收/实收）。
             $depositPayments = Payment::query()
                 ->whereIn('p_sc_id', $groupContractIds)
                 ->where('p_pt_id', '=', PPtId::DEPOSIT)
@@ -382,6 +383,7 @@ class SaleSettlementController extends Controller
                 $result = bcadd($result, $opt.$value, 2);
             }
 
+            // 结算总额为正：应收结算费；为负：应退押金。
             if (bccomp($result, '0', 2) > 0) {
                 if (0 !== bccomp($request->input(['ss_settlement_amount']), $result, 2)) {
                     $validator->errors()->add('settlement_amount', '结算费计算错误');

@@ -19,7 +19,7 @@ class EmqxAuthController extends Controller
     {
         $input = $request->validated();
 
-        // 查找用户
+        // 查找设备并校验口令（password + salt 的 sha256）。
         $device = IotDevice::query()->where(['username' => $input['username']])->first();
 
         if ($device && hash('sha256', $input['password'].$device->salt) === $device->password_hash) {
@@ -41,6 +41,7 @@ class EmqxAuthController extends Controller
 
     private function respond(string $result, bool $is_superuser = false, array $client_attrs = []): JsonResponse
     {
+        // EMQX 期望返回 allow/deny 结果与 is_superuser 标记。
         $response = [
             'result'       => $result,
             'is_superuser' => $is_superuser ? 'true' : 'false',

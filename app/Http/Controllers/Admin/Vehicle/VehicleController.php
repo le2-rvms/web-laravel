@@ -65,6 +65,7 @@ class VehicleController extends Controller
         $admin = auth()->user();
 
         if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
+            // 车队受限时，仅展示所属车队或未分配车队的车辆。
             $query->where(function (Builder $query) use ($admin) {
                 $query->whereIn('ve.ve_team_id', $admin->a_team_ids)->orwhereNull('ve.ve_team_id');
             });
@@ -74,6 +75,7 @@ class VehicleController extends Controller
         $role_vehicle_manager = $admin->hasRole(AdminRole::role_vehicle_mgr);
 
         if ($role_vehicle_manager) {
+            // 车管角色仅看未分配或由自己负责的车辆。
             $query->where(function (Builder $query) use ($admin) {
                 $query->whereNull('ve_vehicle_manager')->orWhere('ve_vehicle_manager', '=', $admin->id);
             });

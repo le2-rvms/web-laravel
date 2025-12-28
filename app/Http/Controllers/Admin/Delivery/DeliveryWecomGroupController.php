@@ -40,8 +40,10 @@ class DeliveryWecomGroupController extends Controller
 
         $items = SaleContractExt::indexQuery()
             ->orderByDesc('sce.sce_id')
+            // 仅展示已签约合同的群配置。
             ->whereIn('sc.sc_status', [ScStatus::SIGNED])
             ->addSelect(
+                // 组装展示文案（联系人|手机号后四位|车牌|付款周期/租赁类型/合同状态）。
                 DB::raw(sprintf(
                     "CONCAT(cu.cu_contact_name,'|',%s,'|', ve.ve_plate_no ,'|',  %s, %s ,'|', %s ) as text,sc.sc_id as value",
                     '((SUBSTRING(cu.cu_contact_phone, 1, 0)  || SUBSTRING(cu.cu_contact_phone, 8, 4)) )',
@@ -81,9 +83,11 @@ class DeliveryWecomGroupController extends Controller
 
         DB::transaction(function () use (&$items) {
             foreach ($items->chunk(50) as $chunks) {
+                // 分批 upsert，避免一次性写入过大。
                 SaleContractExt::query()->upsert($chunks->all(), ['sce_sc_id'], ['sce_wecom_group_url']);
             }
 
+            // 删除未提交的合同群配置。
             SaleContractExt::query()->whereNotIn('sce_sc_id', $items->pluck('sc_id')->all())->delete();
         });
 

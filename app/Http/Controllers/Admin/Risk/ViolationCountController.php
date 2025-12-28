@@ -26,7 +26,7 @@ class ViolationCountController extends Controller
     #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
-        // 构建 vehicle_violations 表的查询
+        // 构建自动抓拍违章明细。
         $violations = DB::table('vehicle_violations', 'vv')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.vv_ve_id')
             ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vv_vu_id')
@@ -39,7 +39,7 @@ class ViolationCountController extends Controller
             ->whereNotNull('vv.vv_vu_id')
         ;
 
-        // 构建 vehicle_manual_violations 表的查询
+        // 构建人工录入违章明细。
         $manualViolations = DB::table('vehicle_manual_violations', 'vv')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vv.vv_ve_id')
             ->leftJoin('vehicle_usages as vu', 'vu.vu_id', '=', 'vv.vv_vu_id')
@@ -51,10 +51,10 @@ class ViolationCountController extends Controller
             ->whereNotNull('vv.vv_vu_id')
         ;
 
-        // 使用 UNION ALL 合并两个查询
+        // 使用 UNION ALL 合并两类违章明细。
         $combinedViolations = $violations->unionAll($manualViolations);
 
-        // 封装子查询并进行聚合、筛选和排序
+        // 按合同/车辆聚合违章数量与金额，用于高风险排行。
         $query = DB::query()
             ->fromSub($combinedViolations, 'combined_violations')
             ->select(
@@ -73,6 +73,7 @@ class ViolationCountController extends Controller
 
         $paginate = new PaginateService(
             [],
+            // 默认按违章次数倒序。
             [['max(vv_violation_datetime) desc']],
             ['kw'],
             []

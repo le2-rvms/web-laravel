@@ -33,6 +33,7 @@ class Company extends Model
 {
     use ModelTrait;
 
+    // 公司信息使用单表单例记录。
     public const CREATED_AT = 'cp_created_at';
 
     public const UPDATED_AT = 'cp_updated_at';
@@ -54,6 +55,7 @@ class Company extends Model
 
     protected function cpCompanyPhoto(): Attribute
     {
+        // 统一走上传文件访问器。
         return $this->uploadFile();
     }
 

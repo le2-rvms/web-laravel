@@ -80,6 +80,7 @@ class VehicleCenter extends Model
         $value = DB::query()
             ->from('vehicle_centers', 'vc')
             ->where('vc.vc_status', VcStatus::ENABLED)
+            // 非超级角色仅可见授权列表包含自己 ID 的修理厂。
             ->when(!$admin->hasRole(config('setting.super_role.name')), function (Builder $query) use ($admin) {
                 $query->whereRaw('vc_permitted @> ?', [json_encode([$admin->id])]);
             })

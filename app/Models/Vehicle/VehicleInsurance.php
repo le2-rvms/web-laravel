@@ -159,6 +159,7 @@ class VehicleInsurance extends Model
             ->select('vi.*', 've.ve_plate_no', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
                 [
+                    // 距到期天数 = now - end_date；负数表示尚未到期。
                     DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_compulsory_end_date) / 86400.0 AS integer ) as vi_compulsory_interval_day'),
                     DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_commercial_end_date) / 86400.0 AS integer ) as vi_commercial_interval_day'),
                     DB::raw('CAST(EXTRACT(EPOCH FROM now() - vi.vi_carrier_liability_end_date) / 86400.0 AS integer ) as vi_carrier_liability_interval_day'), ]

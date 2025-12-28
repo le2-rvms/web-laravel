@@ -30,7 +30,7 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryCustomer
     Route::resource('sale-contracts', SaleContractController::class)->only(['index']);
     Route::resource('payments', PaymentController::class)->only(['index']);
     Route::resource('vehicle-accidents', VehicleAccidentController::class)->only(['index']);
-    Route::resource('vehicle-change', VehicleReplacementController::class)->only(['index']);
+    Route::resource('vehicle-change', VehicleReplacementController::class)->only(['index']); // todo 替换成vehicle-tmp？
     Route::resource('vehicle-maintenances', VehicleMaintenanceController::class)->only(['index']);
     Route::resource('vehicle-repairs', VehicleRepairController::class)->only(['index']);
     Route::resource('vehicle-manual-violations', VehicleManualViolationController::class)->only(['index']);

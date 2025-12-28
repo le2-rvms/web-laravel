@@ -36,6 +36,7 @@ class AdminController extends Controller
         $this->response()->withExtras();
 
         $query = Admin::query()
+            // 排除临时账号，并追加车管数量统计。
             ->where('a_user_type', '!=', AUserType::TEMP)
             ->addSelect([
                 'vehicle_manager_count' => Vehicle::query()->selectRaw('count(*)')->whereColumn('vehicles.ve_vehicle_manager', 'admins.id'),
@@ -80,6 +81,7 @@ class AdminController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function edit(Request $request, Admin $admin): Response
     {
+        // 超级管理员不可被编辑。
         abort_if($admin->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow edit.');
 
         $this->options();
@@ -126,6 +128,7 @@ class AdminController extends Controller
         }
 
         $input['a_user_type'] = (function () use ($input) {
+            // 演示账号在开启 MOCK 时标记为体验用户。
             if (config('setting.mock.enable') && Str::startsWith($input['name'], '演示')) {
                 return AUserType::MOCK;
             }
@@ -178,6 +181,7 @@ class AdminController extends Controller
         }
 
         $input['a_user_type'] = (function () use ($input) {
+            // 演示账号在开启 MOCK 时标记为体验用户。
             if (config('setting.mock.enable') && Str::startsWith($input['name'], '演示')) {
                 return AUserType::MOCK;
             }
@@ -201,6 +205,7 @@ class AdminController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(Admin $admin): Response
     {
+        // 超级管理员不可删除。
         abort_if($admin->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow destroy.');
 
         DB::transaction(function () use (&$admin) {
@@ -217,6 +222,7 @@ class AdminController extends Controller
     #[PermissionAction(PermissionAction::READ)]
     public function show(Admin $admin): Response
     {
+        // 超级管理员不可查看编辑页。
         abort_if($admin->hasRole(config('setting.super_role.name')), 404, 'super_admin not allow edit.');
 
         return $this->response()->withData($admin)->respond();

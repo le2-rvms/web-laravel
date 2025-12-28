@@ -92,6 +92,7 @@ class VehicleUsage extends Model
                 DB::raw(ScRentalType::toCaseSQL()),
                 DB::raw(ScPaymentPeriod::toCaseSQL()),
                 DB::raw(ScStatus::toCaseSQL()),
+                // 行程间隔按开始验车时间减结束验车时间计算，正负取决于时间顺序。
                 DB::raw('EXTRACT(EPOCH FROM vi1.vi_inspection_datetime - vi2.vi_inspection_datetime) / 86400.0 as vu_vi_interval_day'),
                 DB::raw("to_char(vi1.vi_inspection_datetime, 'YYYY-MM-DD HH24:MI:SS') as vi_start_inspection_datetime_"),
                 DB::raw("to_char(vi2.vi_inspection_datetime, 'YYYY-MM-DD HH24:MI:SS') as vi_end_inspection_datetime_"),

@@ -65,6 +65,7 @@ class SaleContractRentPaymentController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request, SaleContract $saleContract): Response
     {
+        // 从前端未支付列表中选择一笔租金进行收款。
         $selectedData = $request->input('unpaid_rent_payments')[$request->input('selectedIndex')] ?? null;
 
         abort_if(!$selectedData, 404);
@@ -86,6 +87,7 @@ class SaleContractRentPaymentController extends Controller
                 if ($validator->failed()) {
                     return;
                 }
+                // 仅已签约合同允许收租金。
                 if (!$saleContract->check_status([ScStatus::SIGNED], $validator)) {
                     return;
                 }
@@ -94,6 +96,7 @@ class SaleContractRentPaymentController extends Controller
         ;
 
         DB::transaction(function () use (&$input) {
+            // 锁定付款记录，避免并发重复收款。
             $Payment = Payment::query()->where('p_id', $input['p_id'])->lockForUpdate()->first();
             $Payment->update($input);
         });

@@ -39,6 +39,7 @@ class BookingVehicle extends Model
 {
     use ModelTrait;
 
+    // 使用自定义时间戳字段。
     public const CREATED_AT = 'bv_created_at';
     public const UPDATED_AT = 'bv_updated_at';
     public const UPDATED_BY = 'bv_updated_by';
@@ -48,12 +49,14 @@ class BookingVehicle extends Model
     protected $guarded = ['bv_id'];
 
     protected $casts = [
+        // 枚举字段统一 cast 为类枚举。
         'bv_props'     => 'array',
         'bv_type'      => BvType::class,
         'bv_is_listed' => BvIsListed::class,
     ];
 
     protected $appends = [
+        // 追加枚举中文标签。
         'bv_type_label',
         'bv_is_listed_label',
     ];
@@ -62,6 +65,7 @@ class BookingVehicle extends Model
 
     public function Vehicle(): BelongsTo
     {
+        // 通过车牌号关联车辆信息。
         return $this->belongsTo(Vehicle::class, 'bv_plate_no', 've_plate_no')->withDefault()->with('VehicleModel');
     }
 
@@ -69,10 +73,12 @@ class BookingVehicle extends Model
     {
         return DB::query()
             ->from('booking_vehicles', 'bv')
+            // 拼装车辆信息用于列表展示。
             ->leftJoin('vehicles as ve', 'bv.bv_plate_no', '=', 've.ve_plate_no')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->select('bv.*', 've.*', 'vm.*')
             ->addSelect(
+                // 附加枚举 label 与上架时长。
                 DB::raw(BvType::toCaseSQL()),
                 DB::raw('(NOW()::date - bv_listed_at::date) AS listed_days_diff'),
             )
@@ -87,6 +93,7 @@ class BookingVehicle extends Model
             ->from('booking_vehicles', 'bv')
             ->leftJoin('vehicles as ve', 'bv.bv_plate_no', '=', 've.ve_plate_no')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
+            // 下拉仅展示已上架的预定车辆。
             ->where('bv.bv_is_listed', '=', BvIsListed::LISTED)
             ->select(DB::raw("CONCAT(ve.ve_plate_no,'-',COALESCE(vm.vm_brand_name,'未知品牌'),'-', COALESCE(vm.vm_model_name,'未知车型')) as text,bv.bv_id as value"))
             ->get()
@@ -97,11 +104,13 @@ class BookingVehicle extends Model
 
     protected function bvPhoto(): Attribute
     {
+        // 统一走上传文件访问器。
         return $this->uploadFile();
     }
 
     protected function bvAdditionalPhotos(): Attribute
     {
+        // 统一走上传文件数组访问器。
         return $this->uploadFileArray();
     }
 
@@ -123,6 +132,7 @@ class BookingVehicle extends Model
     {
         return Attribute::make(
             get: function ($value) {
+                // 缺省生成预定编号。
                 if (!$value) {
                     return 'BK'.gen_sc_no();
                 }

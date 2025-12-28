@@ -36,6 +36,7 @@ class AdminTeamController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
+                    // 支持按名称或备注检索车队。
                     $builder->where('at_name', 'like', '%'.$value.'%')->orWhere('at_remark', 'like', '%'.$value.'%');
                 });
             },
@@ -52,6 +53,7 @@ class AdminTeamController extends Controller
         );
 
         $adminTeam = new AdminTeam([
+            // 默认启用车队。
             'at_status' => AtStatus::ENABLED,
         ]);
 

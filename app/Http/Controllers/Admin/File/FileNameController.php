@@ -26,6 +26,8 @@ class FileNameController extends Controller
             'new_path' => 'required|string',
         ]);
 
+        // 仅调整存储路径，不修改文件内容。
+        // 将 uploads 下文件移动到新目录（仅变更路径）。
         $oldPath = 'uploads/'.$filename;
         $newPath = 'uploads/'.$request->input('new_path').'/'.$filename;
 

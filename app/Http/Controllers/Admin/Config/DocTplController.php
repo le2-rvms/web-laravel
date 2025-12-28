@@ -69,6 +69,7 @@ class DocTplController extends Controller
         ]);
 
         $this->response()->withExtras(
+            // 预加载各业务模板的字段与关联，用于宏变量选择。
             DtType::tryFrom(DtType::SALE_CONTRACT)->getFieldsAndRelations(true),
             DtType::tryFrom(DtType::SALE_SETTLEMENT)->getFieldsAndRelations(true),
             DtType::tryFrom(DtType::PAYMENT)->getFieldsAndRelations(true),
@@ -102,6 +103,7 @@ class DocTplController extends Controller
             'dt_mode' => ['required', Rule::in(DtExportType::label_keys())],
         ]);
 
+        // 预览时仅生成并返回临时链接，不落库。
         $url = $docTplService->GenerateDoc($docTpl, $input['mode']);
 
         return $this->response()->withData($url)->respond();
@@ -113,6 +115,7 @@ class DocTplController extends Controller
         $this->options();
 
         $this->response()->withExtras(
+            // 预加载各业务模板的字段与关联，用于宏变量选择。
             DtType::tryFrom(DtType::SALE_CONTRACT)->getFieldsAndRelations(true),
             DtType::tryFrom(DtType::SALE_SETTLEMENT)->getFieldsAndRelations(true),
             DtType::tryFrom(DtType::PAYMENT)->getFieldsAndRelations(true),
@@ -152,6 +155,7 @@ class DocTplController extends Controller
                 /** @var DocTpl $docTpl */
                 $docTpl = DocTpl::query()->create($input);
             } else {
+                // 更新模板信息（含文件上传字段）。
                 $docTpl->update($input);
             }
         });

@@ -188,6 +188,7 @@ class VehicleAccidentController extends Controller
                     return;
                 }
 
+                // 出险录入仅允许在役车辆。
                 $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
                 if (!$pass) {
                     return;
@@ -196,6 +197,7 @@ class VehicleAccidentController extends Controller
                 $sc_id = $request->input('va_sc_id');
 
                 if ($sc_id) {
+                    // 有合同号时必须能找到对应合同。
                     /** @var SaleContract $saleContract */
                     $saleContract = SaleContract::query()->find($sc_id);
                     if (!$saleContract) {

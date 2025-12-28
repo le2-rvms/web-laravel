@@ -26,12 +26,15 @@ class VehicleMaintenanceController extends Controller
 
         $auth = auth();
 
+        // 按当前客户筛选保养记录，使用游标分页。
         $data = VehicleMaintenance::indexQuery()
+            // 仅查询当前客户的保养记录。
             ->where('sc.sc_cu_id', '=', $auth->id())
             ->forPage(1, $perPage)
             ->when(
-                ${$request}->query('last_id'),
+                $request->query('last_id'),
                 function (Builder $query) use ($request) {
+                    // 基于 last_id 的游标分页。
                     $query->where('vm.vm_id', '<', $request->query('last_id'));
                 }
             )

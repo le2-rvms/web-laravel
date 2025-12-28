@@ -30,6 +30,7 @@ class PaymentAccountController extends Controller
         );
 
         $paymentAccount = new PaymentAccount([
+            // New payment accounts start enabled by default.
             'pa_status' => PaStatus::ENABLED,
         ]);
 
@@ -99,6 +100,7 @@ class PaymentAccountController extends Controller
             })->validate()
         ;
 
+        // Use the same validation flow for create and update.
         if (null === $paymentAccount) {
             $paymentAccount = PaymentAccount::query()->create($input);
         } else {

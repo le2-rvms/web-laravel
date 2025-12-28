@@ -188,6 +188,7 @@ class ImportController extends Controller
         });
         $header = $headers->get(0);
 
+        // 严格校验表头，防止模板错位导入。
         if ($fieldHeader !== $header) {
             throw new ClientException('表头不一致，请重新下载模板文件。');
         }
@@ -217,11 +218,11 @@ class ImportController extends Controller
             })
         ;
 
-        // 批量检查
+        // 批量检查（跨行/全局规则）。
         $afterValidator = $model_name::importAfterValidatorDo();
         $afterValidator();
 
-        // 事务，循环插入
+        // 事务保证导入全成全败。
         DB::transaction(function () use ($datas, $batchInsert) {
             $datas->each(function (array $data) use ($batchInsert) {
                 $batchInsert($data);

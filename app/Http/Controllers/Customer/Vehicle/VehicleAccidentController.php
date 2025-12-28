@@ -28,10 +28,13 @@ class VehicleAccidentController extends Controller
 
         $auth = auth();
 
+        // 按客户范围读取事故记录，使用游标分页。
         $data = VehicleAccident::indexQuery(['cu_id' => $auth->id()])
+            // 仅查询当前客户关联的事故记录。
             ->when(
                 $request->query('last_id'),
                 function (Builder $query) use ($request) {
+                    // 基于 last_id 的游标分页。
                     $query->where('va.va_id', '<', $request->query('last_id'));
                 }
             )

@@ -65,7 +65,8 @@ class VehicleScheduleController extends Controller
         );
 
         $vehicleSchedule = new VehicleSchedule([
-            'vs_inspection_date'      => now(),
+            'vs_inspection_date' => now(),
+            // 默认下次年检日期为一年后。
             'vs_next_inspection_date' => now()->addYear(),
         ]);
 
@@ -130,6 +131,7 @@ class VehicleScheduleController extends Controller
                     return;
                 }
 
+                // 年检提醒仅允许在役车辆。
                 $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
                 if (!$pass) {
                     return;
@@ -164,6 +166,7 @@ class VehicleScheduleController extends Controller
     #[PermissionAction(PermissionAction::READ)]
     public function st_vehicle(Request $request): Response
     {
+        // 年检统计视图（聚合查询）。
         $this->options(true);
         $this->response()->withExtras(
             Vehicle::options(),

@@ -136,6 +136,7 @@ final class ResponseBuilder
     {
         if ($wantsJson = $this->request->wantsJson()) {
             if (PageExcel::check_request($this->request) && $this->data instanceof PaginateService) {
+                // 列表接口命中 output=excel 时，用导出结果替换分页数据。
                 $pageExcel = new PageExcel($this->request->route()->getActionName());
 
                 $export = $pageExcel->export($this->data->builder, $this->data->columns);
@@ -150,6 +151,7 @@ final class ResponseBuilder
             return $this->redirect;
         }
 
+        // 非 JSON 请求：根据路由/请求推导视图名称并渲染。
         $this->view = get_view_file($this->request);
         $payload    = array_merge(
             $this->payload(),

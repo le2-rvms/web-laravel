@@ -37,6 +37,7 @@ class StatisticsController extends Controller
             $data = $validator->getData();
 
             if (!isset($data['dimension'])) {
+                // 默认按月维度统计。
                 $data['dimension'] = Dimension::MONTH;
 
                 $validator->setData($data);
@@ -173,6 +174,7 @@ class StatisticsController extends Controller
         $result = [];
         foreach ($sql_array as [$permission,$sql,$sql_opt]) {
             if (!$admin->can($permission)) {
+                // 没有权限的统计项直接跳过。
                 continue;
             }
 
@@ -186,6 +188,7 @@ class StatisticsController extends Controller
                 $sql = preg_replace('/to_char\((.+?),\s?\'(.+?)\'\)/', "to_char($1, '{$format}')", $sql);
             }
 
+            // 将时间条件注入 SQL 进行时间窗口过滤。
             $sql = preg_replace('/1=1/', "{$column} between DATE '{$startDate}' and DATE '{$endDate}' ", $sql);
 
             $sql_value = DB::select($sql);

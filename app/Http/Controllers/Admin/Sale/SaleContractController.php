@@ -148,6 +148,7 @@ class SaleContractController extends Controller
         ;
 
         if ($saleContract) {
+            // 续租：基于原合同预填数据并生成新合同号与起租日期。
             $saleContract->renew = $saleContract->toArray();
 
             $saleContract->sc_group_id = $saleContract->sc_id;
@@ -489,7 +490,7 @@ class SaleContractController extends Controller
 
         $input = $input1 + $input2 + $input;
 
-        // 修正 sc_group_no
+        // 续租合同沿用 group_no 并递增序号；新合同以自身编号作为组号。
         if ($renewScContract) {
             $input['sc_group_no']  = $renewScContract->sc_group_no ?? $renewScContract->sc_no;
             $input['sc_group_seq'] = $renewScContract->sc_group_seq ? $renewScContract->sc_group_seq + 1 : 1;
@@ -514,6 +515,7 @@ class SaleContractController extends Controller
             $fix['sc_rental_days'] = Carbon::parse($input['sc_start_date'])->diffInDays(Carbon::parse($input['sc_end_date']), true) + 1;
         }
 
+        // 合同、付款计划、车辆状态需要保持一致，使用事务处理。
         DB::transaction(function () use ($fix, &$input, &$saleContract) {
             /** @var SaleContract $saleContract */
             if (null === $saleContract) {
@@ -528,6 +530,7 @@ class SaleContractController extends Controller
             }
 
             if (ScRentalType::LONG_TERM === $saleContract->sc_rental_type->value) {
+                // 长租合同：重新生成付款计划。
                 $saleContract->Payments()->delete();
 
                 foreach ($input['payments'] as $payment) {
@@ -535,6 +538,7 @@ class SaleContractController extends Controller
                 }
             }
 
+            // 车辆锁定为已预定，防止被重复分配。
             $saleContract->Vehicle->updateStatus(ve_status_rental: VeStatusRental::RESERVED);
         });
 
@@ -613,6 +617,8 @@ class SaleContractController extends Controller
 
         $currentDate = $startDate->copy();
 
+        // 关键约束：账期按 interval 切分且首期可叠加免租天数；预付/后付付款日必须落在本期允许范围内，
+        // 周/日付款日会按当前账期回退/前移到合法日期，以保证账期边界一致。
         while (true) {
             // 计算账单周期
             $billingPeriodStart = $currentDate->copy();

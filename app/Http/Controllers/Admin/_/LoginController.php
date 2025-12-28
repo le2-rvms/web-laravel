@@ -37,6 +37,7 @@ class LoginController extends Controller
 
         if (method_exists($this, 'hasTooManyLoginAttempts')
             && $this->hasTooManyLoginAttempts($request)) {
+            // 触发频控锁定。
             $this->fireLockoutEvent($request);
 
             return $this->sendLockoutResponse($request);
@@ -59,10 +60,12 @@ class LoginController extends Controller
             }
 
             if ($request->wantsJson()) {
+                // 同一客户端只保留一个 token。
                 // 删除用户的其他 token
                 $admin->tokens()->where('name', '=', $input['client'])->delete();
 
                 $expiresAt = match ($input['client']) {
+                    // 不同客户端设置不同过期策略。
                     AdminLoginClientEnum::H5->value => Carbon::now()->addHours(12),
                     AdminLoginClientEnum::MP->value => Carbon::now()->addYears(10),
                 };

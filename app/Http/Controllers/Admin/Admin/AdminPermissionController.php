@@ -29,6 +29,7 @@ class AdminPermissionController extends Controller
         $this->options(true);
         $this->response()->withExtras();
 
+        // 预加载角色关联，避免列表页 N+1。
         $query = AdminPermission::query()
             ->orderBy('name')
             ->with('roles')
@@ -44,6 +45,7 @@ class AdminPermissionController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
+                    // 支持按权限名/标题模糊查询。
                     $builder->where('name', 'like', '%'.$value.'%')
                         ->orWhere('title', 'like', '%'.$value.'%')
                     ;
@@ -105,6 +107,7 @@ class AdminPermissionController extends Controller
     public function destroy(AdminPermission $admin_permission): Response
     {
         DB::transaction(function () use (&$admin_permission) {
+            // 删除权限前清理关联表，避免残留关系。
             DB::table('model_has_permissions')->where('permission_id', $admin_permission->id)->delete();
             DB::table('role_has_permissions')->where('permission_id', $admin_permission->id)->delete();
             $admin_permission->delete();

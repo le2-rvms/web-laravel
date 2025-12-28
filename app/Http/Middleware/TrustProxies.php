@@ -20,6 +20,7 @@ class TrustProxies extends Middleware
      * @var int
      */
     protected $headers
+        // Honor standard X-Forwarded-* headers from trusted proxies.
         = Request::HEADER_X_FORWARDED_FOR
         | Request::HEADER_X_FORWARDED_HOST
         | Request::HEADER_X_FORWARDED_PORT

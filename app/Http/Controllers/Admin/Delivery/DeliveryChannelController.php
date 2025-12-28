@@ -47,6 +47,7 @@ class DeliveryChannelController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
+                    // 按消息标题关键字过滤。
                     $builder->where('dc.dc_title', 'like', '%'.$value.'%');
                 });
             },
@@ -65,6 +66,7 @@ class DeliveryChannelController extends Controller
         ]);
 
         $this->response()->withExtras(
+            // 提供默认模板 key 以便快速创建。
             DcKeyDefault::kv(),
         );
 

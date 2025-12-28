@@ -291,6 +291,7 @@ class VehicleInspectionController extends Controller
                     $input
                 );
 
+                // 根据验车类型同步车辆调度状态与用车区间。
                 switch ($vehicleInspection->vi_inspection_type) {
                     case ViInspectionType::SC_DISPATCH:
                     case ViInspectionType::VR_DISPATCH:
@@ -307,6 +308,7 @@ class VehicleInspectionController extends Controller
 
                     case ViInspectionType::SC_RETURN:
                     case ViInspectionType::VR_RETURN:
+                        // 归还时关闭当前用车区间。
                         $update_ve = $vehicleInspection->Vehicle->updateStatus(
                             ve_status_dispatch: VeStatusDispatch::NOT_DISPATCHED
                         );
@@ -336,6 +338,7 @@ class VehicleInspectionController extends Controller
                     $Payment = $vehicleInspection->PaymentAll;
                     if ($Payment && $Payment->exists) {
                         if (PPayStatus::PAID === $Payment->p_pay_status->value) {
+                            // 已支付的财务记录禁止改动，避免对账不一致。
                             $Payment->fill($input_payment);
                             if ($Payment->isDirty()) {
                                 throw new ClientException('财务信息已支付，不能做修改。'); // 不能修改财务记录的判断：修改状态 + 收款数据存在 + 收款记录为已支付 + 收款记录要做更新($model->isDirty()) =>
@@ -347,6 +350,7 @@ class VehicleInspectionController extends Controller
                         $vehicleInspection->Payment()->create($input_payment);
                     }
                 } else {
+                    // 关闭财务记录时，仅作废未支付款项。
                     $vehicleInspection->Payment()
                         ->where('p_pay_status', '=', PPayStatus::UNPAID)
                         ->update(['p_is_valid' => PIsValid::INVALID])
@@ -377,6 +381,7 @@ class VehicleInspectionController extends Controller
         ;
 
         $this->response()->withExtras(
+            // 根据验车类型筛选可选合同/车辆状态。
             match ($input['vi_inspection_type']) {
                 ViInspectionType::SC_DISPATCH => SaleContract::options(
                     where: function (Builder $builder) {

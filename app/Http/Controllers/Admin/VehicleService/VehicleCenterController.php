@@ -66,6 +66,7 @@ class VehicleCenterController extends Controller
         $this->options();
 
         $vehicleCenter = new VehicleCenter([
+            // 默认启用修理厂。
             'vc_status' => VcStatus::ENABLED,
         ]);
 
@@ -102,6 +103,7 @@ class VehicleCenterController extends Controller
             Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
                 $builder->role(AdminRole::role_vehicle_service);
             }),
+            // 展示该修理厂关联的维修/保养/出险记录。
             VehicleRepair::indexList(function (Builder $query) use ($vehicleCenter) {
                 $query->where('vr.vr_vc_id', '=', $vehicleCenter->vc_id);
             }),
@@ -128,8 +130,9 @@ class VehicleCenterController extends Controller
                 'vc_contact_phone' => ['bail', 'nullable', 'string', 'max:32'],
                 'vc_status'        => ['bail', 'required', Rule::in(VcStatus::label_keys())],
                 'vc_note'          => ['bail', 'nullable', 'string', 'max:255'],
-                'vc_permitted'     => ['bail', 'nullable', 'array'],
-                'vc_permitted.*'   => ['bail', 'integer'],
+                // 允许访问该修理厂的员工列表（ID 数组）。
+                'vc_permitted'   => ['bail', 'nullable', 'array'],
+                'vc_permitted.*' => ['bail', 'integer'],
                 //                'contact_mobile'        => ['bail', 'nullable', 'string', 'max:32'],
             ],
             [],

@@ -38,6 +38,7 @@ class MockController extends Controller
                 'mock' => ['该用户不能被体验'],
             ]);
         }
+        // 构造体验用户并写入临时缓存 token。
         $admin = $mock;
         $admin->forceFill([
             '_is_mock' => true,

@@ -32,6 +32,7 @@ class CustomerCompany extends Model
 {
     use ModelTrait;
 
+    // 使用自定义时间戳字段。
     public const CREATED_AT = 'cuc_created_at';
     public const UPDATED_AT = 'cuc_updated_at';
     public const UPDATED_BY = 'cuc_updated_by';
@@ -42,6 +43,7 @@ class CustomerCompany extends Model
 
     public function Customer(): BelongsTo
     {
+        // 关联主客户信息。
         return $this->belongsTo(Customer::class, 'cuc_cu_id', 'cu_id');
     }
 

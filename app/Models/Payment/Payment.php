@@ -166,6 +166,7 @@ class Payment extends Model
                 DB::raw(PIsValid::toCaseSQL()),
                 DB::raw(PIsValid::toColorSQL()),
                 DB::raw(PShouldPayDate_DDD::toCaseSQL(true, 'p.p_should_pay_date')),
+                // 业务规则：仅有效记录且合同状态处于可收款范围内时标记为可收。
                 DB::raw((function () {
                     return sprintf(
                         "(p.p_is_valid in ('%s') and  sc.sc_status in ('%s')) as can_pay",

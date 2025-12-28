@@ -16,6 +16,8 @@ class InitController extends Controller
 
     public function index(Request $request): Response
     {
+        // 前端初始化所需的环境信息。
+        // 字段名与前端约定保持一致，便于直接消费。
         $data = [
             'app_is_prod' => app()->isProduction(),
             'app_env'     => app()->environment(),

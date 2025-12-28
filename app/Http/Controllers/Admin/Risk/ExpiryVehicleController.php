@@ -26,6 +26,7 @@ class ExpiryVehicleController extends Controller
 
         $paginate = new PaginateService(
             [],
+            // 按证照到期时间升序，便于优先处理。
             [['ve.ve_license_valid_until_date', 'asc']],
             [],
             []
@@ -36,6 +37,7 @@ class ExpiryVehicleController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
+    // 资源路由占位：仅提供列表查询。
     public function create() {}
 
     public function store(Request $request) {}

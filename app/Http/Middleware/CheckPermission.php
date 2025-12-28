@@ -22,12 +22,13 @@ class CheckPermission
         $actionArray = explode('@', $actionName);
 
         if (2 !== sizeof($actionArray)) {
+            // 非控制器 action（如闭包路由）直接放行。
             return true;
         }
 
         [$controllerName, $method] = $actionArray;
 
-        // 反射获取方法注解
+        // 反射读取方法上的 PermissionAction 注解。
         $actionName_ = str_replace('@', '::', $actionName);
 
         try {
@@ -45,6 +46,7 @@ class CheckPermission
         /** @var PermissionAction $permissionAttributeIns */
         $permissionAttributeIns = $permissionAttributes[0]->newInstance();
 
+        // 权限名格式：ControllerShortName::ACTION。
         $controller_shortname = preg_replace('{Controller$}', '', class_basename($controllerName));
 
         $admin = Auth::user();

@@ -118,6 +118,7 @@ class PaginateService
 
     protected function searchBuilder($searchMap = null)
     {
+        // 查询参数约定：field__op 形式驱动过滤，kw 视为关键词通道。
         foreach ($this->param as $key => &$value) {
             if (null === $value) {
                 continue;

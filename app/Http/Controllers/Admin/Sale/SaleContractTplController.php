@@ -111,27 +111,30 @@ class SaleContractTplController extends Controller
             trans_property(SaleContractTpl::class)
         );
 
+        // 长租与短租字段规则不同，后续校验基于该开关。
         $is_long_term = SctRentalType::LONG_TERM === $input1['sct_rental_type'];
 
         $input = Validator::make(
             $request->all(),
             [
-                'sct_name'                            => ['bail', 'required', 'max:255'],
-                'sct_no_prefix'                       => ['bail', 'nullable', 'string', 'max:50'],
-                'sct_free_days'                       => ['bail', 'nullable', 'int:4'],
-                'sct_installments'                    => ['bail', 'nullable', 'integer', 'min:1'],
-                'sct_deposit_amount'                  => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'sct_management_fee_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
-                'sct_rent_amount'                     => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sct_name'                  => ['bail', 'required', 'max:255'],
+                'sct_no_prefix'             => ['bail', 'nullable', 'string', 'max:50'],
+                'sct_free_days'             => ['bail', 'nullable', 'int:4'],
+                'sct_installments'          => ['bail', 'nullable', 'integer', 'min:1'],
+                'sct_deposit_amount'        => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sct_management_fee_amount' => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                'sct_rent_amount'           => ['bail', 'nullable', 'decimal:0,2', 'gte:0'],
+                // 短租专用费用字段，长租场景排除。
                 'sct_insurance_base_fee_amount'       => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
                 'sct_insurance_additional_fee_amount' => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
                 'sct_other_fee_amount'                => ['bail', Rule::excludeIf($is_long_term), 'nullable', 'decimal:0,2', 'gte:0'],
-                'sct_payment_day'                     => ['bail', 'nullable', 'integer', new PaymentDayCheck($input1['sct_payment_period'])],
-                'sct_cus_1'                           => ['bail', 'nullable', 'max:255'],
-                'sct_cus_2'                           => ['bail', 'nullable', 'max:255'],
-                'sct_cus_3'                           => ['bail', 'nullable', 'max:255'],
-                'sct_discount_plan'                   => ['bail', 'nullable', 'max:255'],
-                'sct_remark'                          => ['bail', 'nullable', 'max:255'],
+                // 付款日校验依赖付款周期类型。
+                'sct_payment_day'   => ['bail', 'nullable', 'integer', new PaymentDayCheck($input1['sct_payment_period'])],
+                'sct_cus_1'         => ['bail', 'nullable', 'max:255'],
+                'sct_cus_2'         => ['bail', 'nullable', 'max:255'],
+                'sct_cus_3'         => ['bail', 'nullable', 'max:255'],
+                'sct_discount_plan' => ['bail', 'nullable', 'max:255'],
+                'sct_remark'        => ['bail', 'nullable', 'max:255'],
             ]
             + Uploader::validator_rule_upload_array('sct_additional_photos')
             + Uploader::validator_rule_upload_object('sct_additional_file'),

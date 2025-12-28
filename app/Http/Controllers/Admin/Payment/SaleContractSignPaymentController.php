@@ -58,7 +58,7 @@ class SaleContractSignPaymentController extends Controller
             ;
             $saleContract->load('Customer', 'Vehicle', 'Payments', 'Payments.SaleContract', 'Payments.PaymentType', 'SignPayments');
 
-            // 补充 实收押金
+            // 补充「实收」字段，便于前端直接回显。
             if (ScRentalType::LONG_TERM == $saleContract->sc_rental_type->value) {
                 $saleContract->sc_deposit_amount_true        = $saleContract->sc_deposit_amount ?? '0.00';
                 $saleContract->sc_management_fee_amount_true = $saleContract->sc_management_fee_amount ?? '0.00';
@@ -69,7 +69,7 @@ class SaleContractSignPaymentController extends Controller
             }
             $saleContract->sc_actual_pay_date = now()->format('Y-m-d');
 
-            // 押金转移支付
+            // 查找可用的退押金记录，用于押金转移支付。
 
             $payment_refund_deposit = Payment::indexQuery()
 //                    ->where('p_sc_id', '=', $saleContractPre->sc_id)
@@ -129,7 +129,7 @@ class SaleContractSignPaymentController extends Controller
                     return;
                 }
 
-                // 押金支付
+                // 押金转移支付校验：记录必须与当前客户匹配且金额一致。
                 if ($request->boolean('payment_refund_deposit.checked')) {
                     $payment_refund_deposit = Payment::query()
                         ->whereHas('SaleContract', function (\Illuminate\Database\Eloquent\Builder $query) use ($saleContract) {
@@ -157,14 +157,17 @@ class SaleContractSignPaymentController extends Controller
         ;
 
         DB::transaction(function () use (&$payment_refund_deposit, $saleContract, &$input) {
+            // 关键一致性：押金转移需在同一事务内完成（原退押金置为无需支付 + 新建抵扣收款），
+            // 抵扣记录使用负数实际金额用于对冲原押金。
             if ($input['payment_refund_deposit']['checked'] ?? false) {
+                // 将退押金记录改为无需支付，并生成一笔押金收款抵扣。
                 $payment_refund_deposit->update([
                     'p_pay_status'        => PPayStatus::NO_NEED_PAY,
                     'p_actual_pay_date'   => $saleContract->sc_start_date,
                     'p_actual_pay_amount' => $payment_refund_deposit->p_should_pay_amount,
                 ]);
 
-                // 因为直接 insert，所以不会调用 PaymentObserver
+                // 直接创建记录不会触发 PaymentObserver，因此在这里补齐字段。
                 Payment::query()->create([
                     'p_sc_id'             => $saleContract->sc_id,
                     'p_pt_id'             => PPtId::DEPOSIT,
@@ -182,6 +185,7 @@ class SaleContractSignPaymentController extends Controller
                 $should_pay_amount = $input[$label];
                 $actual_pay_amount = $input[$label.'_true'] ?? null;
                 if ((null !== $actual_pay_amount && bccomp($actual_pay_amount, '0', 2) > 0) || (null === $actual_pay_amount && bccomp($should_pay_amount, '0', 2) > 0)) {
+                    // 仅对有金额的费用项生成收款记录。
                     Payment::query()->updateOrCreate([
                         'p_sc_id' => $saleContract->sc_id,
                         'p_pt_id' => $pt_id,
@@ -201,6 +205,7 @@ class SaleContractSignPaymentController extends Controller
                 'sc_signed_at' => now(),
             ]);
 
+            // 签约完成后车辆进入租赁状态。
             $saleContract->Vehicle->updateStatus(ve_status_rental: VeStatusRental::RENTED);
         });
 

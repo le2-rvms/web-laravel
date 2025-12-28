@@ -65,6 +65,7 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
+        // Register flow provisions admin users for the web-admin area.
         return Admin::create([
             'name'     => $data['name'],
             'email'    => $data['email'],

@@ -14,6 +14,7 @@ class CheckAdminIsMock
         $admin = $request->user();
         if ($admin->_is_mock ?? false) {
             $method = $request->method();
+            // 体验账号仅允许只读请求。
             if (!in_array($method, ['GET'])) {
                 abort(403, '体验模式禁止此操作！');
             }

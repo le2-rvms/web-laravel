@@ -32,6 +32,7 @@ class AdminRoleController extends Controller
         $this->response()->withExtras();
 
         $query = AdminRole::query()
+            // 超级角色不展示在列表中。
             ->where('name', '!=', config('setting.super_role.name'))
             ->with('permissions')
         ;
@@ -81,10 +82,12 @@ class AdminRoleController extends Controller
         ;
 
         DB::transaction(function () use (&$input) {
+            // 自定义角色统一标记为 ar_is_custom=YES。
             $admin_role = AdminRole::create($input + ['guard_name' => 'web', 'ar_is_custom' => ArIsCustom::YES]);
 
             $permissions = $input['_permissions'] ?? [];
             if ($permissions) {
+                // 创建时直接赋权。
                 foreach ($permissions as $item) {
                     $admin_role->givePermissionTo($item);
                 }
@@ -99,6 +102,7 @@ class AdminRoleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function edit(Request $request, AdminRole $admin_role): Response
     {
+        // 超级角色不可编辑。
         abort_if(config('setting.super_role.name') == $admin_role->name, 403, 'You Cannot Edit Super Admin Role!');
 
         $this->response()->withExtras(
@@ -109,6 +113,7 @@ class AdminRoleController extends Controller
 
         $admin_role->_permissions = $permissions->pluck('name')->toArray();
 
+        // 按权限分组，供前端按模块展示。
         $groupedPermissions = $permissions->groupBy(fn ($row) => $row->group_name)
             ->map(
                 fn ($group) => $group->pluck('name')->values()
@@ -137,6 +142,7 @@ class AdminRoleController extends Controller
             ->validate()
         ;
 
+        // 超级角色不可编辑。
         abort_if(config('setting.super_role.name') == $admin_role->name, 403, 'You Cannot Edit Super Admin Role!');
 
         DB::transaction(function () use (&$input, &$admin_role) {
@@ -155,6 +161,7 @@ class AdminRoleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(AdminRole $admin_role): Response
     {
+        // 超级角色不可删除。
         abort_if(config('setting.super_role.name') == $admin_role->name, 403, 'You Cannot delete Super Admin Role!');
 
         DB::transaction(function () use (&$admin_role) {

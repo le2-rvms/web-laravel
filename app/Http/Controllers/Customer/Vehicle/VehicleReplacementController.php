@@ -26,12 +26,15 @@ class VehicleReplacementController extends Controller
 
         $auth = auth();
 
+        // 按当前客户过滤临时换车记录，使用游标分页。
         $data = VehicleTmp::indexQuery()
+            // 仅查询当前客户的临时换车记录。
             ->where('sc.sc_cu_id', '=', $auth->id())
             ->when(
                 $request->query('last_id'),
                 function (Builder $query) use ($request) {
-                    $query->where('vr.vr_id', '<', $request->query('last_id'));
+                    // 基于 last_id 的游标分页。
+                    $query->where('vt.vt_id', '<', $request->query('last_id'));
                 }
             )
             ->forPage(1, $perPage)

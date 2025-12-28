@@ -6,5 +6,6 @@ use Laravel\Sanctum\PersonalAccessToken as SanctumPersonalAccessToken;
 
 class PersonalAccessToken extends SanctumPersonalAccessToken
 {
-    protected $table = '_personal_access_tokens'; // 这里改成你想要的表名
+    // 使用自定义 token 表名。
+    protected $table = '_personal_access_tokens';
 }

@@ -18,6 +18,7 @@ class ExpiryVehicleController extends Controller
 
     public function index(Request $request): Response
     {
+        // 简单页码分页，保持接口轻量。
         $page = $request->input('page', 1);
 
         $perPage = 20;
@@ -27,6 +28,7 @@ class ExpiryVehicleController extends Controller
         );
 
         $data = ExpiryVehicle::indexQuery()
+            // 仅显示客户当前合同关联的车辆。
             ->whereIn('ve.ve_id', SaleContract::CustomerHasVeId())
             ->forPage($page, $perPage)
             ->get()

@@ -17,8 +17,8 @@ class StorageController extends Controller
 
     public function downloadShare(Request $request, $filename): BinaryFileResponse
     {
-        // Laravel 的 signed 中间件已校验签名并处理过期
-        // 但如需在方法内再次校验，可用：
+        // Laravel 的 signed 中间件已校验签名并处理过期。
+        // 如需在方法内再次校验，可用：
         if (!$request->hasValidSignature()) {
             abort(403, '无效或已过期的下载链接。');
         }
@@ -34,7 +34,7 @@ class StorageController extends Controller
         // 拿到绝对路径
         $tmpPathFull = $diskLocal->path($tmpPath);
 
-        // 返回下载响应，并在发送完毕后删除文件
+        // 返回下载响应，并在发送完毕后删除临时文件
         return response()
             ->file($tmpPathFull)
             ->deleteFileAfterSend(true)
@@ -43,8 +43,8 @@ class StorageController extends Controller
 
     public function downloadTmp(Request $request, $filename): BinaryFileResponse
     {
-        // Laravel 的 signed 中间件已校验签名并处理过期
-        // 但如需在方法内再次校验，可用：
+        // Laravel 的 signed 中间件已校验签名并处理过期。
+        // 如需在方法内再次校验，可用：
         if (!$request->hasValidSignature()) {
             abort(403, '无效或已过期的下载链接。');
         }
@@ -60,7 +60,7 @@ class StorageController extends Controller
         // 拿到绝对路径
         $tmpPathFull = $diskLocal->path($tmpPath);
 
-        // 返回下载响应，并在发送完毕后删除文件
+        // 返回下载响应，并在发送完毕后删除临时文件
         return response()
             ->file($tmpPathFull)
             ->deleteFileAfterSend(true)

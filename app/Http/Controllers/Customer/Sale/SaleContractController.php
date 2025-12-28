@@ -26,11 +26,14 @@ class SaleContractController extends Controller
 
         $auth = auth();
 
+        // 按当前客户过滤合同，使用游标分页。
         $data = SaleContract::indexQuery()
+            // 仅查询当前客户的合同。
             ->where('cu.cu_id', '=', $auth->id())
             ->when(
                 $request->query('last_id'),
                 function (Builder $query) use ($request) {
+                    // 基于 last_id 的游标分页。
                     $query->where('sc.sc_id', '<', $request->query('last_id'));
                 }
             )

@@ -26,6 +26,7 @@ class PaymentAccount extends Model
 {
     use ModelTrait;
 
+    // 使用自定义时间戳字段。
     public const CREATED_AT = 'pa_created_at';
     public const UPDATED_AT = 'pa_updated_at';
     public const UPDATED_BY = 'pa_updated_by';
@@ -35,6 +36,7 @@ class PaymentAccount extends Model
     protected $guarded = ['pa_id'];
 
     protected $casts = [
+        // 状态枚举与金额格式化。
         'pa_status'  => PaStatus::class,
         'pa_balance' => 'decimal:2',
     ];
@@ -45,6 +47,7 @@ class PaymentAccount extends Model
             ->from('payment_accounts', 'pa')
             ->select('*')
             ->addSelect(
+                // 附加枚举标签与颜色字段。
                 DB::raw(PaStatus::toCaseSQL()),
                 DB::raw(PaStatus::toColorSQL()),
             )
@@ -56,6 +59,7 @@ class PaymentAccount extends Model
         $key = static::getOptionKey($key);
 
         $value = static::query()->toBase()
+            // 下拉仅展示可用账户。
             ->where('pa_status', '!=', PaStatus::DISABLED)
             ->select(DB::raw('pa_name as text,pa_id as value'))->get()
         ;

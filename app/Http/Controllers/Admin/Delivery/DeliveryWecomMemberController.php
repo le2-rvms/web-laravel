@@ -29,6 +29,7 @@ class DeliveryWecomMemberController extends Controller
         $this->response()->withExtras(
         );
 
+        // 拉取成员列表以配置企业微信展示名。
         $items = Admin::indexQuery()
             ->select('id', 'name', 'a_wecom_name')
             ->orderByDesc('a.id')
@@ -59,10 +60,12 @@ class DeliveryWecomMemberController extends Controller
             ->validate()
         ;
 
+        // 批量更新成员配置，并清理未提交条目。
         DB::transaction(function () use (&$input) {
             foreach ($input['items'] as $item) {
                 Admin::query()->find($item['id'])->update($item);
             }
+            // 未在提交列表内的成员将被删除，避免残留无效配置。
             Admin::query()->whereNotIn('id', array_column($input['items'], 'id'))->delete();
         });
 

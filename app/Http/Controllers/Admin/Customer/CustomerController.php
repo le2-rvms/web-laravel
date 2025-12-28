@@ -59,6 +59,7 @@ class CustomerController extends Controller
 
         // 车队作为查询条件
         if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
+            // 车队受限时仅展示所属车队或未分配车队客户。
             $query->where(function (Builder $query) use ($admin) {
                 $query->whereIn('cu.cu_team_id', $admin->a_team_ids)->orWhereNull('cu.cu_team_id');
             });
@@ -67,6 +68,7 @@ class CustomerController extends Controller
         // 如果是管理员或经理，则可以看到所有的用户；如果不是管理员或经理，则只能看到销售或驾管为自己的用户。
         $role_sales_manager = $admin->hasRole(AdminRole::role_sales);
         if ($role_sales_manager) {
+            // 销售角色仅展示本人负责的客户。
             $query->where(function (Builder $query) use ($admin) {
                 $query->whereNull('cu.cu_sales_manager')->orWhere('cu.cu_sales_manager', '=', $admin->id);
             });
@@ -74,6 +76,7 @@ class CustomerController extends Controller
 
         $has_role_driver = $admin->hasRole(AdminRole::role_driver_mgr);
         if ($has_role_driver) {
+            // 驾管角色仅展示本人负责的客户。
             $query->where(function (Builder $query) use ($admin) {
                 $query->whereNull('cu.cu_driver_manager')->orWhere('cu.cu_driver_manager', '=', $admin->id);
             });
@@ -156,6 +159,7 @@ class CustomerController extends Controller
             trans_property(Customer::class),
         )->validate();
 
+        // 根据客户类型选择不同的字段校验规则。
         $validator = match ($input0['cu_type']) {
             CuType::INDIVIDUAL => Validator::make(
                 $request->all(),
@@ -211,6 +215,7 @@ class CustomerController extends Controller
 
             switch ($customer->cu_type) {
                 case CuType::INDIVIDUAL:
+                    // 切换为个人客户时清理公司信息。
                     $customer->CustomerCompany()->delete();
 
                     $input_individual = $input['customer_individual'] ?? [];
@@ -225,6 +230,7 @@ class CustomerController extends Controller
                     break;
 
                 case CuType::COMPANY:
+                    // 切换为企业客户时清理个人信息。
                     $customer->CustomerIndividual()->delete();
 
                     $input_company = $input['customer_company'];

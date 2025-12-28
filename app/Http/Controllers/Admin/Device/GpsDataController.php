@@ -46,6 +46,7 @@ class GpsDataController extends Controller
                 $start = Carbon::parse($request->input('db_start_at'));
                 $end   = Carbon::parse($request->input('db_end_at'));
 
+                // 限制查询窗口，避免扫描过大轨迹区间。
                 if ($end->gt($start->copy()->addDays(3))) {
                     $validator->errors()->add('db_end_at', '开始与结束的时间间隔不能超过 3 天。');
                 }
@@ -74,6 +75,7 @@ SQL,
         );
 
         if (!$winRows) {
+            // 该时间段内没有设备绑定记录。
             throw ValidationException::withMessages([
                 've_id' => '车辆在该时间段内无绑定信息',
             ]);

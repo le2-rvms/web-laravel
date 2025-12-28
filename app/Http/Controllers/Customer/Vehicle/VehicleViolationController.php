@@ -26,11 +26,14 @@ class VehicleViolationController extends Controller
 
         $auth = auth();
 
+        // 按当前客户筛选违章记录，使用游标分页。
         $data = VehicleViolation::indexQuery()
+            // 仅查询当前客户的违章记录。
             ->where('sc.sc_cu_id', '=', $auth->id())
             ->when(
                 $request->query('last_id'),
                 function (Builder $query) use ($request) {
+                    // 基于 last_id 的游标分页。
                     $query->where('vv.vv_id', '<', $request->query('last_id'));
                 }
             )

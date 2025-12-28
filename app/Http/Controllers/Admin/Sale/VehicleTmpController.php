@@ -86,6 +86,7 @@ class VehicleTmpController extends Controller
 
                     $vehicle0 = $saleContract->Vehicle;
 
+                    // 仅租赁中的车辆允许申请临时换车。
                     $pass = $vehicle0->check_status(VeStatusService::YES, [VeStatusRental::RENTED], [], $validator);
                     if (!$pass) {
                         return;
@@ -182,6 +183,7 @@ class VehicleTmpController extends Controller
                 ->create($input + ['vt_current_ve_id' => $saleContract->sc_ve_id])
             ;
 
+            // 根据变更状态同步合同临时车字段。
             switch ($input['vt_change_status']) {
                 case VtChangeStatus::IN_PROGRESS:
                     $saleContract->sc_ve_id_tmp = $vehicle->ve_id;
@@ -196,6 +198,7 @@ class VehicleTmpController extends Controller
                     break;
             }
 
+            // 新车进入租赁状态，避免被再次分配。
             $vehicle->updateStatus(ve_status_rental: VeStatusRental::RENTED);
         });
 
@@ -245,6 +248,7 @@ class VehicleTmpController extends Controller
             if ($change_status_changed) {
                 $saleContract = $vehicleTmp->SaleContract;
 
+                // 状态变更时同步合同临时车字段。
                 switch ($input['vt_change_status']) {
                     case VtChangeStatus::IN_PROGRESS:
                         $saleContract->sc_ve_id_tmp = $vehicleTmp->vt_new_ve_id;

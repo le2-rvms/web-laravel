@@ -73,6 +73,7 @@ class TableLogTriggersCreate extends Command
 
     protected function deployFunction(): void
     {
+        // 关键约束：基于配置传入的单列主键名，用 row_to_json 提取主键并写入审计表。
         $sql = <<<SQL
 CREATE OR REPLACE FUNCTION {$this->auditSchema}.{$this->auditFunction}()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$

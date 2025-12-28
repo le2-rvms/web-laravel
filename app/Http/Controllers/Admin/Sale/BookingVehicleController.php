@@ -31,6 +31,7 @@ class BookingVehicleController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
+        // 预填常用字段，简化新建录入。
         $bookingVehicles = new BookingVehicle([
             'bv_type'              => BvType::WEEKLY_RENT,
             'bv_registration_date' => date('Y-m-d'),
@@ -102,6 +103,7 @@ class BookingVehicleController extends Controller
         $input = Validator::make(
             $request->all(),
             [
+                // 新建时可设置，修改时不可变更（下单关联依赖）。
                 'bv_type'               => ['bail', Rule::excludeIf(null !== $bookingVehicle), 'required', Rule::in(BvType::label_keys())],
                 'bv_plate_no'           => ['bail', Rule::excludeIf(null !== $bookingVehicle), 'required', 'string', Rule::exists(Vehicle::class, 've_plate_no')->where('ve_status_service', VeStatusService::YES)],
                 'bv_pickup_date'        => ['bail', 'required', 'nullable', 'date'],
@@ -129,6 +131,7 @@ class BookingVehicleController extends Controller
         ;
 
         if (null === $bookingVehicle) {
+            // 新建后默认上架，记录上架时间。
             $bookingVehicle = BookingVehicle::query()->create($input + ['bv_is_listed' => BvIsListed::LISTED, 'bv_listed_at' => now()]);
         } else {
             $bookingVehicle->update($input);

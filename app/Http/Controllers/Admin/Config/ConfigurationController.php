@@ -22,6 +22,7 @@ abstract class ConfigurationController extends Controller
     public function __construct()
     {
         if (null !== $this->usageCategory) {
+            // 将使用场景注入响应，供前端过滤/跳转。
             $this->response()->withExtras(
                 [
                     'uc' => $this->usageCategory,
@@ -82,6 +83,7 @@ abstract class ConfigurationController extends Controller
 
         $configuration->fill($input);
 
+        // 二次确认页，避免误操作。
         return view('config.edit_confirm', compact('input', 'configuration'));
     }
 
@@ -101,6 +103,7 @@ abstract class ConfigurationController extends Controller
     public function destroy(Configuration $configuration): Response
     {
         DB::transaction(function () use ($configuration) {
+            // 仅允许删除当前 usageCategory 下的数据。
             if ($configuration->cfg_usage_category->value === $this->usageCategory) {
                 $configuration->deleteOrFail();
             }
@@ -129,6 +132,7 @@ abstract class ConfigurationController extends Controller
 
         $configuration = new Configuration($input);
 
+        // 二次确认页，避免误操作。
         return view('config.create_confirm', compact('input', 'configuration'));
     }
 
@@ -137,6 +141,7 @@ abstract class ConfigurationController extends Controller
         $input = $this->validatedCreateRequest($request);
 
         DB::transaction(function () use ($input) {
+            // 强制写入当前 usageCategory，避免越权写入其他分类。
             $configuration = Configuration::query()->create($input + ['cfg_usage_category' => $this->usageCategory]); // todo 改为前端要传，控制器要验证。
         });
 

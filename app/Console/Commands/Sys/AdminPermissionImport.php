@@ -49,6 +49,7 @@ class AdminPermissionImport extends Command
             $this->info("Language package file generated at {$filePath}");
         })();
 
+        // 关键一致性：权限以代码为准，事务内锁定后差异化更新/删除，避免并发时权限闪断。
         DB::transaction(function () {
             $permissionNames = Permission::query()->lockForUpdate()->get()->pluck('', 'name')->keys()->toArray();
 

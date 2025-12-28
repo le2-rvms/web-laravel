@@ -34,6 +34,7 @@ class OneAccountController extends Controller
             OaProvince::options(),
         );
 
+        // 创建页仅需选项，表单由前端初始化。
         return $this->response()->respond();
     }
 
@@ -107,6 +108,7 @@ class OneAccountController extends Controller
         if (null === $oneAccount) {
             $oneAccount = OneAccount::query()->create($input);
         } else {
+            // 修改账号信息后清空刷新时间，提示重新获取/刷新 cookie。
             $input['oa_cookie_refresh_at'] = null;
             $oneAccount->update($input);
         }

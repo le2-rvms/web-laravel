@@ -68,7 +68,7 @@ class S3FilesClean extends Command
                         continue;
                     }
 
-                    // 提取 'path_' 字段,直接追加到 $dbFiles
+                    // 约定：*_photo/*_file 为单对象，*_photos/*_files 为数组，*_info 取 info_photos；仅收集 path_ 用于比对。
                     switch ($type) {
                         case 'photo':
                         case 'file':

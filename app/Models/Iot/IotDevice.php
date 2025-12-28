@@ -26,6 +26,7 @@ class IotDevice extends Model
 {
     use ModelTrait;
 
+    // 设备信息存于独立 IoT 数据库。
     public const CREATED_AT = 'd_created_at';
     public const UPDATED_AT = 'd_updated_at';
     public const UPDATED_BY = 'd_updated_by';
@@ -50,6 +51,7 @@ class IotDevice extends Model
     {
         return Attribute::make(
             get: function (mixed $value, array $attributes) {
+                // 优先使用存储的 username，缺省拼接 d_id 与设备编码。
                 return $attributes['username'] ?? ($attributes['d_id'].'&'.$attributes['device_code']);
             },
         );

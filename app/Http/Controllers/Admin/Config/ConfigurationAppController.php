@@ -15,6 +15,7 @@ class ConfigurationAppController extends ConfigurationController
 {
     public function __construct()
     {
+        // 应用配置使用 APP 分类。
         $this->usageCategory = CfgUsageCategory::APP;
 
         parent::__construct();
@@ -23,6 +24,7 @@ class ConfigurationAppController extends ConfigurationController
     #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request)
     {
+        // 仅补充权限控制，复用基类配置列表逻辑。
         return parent::index($request);
     }
 

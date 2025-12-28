@@ -26,6 +26,7 @@ class ExpiryDriverController extends Controller
     #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request): Response
     {
+        // 默认查看未来 N 天游离到期证件的司机。
         $days = $request->input('days', 30);
 
         $targetDate = Carbon::today()->addDays($days)->toDateString();
@@ -39,12 +40,14 @@ class ExpiryDriverController extends Controller
             })
 //            ->where('cu.cu_type', CuCustomerType::INDIVIDUAL)
 //            ->where(function ($q) use ($targetDate) {
+            // 驾驶证或身份证任一到期即纳入结果。
             ->where('cui.cui_driver_license_expiry_date', '<=', $targetDate)
             ->orWhere('cui.cui_id_expiry_date', '<=', $targetDate)
 //                ;
 //            })
             ->select('cu.*', 'cui.*')
             ->addSelect(
+                // 追加枚举 label 字段，便于前端直用。
                 DB::raw(CuType::toCaseSQL()),
                 DB::raw(CuiGender::toCaseSQL()),
             )

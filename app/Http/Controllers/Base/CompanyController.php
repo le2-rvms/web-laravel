@@ -24,6 +24,7 @@ class CompanyController extends Controller
     {
         $input = Validator::make(
             ['company' => $company],
+            // 限制公司标识格式，避免路径穿越。
             ['company' => ['required', 'regex:/^[\w-]+$/']],
         )->after(function ($validator) use ($company, &$envFilePath) {
             $envFilePath = join(DIRECTORY_SEPARATOR, [
@@ -42,6 +43,7 @@ class CompanyController extends Controller
 
         $vars = Dotenv::parse($rawContent);
 
+        // 仅返回允许暴露的公司配置字段。
         $result = array_intersect_key($vars, array_flip(['COMPANY_ID', 'MOCK_ENABLE', 'COMPANY__HOST_ID', 'COMPANY__HOST_DOMAIN_BASE']));
 
         return $this->response()->withData($result)->respond();
@@ -79,6 +81,7 @@ class CompanyController extends Controller
         ;
 
         try {
+            // 发送注册申请邮件。
             Mail::to(config('mail.from.address'))
                 ->send(new CompanyRegistration($input))
             ;

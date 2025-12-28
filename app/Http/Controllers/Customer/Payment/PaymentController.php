@@ -30,17 +30,20 @@ class PaymentController extends Controller
             ['perPage' => $perPage],
             PIsValid::options(),
             PaymentType::options(function ($builder) {
+                // 仅展示启用的收付款类型。
                 $builder->where('pt_is_active', PtIsActive::ENABLED);
             }),
         );
 
         $data = Payment::indexQuery()
+            // 仅展示有效的收付记录与特定合同状态。
             ->where('p.p_is_valid', '=', PIsValid::VALID)
             ->whereIn('sc.sc_status', [ScStatus::SIGNED, ScStatus::COMPLETED, ScStatus::EARLY_TERMINATION])
             ->where('sc.sc_cu_id', '=', auth()->id())
             ->when(
                 $request->query('last_id'),
                 function (Builder $query) use ($request) {
+                    // 基于 last_id 的游标分页。
                     $query->where('p.p_id', '<', $request->query('last_id'));
                 }
             )

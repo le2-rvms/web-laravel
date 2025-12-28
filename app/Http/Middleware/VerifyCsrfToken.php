@@ -12,5 +12,6 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
+        // Add webhook endpoints here if they cannot send CSRF tokens.
     ];
 }

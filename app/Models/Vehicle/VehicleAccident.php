@@ -170,6 +170,7 @@ class VehicleAccident extends Model
                 DB::raw(VaPickupStatus::toCaseSQL()),
                 DB::raw(VaSettlementMethod::toCaseSQL()),
                 DB::raw(VaManagedVehicle::toCaseSQL()),
+                // 进/出厂间隔按进厂时间减出厂时间计算，正负取决于时间顺序。
                 DB::raw('EXTRACT(EPOCH FROM va_factory_in_dt - va_factory_out_dt) / 86400.0 as va_interval_day'),
                 DB::raw("to_char(va_accident_dt, 'YYYY-MM-DD HH24:MI') as va_accident_dt_"),
                 DB::raw("to_char(va_factory_in_dt, 'YYYY-MM-DD HH24:MI') as va_factory_in_dt_"),

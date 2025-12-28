@@ -130,6 +130,7 @@ class VehicleForceTakeController extends Controller
                     return;
                 }
 
+                // 风控收车仅允许在役车辆。
                 $pass = $vehicle->check_status(VeStatusService::YES, [], [], $validator);
                 if (!$pass) {
                     return;

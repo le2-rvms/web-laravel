@@ -44,7 +44,7 @@ class TemporaryAdmin
             return false;
         }
 
-        // 构造临时用户对象
+        // 从缓存构造临时用户对象，用于绕过 Sanctum 认证。
         $tempAdmin = new Admin();
         $tempAdmin->forceFill($adminCached);
 
@@ -52,6 +52,7 @@ class TemporaryAdmin
 
         $roles = $tempAdmin->roles;
 
+        // 无角色的临时用户不放行，避免权限缺失导致的绕过。
         if ($roles->isEmpty()) {
             return false;
         }

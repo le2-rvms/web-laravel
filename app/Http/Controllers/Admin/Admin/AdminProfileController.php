@@ -39,6 +39,7 @@ class AdminProfileController extends Controller
         $input = Validator::make(
             $request->all(),
             [
+                // 需先验证当前密码。
                 'current_password'      => ['required', 'string', 'min:8', 'current_password'],
                 'password'              => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
                 'password_confirmation' => ['required', 'string', 'min:8'],

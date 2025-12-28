@@ -93,6 +93,7 @@ class AuthController extends Controller
 
         $customer = Customer::query()->where('cu_contact_phone', $input['phone'])->first();
 
+        // 清理旧 token、生成新 token、清验证码需原子性处理。
         DB::transaction(function () use ($customer, &$token, &$cacheKey) {
             $customer->tokens()->delete();
 

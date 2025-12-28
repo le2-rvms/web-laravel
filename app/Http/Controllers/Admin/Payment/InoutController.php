@@ -27,6 +27,7 @@ class InoutController extends Controller
     {
         $this->options(true);
         $this->response()->withExtras(
+            // 账号下拉选项供筛选使用。
             PaymentAccount::options(),
         );
 
@@ -44,6 +45,7 @@ class InoutController extends Controller
             $query,
             $request,
             [
+                // Keyword search across customer, vehicle, remark, and contract.
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
                         $builder->where('cu.cu_contact_name', 'like', '%'.$value.'%')
@@ -63,6 +65,7 @@ class InoutController extends Controller
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
+            // Include counts for filter UI when requested.
             $with_group_count ? IoType::options_with_count(PaymentInout::class) : IoType::options(),
         );
     }

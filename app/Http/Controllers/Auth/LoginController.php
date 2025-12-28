@@ -33,6 +33,7 @@ class LoginController extends Controller
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
+        // Logout requires an authenticated user; other routes are guest-only.
         $this->middleware('auth')->only('logout');
     }
 

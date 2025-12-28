@@ -33,6 +33,7 @@ class PaymentInout extends Model
 {
     use ModelTrait;
 
+    // 使用自定义时间戳字段。
     public const CREATED_AT = 'io_created_at';
     public const UPDATED_AT = 'io_updated_at';
     public const UPDATED_BY = 'io_updated_by';
@@ -54,16 +55,19 @@ class PaymentInout extends Model
 
     public function Customer(): BelongsTo
     {
+        // 关联客户信息。
         return $this->belongsTo(Customer::class, 'io_cu_id', 'cu_id');
     }
 
     public function PaymentAccount(): BelongsTo
     {
+        // 关联收付款账号。
         return $this->belongsTo(PaymentAccount::class, 'io_pa_id', 'pa_id');
     }
 
     public function Payment(): BelongsTo
     {
+        // 关联收付款计划记录。
         return $this->belongsTo(Payment::class, 'io_p_id', 'p_id');
     }
 
@@ -71,6 +75,7 @@ class PaymentInout extends Model
     {
         return DB::query()
             ->from('payment_inouts', 'io')
+            // 组装多表信息，便于列表一次取齐。
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'io.io_cu_id')
             ->leftJoin('payment_accounts as pa', 'pa.pa_id', '=', 'io.io_pa_id')
             ->leftJoin('payments as p', 'p.p_id', '=', 'io.io_p_id')
@@ -81,6 +86,7 @@ class PaymentInout extends Model
             ->orderByDesc('io.io_id')
             ->select('pa.pa_name', 'pt.pt_name', 'io.io_occur_amount', 'io.io_account_balance', 'p.p_should_pay_date', 'p.p_should_pay_amount', 'cu.cu_contact_name', 'sc.sc_no', 've.ve_plate_no', 'p.p_remark')
             ->addSelect(
+                // 附加枚举标签、颜色与展示字段。
                 DB::raw(IoType::toCaseSQL()),
                 DB::raw(PPayStatus::toCaseSQL()),
                 DB::raw(PPayStatus::toColorSQL()),
@@ -92,6 +98,7 @@ class PaymentInout extends Model
 
     public static function indexColumns(): array
     {
+        // 列表列配置，供 PaginateService 渲染。
         return [
             'Inout.pa_name'                => fn ($item) => $item->pa_name,
             'Inout.io_type'                => fn ($item) => $item->io_type_label,
@@ -133,6 +140,7 @@ class PaymentInout extends Model
     protected function ioTypeLabel(): Attribute
     {
         return Attribute::make(
+            // 提供枚举中文标签。
             get: fn () => $this->getAttribute('io_type')?->label,
         );
     }

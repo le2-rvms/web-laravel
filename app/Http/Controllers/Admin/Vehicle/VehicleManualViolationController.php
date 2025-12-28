@@ -124,6 +124,7 @@ class VehicleManualViolationController extends Controller
                 return;
             }
             if (null === $request->input('vv_vi_id')) {
+                // 新增时校验车辆状态，修改时跳过该校验。
                 // ve_id
                 $ve_id = $request->input('vv_ve_id');
 

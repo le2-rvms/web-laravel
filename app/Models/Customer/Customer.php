@@ -128,6 +128,7 @@ class Customer extends Authenticatable
     {
         return DB::query()
             ->from('customers', 'cu')
+            // 按客户类型限定 join，避免公司/个人字段交叉混入。
             ->leftJoin('customer_companies as cuc', function (JoinClause $join) {
                 $join->on('cuc.cuc_cu_id', '=', 'cu.cu_id')
                     ->where('cu.cu_type', '=', CuType::COMPANY)
