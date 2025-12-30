@@ -90,7 +90,6 @@
         "hooks": {
             "pre-commit": [
                 "echo \"Committing as $(git config user.name)\"",
-                "export PHP_CS_FIXER_IGNORE_ENV=1",
                 "bin_dir=$(composer -q global config bin-dir --absolute)",
                 "files=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\\.php$')",
                 "if [ -n \"$files\" ]; then",
