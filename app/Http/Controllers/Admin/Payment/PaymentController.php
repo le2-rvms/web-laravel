@@ -312,11 +312,14 @@ class PaymentController extends Controller
             if ($payment && $payment->exists) {
                 $payment->update($input);
 
-                if ($input_payment = $input['payment']) {
+                if ($input['add_should_pay']) {
+                    $input_payment = $input['payment'];
+
                     $input_payment['p_sc_id']      = $payment->p_sc_id;
                     $input_payment['p_pay_status'] = PPayStatus::UNPAID;
                     $input_payment['p_is_valid']   = PIsValid::VALID;
                     $input_payment['p_remark']     = $input_payment['p_remark'] ?? $input['p_remark'];
+
                     Payment::query()->create($input_payment);
                 }
             } else {
