@@ -133,6 +133,7 @@ class PaymentController extends Controller
         );
 
         if ($payment) {
+            $payment->p_actual_pay_date = now()->format('Y-m-d');
             $payment->load(['SaleContract', 'PaymentType', 'SaleContract.Customer']);
         }
 
