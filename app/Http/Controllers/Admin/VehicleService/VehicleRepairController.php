@@ -172,7 +172,7 @@ class VehicleRepairController extends Controller
         if ($vehicleRepair->vr_ve_id) {
             $this->response()->withExtras(
                 SaleContract::options(
-                    where: function (Builder $builder) use ($vehicleRepair) {
+                    function (Builder $builder) use ($vehicleRepair) {
                         $builder->where('sc.sc_ve_id', '=', $vehicleRepair->vr_ve_id);
                     }
                 ),
@@ -338,7 +338,7 @@ class VehicleRepairController extends Controller
 
         $this->response()->withExtras(
             SaleContract::options(
-                where: function (Builder $builder) use ($input) {
+                function (Builder $builder) use ($input) {
                     $builder->where('sc.sc_ve_id', '=', $input['ve_id']);
                 }
             )

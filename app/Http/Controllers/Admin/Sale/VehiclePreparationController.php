@@ -56,7 +56,7 @@ class VehiclePreparationController extends Controller
         $this->response()->withExtras(
             YesNo::options(),
             Vehicle::options(
-                where: function (Builder $builder) {
+                function (Builder $builder) {
                     $builder->whereIn('ve_status_rental', [VeStatusRental::PENDING]);
                 }
             )

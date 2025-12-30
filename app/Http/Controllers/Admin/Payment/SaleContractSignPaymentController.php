@@ -42,7 +42,7 @@ class SaleContractSignPaymentController extends Controller
             PaymentAccount::options(),
             PPayStatus::options(),
             SaleContract::options(
-                where: function (Builder $builder) {
+                function (Builder $builder) {
                     $builder
                         ->whereIn('sc.sc_status', [ScStatus::PENDING])
                     ;

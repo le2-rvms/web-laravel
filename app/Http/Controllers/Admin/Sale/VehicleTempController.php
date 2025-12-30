@@ -99,12 +99,12 @@ class VehicleTempController extends Controller
         $this->options();
         $this->response()->withExtras(
             SaleContract::options(
-                where: function (Builder $builder) {
+                function (Builder $builder) {
                     $builder->whereIn('sc.sc_status', [ScStatus::SIGNED]);
                 }
             ),
             Vehicle::options(
-                where: function (Builder $builder) {
+                function (Builder $builder) {
                     $builder->whereIn('ve_status_rental', [VeStatusRental::LISTED])
                         ->whereIn('ve_status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
                     ;

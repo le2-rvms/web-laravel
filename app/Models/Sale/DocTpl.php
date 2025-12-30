@@ -67,6 +67,8 @@ class DocTpl extends Model
 
     public static function options(?\Closure $where = null, ?string $key = null): array
     {
+        $key = static::getOptionKey();
+
         $value1 = static::query()
             ->from('doc_tpls', 'dt')
             ->where('dt.dt_status', '=', DtStatus::ENABLED)

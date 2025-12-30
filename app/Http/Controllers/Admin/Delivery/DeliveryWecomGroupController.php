@@ -32,7 +32,7 @@ class DeliveryWecomGroupController extends Controller
         $this->options();
         $this->response()->withExtras(
             SaleContract::options(
-                where: function (Builder $builder) {
+                function (Builder $builder) {
                     $builder->whereIn('sc.sc_status', [ScStatus::SIGNED]);
                 }
             ),

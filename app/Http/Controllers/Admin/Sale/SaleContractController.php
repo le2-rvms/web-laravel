@@ -175,7 +175,7 @@ class SaleContractController extends Controller
             $this->response()->withExtras(
                 SaleContractTpl::options(),
                 Vehicle::options(
-                    where: function (Builder $builder) use ($admin) {
+                    function (Builder $builder) use ($admin) {
                         $builder
                             ->whereIn('ve_status_rental', [VeStatusRental::LISTED])
                             ->whereIn('ve_status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
@@ -237,7 +237,7 @@ class SaleContractController extends Controller
         $this->response()->withExtras(
             SaleContractTpl::options(),
             Vehicle::options(
-                where: function (Builder $builder) use ($saleContract) {
+                function (Builder $builder) use ($saleContract) {
                     $builder
                         ->where(function (Builder $query) {
                             $query->whereIn('ve_status_rental', [VeStatusRental::LISTED])

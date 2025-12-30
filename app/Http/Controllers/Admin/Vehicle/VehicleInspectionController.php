@@ -382,7 +382,7 @@ class VehicleInspectionController extends Controller
             // 根据验车类型筛选可选合同/车辆状态。
             match ($input['vi_inspection_type']) {
                 ViInspectionType::SC_DISPATCH => SaleContract::options(
-                    where: function (Builder $builder) {
+                    function (Builder $builder) {
                         $builder
                             ->whereIn('ve.ve_status_rental', [VeStatusRental::RENTED])
                             ->whereIn('ve.ve_status_dispatch', [VeStatusDispatch::NOT_DISPATCHED])
@@ -391,7 +391,7 @@ class VehicleInspectionController extends Controller
                     }
                 ),
                 ViInspectionType::SC_RETURN => SaleContract::options(
-                    where: function (Builder $builder) {
+                    function (Builder $builder) {
                         $builder
                             ->whereIn('ve.ve_status_rental', [VeStatusRental::RENTED])
                             ->whereIn('ve.ve_status_dispatch', [VeStatusDispatch::DISPATCHED])
@@ -400,7 +400,7 @@ class VehicleInspectionController extends Controller
                     }
                 ),
                 ViInspectionType::VR_DISPATCH => SaleContract::optionsVeReplace(
-                    where: function (Builder $builder) {
+                    function (Builder $builder) {
                         $builder
 //                            ->where('vr.change_start_date', '<=', $today = now()->format('Y-m-d'))
 //                            ->where('vr.change_end_date', '>=', $today)
@@ -411,7 +411,7 @@ class VehicleInspectionController extends Controller
                     }
                 ),
                 ViInspectionType::VR_RETURN => SaleContract::optionsVeReplace(
-                    where: function (Builder $builder) {
+                    function (Builder $builder) {
                         $builder
 //                            ->where('vr.change_start_date', '<=', $today = now()->format('Y-m-d'))
 //                            ->where('vr.change_end_date', '>=', $today)
