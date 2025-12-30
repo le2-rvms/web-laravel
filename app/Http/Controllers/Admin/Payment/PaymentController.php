@@ -61,7 +61,7 @@ class PaymentController extends Controller
 
         $paginate = new PaginateService(
             [],
-            [],
+            [['p.p_sc_id', 'desc'], ['p.p_id', 'asc']],
             ['kw', 'p_pt_id', 'p_pay_status', 'p_is_valid', 'p_should_pay_date', 'p_actual_pay_date'],
             []
         );
@@ -88,7 +88,7 @@ class PaymentController extends Controller
         $this->options();
         $this->response()->withExtras(
             SaleContract::options(
-                where: function (Builder $builder) {
+                function (Builder $builder) {
                     $builder->whereIn('sc.sc_status', [ScStatus::PENDING, ScStatus::SIGNED]);
                 }
             ),
@@ -135,6 +135,25 @@ class PaymentController extends Controller
         if ($payment) {
             $payment->p_actual_pay_date = now()->format('Y-m-d');
             $payment->load(['SaleContract', 'PaymentType', 'SaleContract.Customer']);
+
+            // 准备待付款数据
+            $payment->payment = new Payment([
+                'p_pt_id'           => $payment->p_pt_id,
+                'p_payment_type'    => PaymentType::query()->where('pt_id', '=', $payment->p_pt_id)->first(),
+                'p_should_pay_date' => now()->format('Y-m-d'),
+                'p_pay_status'      => PPayStatus::UNPAID,
+            ])->load(['PaymentType']);
+
+            $customer = $payment->SaleContract->Customer;
+
+            $this->response()->withExtras(
+                Payment::indexList(function (Builder $query) use ($payment) {
+                    //                    $query->where('sc.sc_cu_id', '=', $customer->cu_id);
+                    $query->where('sc.sc_id', '=', $payment->p_sc_id);
+                    $query->orderBy('p.p_sc_id')->orderby('p.p_should_pay_date')->orderby('p.p_id');
+                }),
+                Payment::indexStat(),
+            );
         }
 
         return $this->response()->withData($payment)->respond();
@@ -193,6 +212,22 @@ class PaymentController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, ?Payment $payment): Response
     {
+        ['p_pay_status' => $p_pay_status] = $input0 = Validator::make(
+            $request->all(),
+            [
+                'p_pay_status' => ['bail', 'required', Rule::in(PPayStatus::label_keys())],
+            ],
+            [],
+            trans_property(Payment::class)
+        )
+            ->after(function (\Illuminate\Validation\Validator $validator) {
+                if ($validator->failed()) {
+                    return;
+                }
+            })
+            ->validate()
+        ;
+
         $input = Validator::make(
             $request->all(),
             [
@@ -200,26 +235,20 @@ class PaymentController extends Controller
                 'p_pt_id'             => ['bail', 'required', Rule::in(PPtId::label_keys())],
                 'p_should_pay_date'   => ['bail', 'required', 'date'],
                 'p_should_pay_amount' => ['bail', 'required', 'numeric'],
-                'p_pay_status'        => ['bail', 'required', Rule::in(PPayStatus::label_keys())],
-                'p_actual_pay_date'   => [
-                    'bail',
-                    Rule::requiredIf(PPayStatus::PAID === $request->input('p_pay_status')),
-                    Rule::excludeIf(PPayStatus::UNPAID === $request->input('p_pay_status')),
-                    'date'],
-                'p_actual_pay_amount' => [
-                    'bail',
-                    Rule::requiredIf(PPayStatus::PAID === $request->input('p_pay_status')),
-                    Rule::excludeIf(PPayStatus::UNPAID === $request->input('p_pay_status')),
-                    'numeric',
-                ],
-                'p_pa_id' => [
-                    'bail',
-                    Rule::requiredIf(PPayStatus::PAID === $request->input('p_pay_status')),
-                    Rule::excludeIf(PPayStatus::UNPAID === $request->input('p_pay_status')),
-                    Rule::exists(PaymentAccount::class, 'pa_id')->where('pa_status', PaStatus::ENABLED),
-                ],
-                'p_remark' => ['bail', 'nullable', 'string'],
-            ],
+                'p_remark'            => ['bail', 'nullable', 'string'],
+            ]
+            + (PPayStatus::PAID === $p_pay_status ? [
+                'p_actual_pay_date'   => ['bail', 'required', 'date'],
+                'p_actual_pay_amount' => ['bail', 'required', 'numeric'],
+                'p_pa_id'             => ['bail', 'required', Rule::exists(PaymentAccount::class, 'pa_id')->where('pa_status', PaStatus::ENABLED)],
+            ] : [])
+            + ($payment ? [
+                'add_should_pay'              => ['bail', 'nullable', 'boolean'],
+                'payment.p_pt_id'             => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), Rule::in($payment->p_pt_id)],
+                'payment.p_should_pay_date'   => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'date'],
+                'payment.p_should_pay_amount' => ['bail', Rule::requiredIf($request->boolean('add_should_pay')), 'nullable', 'numeric'],
+                'payment.p_remark'            => ['bail', 'nullable', 'string'],
+            ] : []),
             [],
             trans_property(Payment::class)
         )
@@ -245,14 +274,51 @@ class PaymentController extends Controller
                             return;
                         }
                     }
+
+                    // 验证： 当修改状态 && 选择已支付的时候， 应收/付金额  - 实际收/付金额 = 少收付金额，少收付金额 > 0 ：验证要有代收付款的信息；代收付款 === true 的时候，金额要等于 少收付金额
+                    if (PPayStatus::PAID === $request->input('p_pay_status')) {
+                        $less = bcsub($request->input('p_should_pay_amount'), $request->input('p_actual_pay_amount'), 2);
+                        if (bccomp($less, '0', 2) > 0) {
+                            if (null === $request->input('add_should_pay')) {
+                                $validator->errors()->add('add_should_pay', '收付款信息必填。');
+
+                                return;
+                            }
+
+                            if (0 !== bccomp($request->input('payment.p_should_pay_amount'), $less, 2)) {
+                                $validator->errors()->add('add_should_pay', '收付款信息中的应收/付金额错误。');
+
+                                return;
+                            }
+                        }
+                    }
                 }
             })
             ->validate()
         ;
 
+        // 当是修改状态、当选择已支付，当打开了代收款， 计划金额修改为实际金额
+        if ($payment && $payment->exists) {
+            if (PPayStatus::PAID === $input0['p_pay_status']) {
+                if ($input['add_should_pay']) {
+                    $input['p_should_pay_amount'] = $input['p_actual_pay_amount'];
+                }
+            }
+        }
+
+        $input += $input0;
+
         DB::transaction(function () use (&$input, &$payment) {
             if ($payment && $payment->exists) {
                 $payment->update($input);
+
+                if ($input_payment = $input['payment']) {
+                    $input_payment['p_sc_id']      = $payment->p_sc_id;
+                    $input_payment['p_pay_status'] = PPayStatus::UNPAID;
+                    $input_payment['p_is_valid']   = PIsValid::VALID;
+                    $input_payment['p_remark']     = $input_payment['p_remark'] ?? $input['p_remark'];
+                    Payment::query()->create($input_payment);
+                }
             } else {
                 $payment = Payment::query()->create($input);
             }
