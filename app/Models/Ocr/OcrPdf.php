@@ -4,10 +4,9 @@ namespace App\Models\Ocr;
 
 use App\Models\_\ModelTrait;
 use GuzzleHttp\Client;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 
 class OcrPdf extends Model
 {
@@ -56,7 +55,7 @@ class OcrPdf extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query();
+        return static::query();
     }
 
     public static function RecognizeCompulsory($text)
@@ -216,8 +215,8 @@ class OcrPdf extends Model
         return null;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 }

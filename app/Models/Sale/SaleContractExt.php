@@ -3,10 +3,9 @@
 namespace App\Models\Sale;
 
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @property int    $sce_id              扩展租车合同ID
@@ -35,7 +34,7 @@ class SaleContractExt extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('sale_contract_exts', 'sce')
             ->leftJoin('sale_contracts as sc', 'sce.sce_sc_id', '=', 'sc.sc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
@@ -45,8 +44,8 @@ class SaleContractExt extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 }

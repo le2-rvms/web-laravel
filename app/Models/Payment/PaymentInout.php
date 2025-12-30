@@ -7,11 +7,11 @@ use App\Enum\Payment\IoType;
 use App\Enum\Payment\PPayStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Customer\Customer;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -73,7 +73,7 @@ class PaymentInout extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('payment_inouts', 'io')
             // 组装多表信息，便于列表一次取齐。
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'io.io_cu_id')
@@ -116,25 +116,25 @@ class PaymentInout extends Model
         ];
     }
 
-    public static function option(Collection $Payments): array
+    //    public static function option(Collection $Payments): array
+    //    {
+    //        $key = static::getOptionKey($key);
+    //
+    //        return [
+    //            $key => (function () use ($Payments) {
+    //                $value = [];
+    //                foreach ($Payments as $key => $p) {
+    //                    $value[] = ['text' => $p->p_remark, 'value' => $key];
+    //                }
+    //
+    //                return $value;
+    //            })(),
+    //        ];
+    //    }
+
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        return [
-            $key => (function () use ($Payments) {
-                $value = [];
-                foreach ($Payments as $key => $p) {
-                    $value[] = ['text' => $p->p_remark, 'value' => $key];
-                }
-
-                return $value;
-            })(),
-        ];
-    }
-
-    public static function options(?\Closure $where = null, ?string $key = null): array
-    {
-        return [];
+        return static::query();
     }
 
     protected function ioTypeLabel(): Attribute

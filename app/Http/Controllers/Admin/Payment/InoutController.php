@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Payment\PaymentInout;
 use App\Services\PaginateService;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -48,11 +48,7 @@ class InoutController extends Controller
                 // Keyword search across customer, vehicle, remark, and contract.
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('cu.cu_contact_name', 'like', '%'.$value.'%')
-                            ->orWhere('ve.ve_plate_no', 'like', '%'.$value.'%')
-                            ->orWhere('p.p_remark', 'like', '%'.$value.'%')
-                            ->orWhere('sc.sc_no', 'like', '%'.$value.'%')
-                        ;
+                        $builder->where('cu.cu_contact_name', 'like', '%'.$value.'%')->orWhere('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('p.p_remark', 'like', '%'.$value.'%')->orWhere('sc.sc_no', 'like', '%'.$value.'%');
                     });
                 },
             ],

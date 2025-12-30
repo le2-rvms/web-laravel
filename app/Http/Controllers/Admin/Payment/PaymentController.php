@@ -22,7 +22,7 @@ use App\Models\Sale\DocTpl;
 use App\Models\Sale\SaleContract;
 use App\Services\DocTplService;
 use App\Services\PaginateService;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -72,12 +72,7 @@ class PaymentController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->whereLike('sc.sc_no', '%'.$value.'%')
-                            ->orWhereLike('p.p_remark', '%'.$value.'%')
-                            ->orWhereLike('ve.ve_plate_no', '%'.$value.'%')
-                            ->orWhereLike('cu.cu_contact_name', '%'.$value.'%')
-                            ->orWhereLike('cu.cu_contact_phone', '%'.$value.'%')
-                        ;
+                        $builder->whereLike('sc.sc_no', '%'.$value.'%')->orWhereLike('p.p_remark', '%'.$value.'%')->orWhereLike('ve.ve_plate_no', '%'.$value.'%')->orWhereLike('cu.cu_contact_name', '%'.$value.'%')->orWhereLike('cu.cu_contact_phone', '%'.$value.'%');
                     });
                 },
             ],

@@ -24,7 +24,7 @@ use App\Models\Vehicle\VehicleUsage;
 use App\Models\Vehicle\VehicleViolation;
 use App\Services\PaginateService;
 use App\Services\Uploader;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -92,10 +92,7 @@ class CustomerController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->whereLike('cu.cu_contact_name', '%'.$value.'%')
-                        ->orWhereLike('cu.cu_contact_phone', '%'.$value.'%')
-                        ->orWhereLike('cu.cu_remark', '%'.$value.'%')
-                    ;
+                    $builder->whereLike('cu.cu_contact_name', '%'.$value.'%')->orWhereLike('cu.cu_contact_phone', '%'.$value.'%')->orWhereLike('cu.cu_remark', '%'.$value.'%');
                 });
             },
         ], $columns);
@@ -270,7 +267,7 @@ class CustomerController extends Controller
         $this->options();
 
         $this->response()->withExtras(
-            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+            Admin::optionsWithRoles(function (Builder $builder) {
                 $builder->role(AdminRole::role_sales);
             }, 'cu_driver_manager'),
             AdminTeam::options(),
@@ -289,10 +286,10 @@ class CustomerController extends Controller
         $this->options();
 
         $this->response()->withExtras(
-            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+            Admin::optionsWithRoles(function (Builder $builder) {
                 $builder->role(AdminRole::role_sales);
             }, 'cu_sales_manager'),
-            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+            Admin::optionsWithRoles(function (Builder $builder) {
                 $builder->role(AdminRole::role_driver_mgr);
             }, 'cu_driver_manager'),
             AdminTeam::options(),

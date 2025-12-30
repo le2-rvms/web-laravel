@@ -5,8 +5,7 @@ namespace App\Services;
 use App\Models\_\Configuration;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\Pagination\Paginator;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class PaginateService
@@ -21,7 +20,7 @@ class PaginateService
     //        return join(',', $return);
     //    }
 
-    public Builder|EloquentBuilder $builder;
+    public Builder $builder;
 
     public ?LengthAwarePaginator $paginator = null;
 
@@ -63,7 +62,7 @@ class PaginateService
         return $return;
     }
 
-    public function paginator(Builder|EloquentBuilder $query, $request, $searchMap = null, ?array $columns = null): ?LengthAwarePaginator
+    public function paginator(Builder $query, $request, $searchMap = null, ?array $columns = null): ?LengthAwarePaginator
     {
         $this->builder = $query;
 

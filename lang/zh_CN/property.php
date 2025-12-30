@@ -284,7 +284,7 @@ return [
         'sc_payment_period_label'                => '付款类型-中文',
         'sc_cu_id'                               => '客户序号',
         'sc_ve_id'                               => '车辆序号',
-        'sc_ve_id_tmp'                           => '临时车辆序号',
+        'sc_ve_id_temp'                          => '临时车辆序号',
         'sc_group_no'                            => '',
         'sc_group_seq'                           => '',
         'sc_no'                                  => '合同编号',
@@ -390,7 +390,7 @@ return [
         'ss_approved_by'                => '审核人',
         'ss_approved_at'                => '审核时间',
     ],
-    'VehicleTmp' => [
+    'VehicleTemp' => [
         'vt_id'                  => '临时派车记录序号',
         'vt_sc_id'               => '租车合同序号',
         'vt_current_ve_id'       => '车辆序号',

@@ -10,7 +10,7 @@ use App\Http\Controllers\Customer\Vehicle\VehicleAccidentController;
 use App\Http\Controllers\Customer\Vehicle\VehicleMaintenanceController;
 use App\Http\Controllers\Customer\Vehicle\VehicleManualViolationController;
 use App\Http\Controllers\Customer\Vehicle\VehicleRepairController;
-use App\Http\Controllers\Customer\Vehicle\VehicleReplacementController;
+use App\Http\Controllers\Customer\Vehicle\VehicleTempController;
 use App\Http\Controllers\Customer\Vehicle\VehicleViolationController;
 use App\Http\Middleware\TemporaryCustomer;
 use Illuminate\Support\Facades\Route;
@@ -30,7 +30,7 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryCustomer
     Route::resource('sale-contracts', SaleContractController::class)->only(['index']);
     Route::resource('payments', PaymentController::class)->only(['index']);
     Route::resource('vehicle-accidents', VehicleAccidentController::class)->only(['index']);
-    Route::resource('vehicle-change', VehicleReplacementController::class)->only(['index']); // todo 替换成vehicle-tmp？
+    Route::resource('vehicle-temps', VehicleTempController::class)->only(['index']);
     Route::resource('vehicle-maintenances', VehicleMaintenanceController::class)->only(['index']);
     Route::resource('vehicle-repairs', VehicleRepairController::class)->only(['index']);
     Route::resource('vehicle-manual-violations', VehicleManualViolationController::class)->only(['index']);

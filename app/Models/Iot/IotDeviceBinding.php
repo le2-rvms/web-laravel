@@ -5,10 +5,9 @@ namespace App\Models\Iot;
 use App\Models\_\ModelTrait;
 use App\Models\Vehicle\Vehicle;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @property int         $db_id        绑定ID
@@ -29,7 +28,7 @@ class IotDeviceBinding extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             // 统一别名便于 join 与筛选。
             ->from('iot_device_bindings', 'db')
         ;
@@ -47,9 +46,9 @@ class IotDeviceBinding extends Model
         return $this->belongsTo(Vehicle::class, 've_id', 've_id');
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function casts(): array

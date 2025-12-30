@@ -4,10 +4,9 @@ namespace App\Models\Iot;
 
 use App\Attributes\ClassName;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\DB;
 
 #[ClassName('')]
 /**
@@ -39,12 +38,12 @@ class IotDevice extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query();
+        return static::query();
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function username(): Attribute

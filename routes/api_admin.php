@@ -43,7 +43,7 @@ use App\Http\Controllers\Admin\Sale\SaleContractTplController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementApproveController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementController;
 use App\Http\Controllers\Admin\Sale\VehiclePreparationController;
-use App\Http\Controllers\Admin\Sale\VehicleTmpController;
+use App\Http\Controllers\Admin\Sale\VehicleTempController;
 use App\Http\Controllers\Admin\Vehicle\OneAccountController;
 use App\Http\Controllers\Admin\Vehicle\VehicleController;
 use App\Http\Controllers\Admin\Vehicle\VehicleInspectionController;
@@ -157,8 +157,8 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     Route::apiSingleton('sale-contracts.cancel', SaleContractCancelController::class);
 
-    Route::post('vehicle-tmp/upload', [VehicleTmpController::class, 'upload']);
-    Route::resource('vehicle-tmp', VehicleTmpController::class);
+    Route::post('vehicle-temp/upload', [VehicleTempController::class, 'upload']);
+    Route::resource('vehicle-temp', VehicleTempController::class);
 
     Route::post('sale-settlement/upload', [SaleSettlementController::class, 'upload']);
     Route::get('sale-settlement/{sale_settlement}/doc', [SaleSettlementController::class, 'doc']);

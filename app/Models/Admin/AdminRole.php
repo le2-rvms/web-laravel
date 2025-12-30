@@ -5,8 +5,8 @@ namespace App\Models\Admin;
 use App\Attributes\ClassName;
 use App\Enum\Admin\ArIsCustom;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
@@ -40,22 +40,18 @@ class AdminRole extends Role
         'ar_is_custom' => ArIsCustom::NO,
     ];
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = Role::query()->toBase()
+        return static::query()
             ->where('name', '!=', config('setting.super_role.name'))
             ->orderBy('id')
-            ->select(DB::raw('name as text,id as value'))->get()
+            ->select(DB::raw('name as text,id as value'))
         ;
-
-        return [$key => $value];
     }
 
     public static function indexQuery(): Builder
     {
-        // TODO: Implement indexQuery() method.
+        return static::query();
     }
 
     protected function casts(): array

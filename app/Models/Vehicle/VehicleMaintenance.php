@@ -17,11 +17,11 @@ use App\Models\_\ModelTrait;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentType;
 use App\Models\Sale\SaleContract;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -152,35 +152,13 @@ class VehicleMaintenance extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $vm_ve_id = $search['ve_id'] ?? null;
-        //        $vm_cu_id = $search['cu_id'] ?? null;
-        //        $vm_vc_id = $search['vc_id'] ?? null;
-
-        return DB::query()
+        return static::query()
             ->from('vehicle_maintenances', 'vm')
             ->leftJoin('vehicle_centers as vc', 'vc.vc_id', '=', 'vm.vm_vc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vm.vm_ve_id')
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vm.vm_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-//            ->when($vm_ve_id, function (Builder $query) use ($vm_ve_id) {
-//                $query->where('vm.ve_id', '=', $vm_ve_id);
-//            })
-//            ->when($vm_cu_id, function (Builder $query) use ($vm_cu_id) {
-//                $query->where('sc.sc_cu_id', '=', $vm_cu_id);
-//            })
-//            ->when($vm_vc_id, function (Builder $query) use ($vm_vc_id) {
-//                $query->where('vm.vm_vc_id', '=', $vm_vc_id);
-//            })
-//            ->when(
-//                null === $vm_ve_id && null === $vm_cu_id,
-//                function (Builder $query) {
-//                    $query->orderByDesc('vm.vm_id');
-//                },
-//                function (Builder $query) {
-//                    $query->orderBy('vm.vm_id');
-//                }
-//            )
             ->select('vm.*', 'vc.vc_name', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', '_vm.vm_brand_name', '_vm.vm_model_name')
             ->addSelect(
                 DB::raw(VmCustodyVehicle::toCaseSQL()),
@@ -283,9 +261,9 @@ class VehicleMaintenance extends Model
         };
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function vmSettlementStatusLabel(): Attribute

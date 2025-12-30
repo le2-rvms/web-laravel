@@ -15,10 +15,10 @@ use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use App\Models\Customer\Customer;
 use App\Models\Sale\SaleContract;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -133,35 +133,13 @@ class VehicleAccident extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $va_ve_id = $search['ve_id'] ?? null;
-        //        $va_sc_id = $search['sc_id'] ?? null;
-        //        $va_vc_id = $search['vc_id'] ?? null;
-
-        return DB::query()
+        return static::query()
             ->from('vehicle_accidents', 'va')
             ->leftJoin('vehicle_centers as vc', 'vc.vc_id', '=', 'va.va_vc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'va.va_ve_id')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'va.va_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-//            ->when($va_ve_id, function (Builder $query) use ($va_ve_id) {
-//                $query->where('va.va_ve_id', '=', $va_ve_id);
-//            })
-//            ->when($va_sc_id, function (Builder $query) use ($va_sc_id) {
-//                $query->where('va.va_sc_id', '=', $va_sc_id);
-//            })
-//            ->when($va_vc_id, function (Builder $query) use ($va_vc_id) {
-//                $query->where('va.va_vc_id', '=', $va_vc_id);
-//            })
-//            ->when(
-//                null === $va_ve_id && null === $va_sc_id,
-//                function (Builder $query) {
-//                    $query->orderByDesc('va.va_id');
-//                },
-//                function (Builder $query) {
-//                    $query->orderBy('va.va_id');
-//                }
-//            )
             ->select('va.*', 'vc.vc_name', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
                 DB::raw(VaClaimStatus::toCaseSQL()),
@@ -289,9 +267,9 @@ class VehicleAccident extends Model
         };
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function vaClaimStatusLabel(): Attribute

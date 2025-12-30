@@ -3,9 +3,8 @@
 namespace App\Models\One;
 
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @property int          $or_id
@@ -32,12 +31,12 @@ class OneRequest extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query();
+        return static::query();
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function casts()

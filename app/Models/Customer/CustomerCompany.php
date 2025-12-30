@@ -4,11 +4,10 @@ namespace App\Models\Customer;
 
 use App\Attributes\ClassName;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 #[ClassName('企业客户')]
 /**
@@ -49,11 +48,11 @@ class CustomerCompany extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query();
+        return static::query();
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 }

@@ -8,10 +8,10 @@ use App\Enum\Booking\BvType;
 use App\Models\_\ModelTrait;
 use App\Models\Vehicle\Vehicle;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 #[ClassName('预定车辆')]
@@ -71,7 +71,7 @@ class BookingVehicle extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('booking_vehicles', 'bv')
             // 拼装车辆信息用于列表展示。
             ->leftJoin('vehicles as ve', 'bv.bv_plate_no', '=', 've.ve_plate_no')
@@ -85,21 +85,16 @@ class BookingVehicle extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = DB::query()
+        return static::query()
             ->from('booking_vehicles', 'bv')
             ->leftJoin('vehicles as ve', 'bv.bv_plate_no', '=', 've.ve_plate_no')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             // 下拉仅展示已上架的预定车辆。
             ->where('bv.bv_is_listed', '=', BvIsListed::LISTED)
             ->select(DB::raw("CONCAT(ve.ve_plate_no,'-',COALESCE(vm.vm_brand_name,'未知品牌'),'-', COALESCE(vm.vm_model_name,'未知车型')) as text,bv.bv_id as value"))
-            ->get()
         ;
-
-        return [$key => $value];
     }
 
     protected function bvPhoto(): Attribute

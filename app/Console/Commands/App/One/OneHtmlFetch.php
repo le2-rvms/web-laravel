@@ -32,9 +32,7 @@ class OneHtmlFetch extends Command
         $oneAccounts = OneAccount::query()
             ->whereRaw('LENGTH(oa_cookie_string) > ?', [30])
             ->where(function (Builder $query) {
-                $query->where('oa_cookie_refresh_at', '>=', now()->subMinutes(30))
-                    ->orWhereNull('oa_cookie_refresh_at')
-                ;
+                $query->where('oa_cookie_refresh_at', '>=', now()->subMinutes(30))->orWhereNull('oa_cookie_refresh_at');
             })
 
             ->get()

@@ -22,7 +22,7 @@ use App\Models\Payment\Payment;
 use App\Models\Sale\DocTpl;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleSettlement;
-use App\Models\Sale\VehicleTmp;
+use App\Models\Sale\VehicleTemp;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleManualViolation;
 use App\Models\Vehicle\VehicleRepair;
@@ -31,7 +31,7 @@ use App\Models\Vehicle\VehicleViolation;
 use App\Services\DocTplService;
 use App\Services\PaginateService;
 use App\Services\Uploader;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -82,11 +82,7 @@ class SaleSettlementController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')
-                            ->orWhere('cu.cu_contact_name', 'like', '%'.$value.'%')
-                            ->orWhere('cu.cu_contact_phone', 'like', '%'.$value.'%')
-                            ->orWhere('ss.ss_remark', 'like', '%'.$value.'%')
-                        ;
+                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('cu.cu_contact_name', 'like', '%'.$value.'%')->orWhere('cu.cu_contact_phone', 'like', '%'.$value.'%')->orWhere('ss.ss_remark', 'like', '%'.$value.'%');
                     });
                 },
             ],
@@ -221,7 +217,7 @@ class SaleSettlementController extends Controller
             SaleContract::indexList(function (Builder $query) use ($groupContractIds) {
                 $query->whereIn('sc.sc_id', $groupContractIds);
             }),
-            VehicleTmp::indexList(function (Builder $query) use ($groupContractIds) {
+            VehicleTemp::indexList(function (Builder $query) use ($groupContractIds) {
                 $query->whereIn('sc.sc_id', $groupContractIds);
             }),
             VehicleInspection::indexList(function (Builder $query) use ($groupContractIds) {
@@ -303,7 +299,7 @@ class SaleSettlementController extends Controller
             SaleContract::indexList(function (Builder $query) use ($groupContractIds) {
                 $query->whereIn('sc.sc_id', $groupContractIds);
             }),
-            VehicleTmp::indexList(function (Builder $query) use ($groupContractIds) {
+            VehicleTemp::indexList(function (Builder $query) use ($groupContractIds) {
                 $query->whereIn('sc.sc_id', $groupContractIds);
             }),
             VehicleInspection::indexList(function (Builder $query) use ($groupContractIds) {

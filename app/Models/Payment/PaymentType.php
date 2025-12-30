@@ -6,9 +6,9 @@ use App\Attributes\ClassName;
 use App\Enum\Payment\PIsValid;
 use App\Enum\Payment\PtIsActive;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\DB;
 
@@ -37,24 +37,18 @@ class PaymentType extends Model
         return $this->hasMany(Payment::class, 'p_pt_id', 'pt_id');
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = static::query()->toBase()
-            ->where($where)
+        return static::query()
             ->select(DB::raw('pt_name as text, pt_id as value'))
-            ->get()
         ;
-
-        return [$key => $value];
     }
 
     public static function indexOptions(): array
     {
         $key = static::getOptionKey();
 
-        $value = static::query()->toBase()
+        $value = static::query()
             ->select(DB::raw('pt_name as text, pt_id as value, pt_required as disable'))
             ->orderby('pt_id')
             ->get()
@@ -67,7 +61,7 @@ class PaymentType extends Model
     {
         $key = static::getOptionKey();
 
-        $value = DB::query()
+        $value = static::query()
             ->from('payment_types', 'pt')
             ->leftJoin('payments as p', function (JoinClause $join) {
                 $join->on('p.p_pt_id', '=', 'pt.pt_id')
@@ -86,6 +80,6 @@ class PaymentType extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query();
+        return static::query();
     }
 }

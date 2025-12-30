@@ -11,11 +11,11 @@ use App\Models\Vehicle\Vehicle;
 use GuzzleHttp\Cookie\FileCookieJar;
 use GuzzleHttp\Cookie\SetCookie;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -121,7 +121,7 @@ class OneAccount extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('one_accounts', 'oa')
             ->select('oa.*')
             ->addSelect(
@@ -131,27 +131,12 @@ class OneAccount extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = static::query()
-            ->when($where, fn ($query) => $query->where($where))
+        return static::query()
+            ->select(DB::raw('oa_name as text,oa_id as value'))
             ->orderByDesc('oa_id')
-            ->get()
-            ->map(function (self $account) {
-                return [
-                    'text'                  => $account->oa_name,
-                    'value'                 => $account->oa_id,
-                    'oa_type_label'         => $account->oa_type_label,
-                    'oa_province'           => $account->oa_province,
-                    'oa_province_label'     => $account->oa_province_value['name'] ?? null,
-                    'oa_cookie_refresh_at_' => $account->oa_cookie_refresh_at,
-                ];
-            })
         ;
-
-        return [$key => $value];
     }
 
     public function oaVehicles(): HasMany

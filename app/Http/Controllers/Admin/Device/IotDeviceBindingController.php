@@ -11,7 +11,7 @@ use App\Models\Iot\IotDevice;
 use App\Models\Iot\IotDeviceBinding;
 use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

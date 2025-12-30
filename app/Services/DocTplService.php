@@ -42,7 +42,7 @@ class DocTplService
                 abort(404, '模板文件不存在');
             }
 
-            // 将流写入本地 tmp DOCX 文件
+            // 将流写入本地 temp DOCX 文件
             $tmpPath = 'share/'.uniqid().'_'.mt_rand().'.docx';
 
             $_ = $this->diskLocal->put($tmpPath, $stream);

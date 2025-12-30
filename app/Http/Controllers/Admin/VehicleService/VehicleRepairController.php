@@ -27,7 +27,7 @@ use App\Models\Vehicle\VehicleCenter;
 use App\Models\Vehicle\VehicleRepair;
 use App\Services\PaginateService;
 use App\Services\Uploader;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;

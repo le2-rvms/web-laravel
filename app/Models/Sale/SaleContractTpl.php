@@ -8,9 +8,9 @@ use App\Enum\SaleContract\SctPaymentPeriod;
 use App\Enum\SaleContract\SctRentalType;
 use App\Enum\SaleContract\SctStatus;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 #[ClassName('租车合同模板')]
@@ -70,7 +70,7 @@ class SaleContractTpl extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('sale_contract_tpls', 'sct')
             ->orderByDesc('sct.sct_id')
             ->select('sct.*')
@@ -83,19 +83,14 @@ class SaleContractTpl extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = DB::query()
+        return static::query()
             ->from('sale_contract_tpls', 'sct')
             ->where('sct.sct_status', '=', SctStatus::ENABLED)
             ->orderBy('sct.sct_id', 'desc')
             ->select(DB::raw('sct_name as text,sct.sct_id as value'))
-            ->get()->toArray()
         ;
-
-        return [$key => $value];
     }
 
     protected function sctPaymentPeriodLabel(): Attribute

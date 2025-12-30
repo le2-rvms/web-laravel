@@ -6,12 +6,11 @@ use App\Attributes\ClassName;
 use App\Attributes\ColumnDesc;
 use App\Enum\Customer\CuiGender;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 #[ClassName('个人客户')]
 #[ColumnDesc('cui_name')]
@@ -79,12 +78,12 @@ class CustomerIndividual extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query();
+        return static::query();
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function cuiGenderLabel(): Attribute

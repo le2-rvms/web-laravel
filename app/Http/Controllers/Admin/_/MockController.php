@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin\_;
 use App\Enum\Admin\AUserType;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
-// use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

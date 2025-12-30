@@ -9,10 +9,10 @@ use App\Enum\SaleContract\ScPaymentPeriod;
 use App\Enum\SaleContract\ScRentalType;
 use App\Enum\SaleContract\ScStatus;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -99,30 +99,12 @@ class SaleSettlement extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $cu_id = $search['cu_id'] ?? null;
-        //        $sc_id = $search['sc_id'] ?? null;
-
-        return DB::query()
+        return static::query()
             ->from('sale_settlements', 'ss')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'ss.ss_sc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-//            ->when($cu_id, function (Builder $query) use ($cu_id) {
-//                $query->where('cu.cu_id', '=', $cu_id);
-//            })
-//            ->when($sc_id, function (Builder $query) use ($sc_id) {
-//                $query->where('ss.ss_sc_id', '=', $sc_id);
-//            })
-//            ->when(
-//                null === $cu_id && null === $sc_id,
-//                function (Builder $query) {
-//                    $query->orderByDesc('ss.ss_id');
-//                },
-//                function (Builder $query) {
-//                    $query->orderBy('ss.ss_id');
-//                }
-//            )
             ->select('ss.*', 'sc.*', 'cu.*', 've.*', '_vm.vm_brand_name', '_vm.vm_model_name')
             ->addSelect(
                 DB::raw(SsReturnStatus::toCaseSQL()),
@@ -167,9 +149,9 @@ class SaleSettlement extends Model
         ];
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function ssAdditionalPhotos(): Attribute

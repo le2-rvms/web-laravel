@@ -19,7 +19,7 @@ use App\Models\Sale\BookingOrder;
 use App\Models\Sale\BookingVehicle;
 use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -50,10 +50,7 @@ class BookingOrderController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->whereLike('bo.bo_no', '%'.$value.'%')
-                        ->orWhereLike('bo.bo_plate_no', '%'.$value.'%')
-                        ->orWhereLike('cu.cu_contact_name', '%'.$value.'%')
-                    ;
+                    $builder->whereLike('bo.bo_no', '%'.$value.'%')->orWhereLike('bo.bo_plate_no', '%'.$value.'%')->orWhereLike('cu.cu_contact_name', '%'.$value.'%');
                 });
             },
         ]);

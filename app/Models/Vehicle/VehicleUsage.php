@@ -8,9 +8,9 @@ use App\Enum\SaleContract\ScRentalType;
 use App\Enum\SaleContract\ScStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Sale\SaleContract;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 #[ClassName('行程')]
@@ -58,35 +58,13 @@ class VehicleUsage extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $ve_id = $search['ve_id'] ?? null;
-        //        $sc_id = $search['sc_id'] ?? null;
-        //        $cu_id = $search['cu_id'] ?? null;
-
-        return DB::query()
+        return static::query()
             ->from('vehicle_usages', 'vu')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vu.vu_sc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vu.vu_ve_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
             ->leftJoin('vehicle_inspections as vi1', 'vi1.vi_id', '=', 'vu.vu_start_vi_id')
             ->leftJoin('vehicle_inspections as vi2', 'vi2.vi_id', '=', 'vu.vu_end_vi_id')
-//            ->when($ve_id, function (Builder $query) use ($ve_id) {
-//                $query->where('vu.vu_ve_id', '=', $ve_id);
-//            })
-//            ->when($sc_id, function (Builder $query) use ($sc_id) {
-//                $query->where('vu.vu_sc_id', '=', $sc_id);
-//            })
-//            ->when($cu_id, function (Builder $query) use ($cu_id) {
-//                $query->where('sc.sc_cu_id', '=', $cu_id);
-//            })
-//            ->when(
-//                null === $ve_id && null === $sc_id && null === $cu_id,
-//                function (Builder $query) {
-//                    $query->orderByDesc('vu.vu_id');
-//                },
-//                function (Builder $query) {
-//                    $query->orderBy('vu.vu_id');
-//                }
-//            )
             ->select('vu.*', 'sc.*', 've.*', 'cu.*')
             ->addSelect(
                 DB::raw(ScRentalType::toCaseSQL()),
@@ -100,8 +78,8 @@ class VehicleUsage extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 }

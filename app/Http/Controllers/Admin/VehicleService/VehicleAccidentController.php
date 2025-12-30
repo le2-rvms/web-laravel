@@ -20,7 +20,7 @@ use App\Models\Vehicle\VehicleAccident;
 use App\Models\Vehicle\VehicleCenter;
 use App\Services\PaginateService;
 use App\Services\Uploader;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -62,11 +62,7 @@ class VehicleAccidentController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')
-                            ->orWhere('va.va_accident_location', 'like', '%'.$value.'%')
-                            ->orWhere('va.va_description', 'like', '%'.$value.'%')
-                            ->orWhere('cu.cu_contact_name', 'like', '%'.$value.'%')
-                        ;
+                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('va.va_accident_location', 'like', '%'.$value.'%')->orWhere('va.va_description', 'like', '%'.$value.'%')->orWhere('cu.cu_contact_name', 'like', '%'.$value.'%');
                     });
                 },
             ],

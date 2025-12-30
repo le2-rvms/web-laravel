@@ -12,7 +12,7 @@ use App\Models\Admin\Admin;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleViolation;
 use App\Services\PaginateService;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -63,9 +63,7 @@ class VehicleViolationController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('violation_content', 'like', '%'.$value.'%')
-                            ->orWhere('vv_remark', 'like', "%{$value}%")
-                        ;
+                        $builder->where('violation_content', 'like', '%'.$value.'%')->orWhere('vv_remark', 'like', "%{$value}%");
                     });
                 },
             ],

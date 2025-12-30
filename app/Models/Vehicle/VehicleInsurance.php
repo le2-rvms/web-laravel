@@ -8,10 +8,10 @@ use App\Attributes\ColumnType;
 use App\Enum\VehicleInspection\ViIsCompanyBorne;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -126,7 +126,7 @@ class VehicleInsurance extends Model
     {
         //        $ve_id = $search['ve_id'] ?? null;
 
-        return DB::query()
+        return static::query()
             ->from('vehicle_insurances', 'vi')
 //            ->when(null === $ve_id, function (Builder $query) {
 //                return $query->joinSub(
@@ -266,9 +266,9 @@ class VehicleInsurance extends Model
         };
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function viCompulsoryPolicyFile(): Attribute

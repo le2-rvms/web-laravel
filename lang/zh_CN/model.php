@@ -81,7 +81,7 @@ return [
         'name'   => '结算',
         'suffix' => '',
     ],
-    'VehicleTmp' => [
+    'VehicleTemp' => [
         'name'   => '临时派车',
         'suffix' => '',
     ],

@@ -14,7 +14,7 @@ use App\Models\Sale\DocTpl;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleContractTpl;
 use App\Models\Sale\SaleSettlement;
-use App\Models\Sale\VehicleTmp;
+use App\Models\Sale\VehicleTemp;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleAccident;
 use App\Models\Vehicle\VehicleCenter;
@@ -46,7 +46,7 @@ return [
             (VehicleInspection::class)      => 'vi_id',
             (VehicleManualViolation::class) => 'vv_id',
             (VehicleForceTake::class)       => 'vft_id',
-            (VehicleTmp::class)             => 'vt_id',
+            (VehicleTemp::class)            => 'vt_id',
             (VehicleSchedule::class)        => 'vs_id',
             (VehicleInsurance::class)       => 'vi_id',
             (SaleContract::class)           => 'sc_id',
@@ -62,8 +62,8 @@ return [
 
         'union' => [
             Customer::class => [
-                [CustomerIndividual::class, 'cu_id'],
-                [CustomerCompany::class, 'cu_id'],
+                [CustomerIndividual::class, 'cui_cu_id'],
+                [CustomerCompany::class, 'cuc_cu_id'],
             ],
         ],
     ],

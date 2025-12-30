@@ -6,10 +6,10 @@ use App\Attributes\ClassName;
 use App\Enum\Vehicle\VftStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Customer\Customer;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -60,25 +60,11 @@ class VehicleForceTake extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $vft_ve_id = $search['vft_ve_id'] ?? null;
-
-        return DB::query()
+        return static::query()
             ->from('vehicle_force_takes', 'vft')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vft.vft_ve_id')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'vft.vft_cu_id')
-//            ->when($vft_ve_id, function (Builder $query) use ($vft_ve_id) {
-//                $query->where('vft.vft_ve_id', '=', $vft_ve_id);
-//            })
-//            ->when(
-//                null === $vft_ve_id,
-//                function (Builder $query) {
-//                    $query->orderByDesc('vft.vft_id');
-//                },
-//                function (Builder $query) {
-//                    $query->orderBy('vft.vft_id');
-//                }
-//            )
             ->select('vft.*', 'cu.cu_contact_name', 've.ve_plate_no', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
                 DB::raw(VftStatus::toCaseSQL()),
@@ -86,9 +72,9 @@ class VehicleForceTake extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function vftStatusLabel(): Attribute

@@ -12,9 +12,9 @@ use App\Enum\VehiclePreparation\VpInsuredCheckIs;
 use App\Enum\VehiclePreparation\VpVehicleCheckIs;
 use App\Enum\YesNo;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -62,7 +62,7 @@ class VehiclePreparation extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('vehicle_preparations', 'vp')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vp.vp_ve_id')
             ->leftJoin('vehicle_models as vm', 've.ve_vm_id', '=', 'vm.vm_id')
@@ -83,8 +83,8 @@ class VehiclePreparation extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 }

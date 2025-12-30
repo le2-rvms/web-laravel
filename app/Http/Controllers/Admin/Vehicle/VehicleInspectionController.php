@@ -34,7 +34,7 @@ use App\Models\Vehicle\VehicleUsage;
 use App\Services\DocTplService;
 use App\Services\PaginateService;
 use App\Services\Uploader;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -90,9 +90,7 @@ class VehicleInspectionController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')
-                            ->orWhere('vi.vi_remark', 'like', '%'.$value.'%')
-                        ;
+                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('vi.vi_remark', 'like', '%'.$value.'%');
                     });
                 },
             ],

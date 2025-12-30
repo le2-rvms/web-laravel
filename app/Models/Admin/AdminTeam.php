@@ -9,10 +9,10 @@ use App\Enum\Admin\AUserType;
 use App\Models\_\ModelTrait;
 use App\Models\Customer\Customer;
 use App\Models\Vehicle\Vehicle;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -55,7 +55,7 @@ class AdminTeam extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->select('at.*')
             ->from('admin_teams as at')
             ->addSelect([
@@ -70,43 +70,37 @@ class AdminTeam extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = static::query()
-            ->when($where, fn ($query) => $query->where($where))
+        return static::query()
             ->orderBy('at_sort')
             ->orderBy('at_id')
             ->selectRaw('at_name as text, at_id as value')
-            ->get()
         ;
-
-        return [$key => $value];
     }
 
-    public static function optionsWithRoles(?\Closure $where = null): array
-    {
-        $key = static::getOptionKey($key);
-
-        $admins = static::query()
-            ->where($where)
-            ->orderBy('at_id')
-            ->where('a_user_type', '!=', AUserType::TEMP)
-            ->with('roles')->get()
-        ;
-
-        $value = $admins->map(function ($admin) {
-            $role_names = $admin->roles->pluck('name')->toArray();
-
-            return [
-                'text'  => $admin->name.($role_names ? '('.implode(',', $role_names).')' : ''),
-                'value' => $admin->at_id,
-            ];
-        });
-
-        return [$key => $value];
-    }
+    //    public static function optionsWithRoles(?\Closure $where = null): array
+    //    {
+    //        $key = static::getOptionKey($key);
+    //
+    //        $admins = static::query()
+    //            ->where($where)
+    //            ->orderBy('at_id')
+    //            ->where('a_user_type', '!=', AUserType::TEMP)
+    //            ->with('roles')->get()
+    //        ;
+    //
+    //        $value = $admins->map(function ($admin) {
+    //            $role_names = $admin->roles->pluck('name')->toArray();
+    //
+    //            return [
+    //                'text'  => $admin->name.($role_names ? '('.implode(',', $role_names).')' : ''),
+    //                'value' => $admin->at_id,
+    //            ];
+    //        });
+    //
+    //        return [$key => $value];
+    //    }
 
     public static function buildUniDataPickerTree(?string $type = null): array
     {

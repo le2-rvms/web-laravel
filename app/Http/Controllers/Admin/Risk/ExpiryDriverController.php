@@ -7,6 +7,7 @@ use App\Attributes\PermissionType;
 use App\Enum\Customer\CuiGender;
 use App\Enum\Customer\CuType;
 use App\Http\Controllers\Controller;
+use App\Models\Customer\CustomerIndividual;
 use App\Services\PaginateService;
 use Carbon\Carbon;
 use Illuminate\Database\Query\JoinClause;
@@ -31,7 +32,7 @@ class ExpiryDriverController extends Controller
 
         $targetDate = Carbon::today()->addDays($days)->toDateString();
 
-        $query = DB::query()
+        $query = CustomerIndividual::query()
             ->from('customer_individuals', 'cui')
             ->leftJoin('customers as cu', function (JoinClause $join) {
                 $join->on('cui.cui_cu_id', '=', 'cu.cu_id')
@@ -41,8 +42,7 @@ class ExpiryDriverController extends Controller
 //            ->where('cu.cu_type', CuCustomerType::INDIVIDUAL)
 //            ->where(function ($q) use ($targetDate) {
             // 驾驶证或身份证任一到期即纳入结果。
-            ->where('cui.cui_driver_license_expiry_date', '<=', $targetDate)
-            ->orWhere('cui.cui_id_expiry_date', '<=', $targetDate)
+            ->where('cui.cui_driver_license_expiry_date', '<=', $targetDate)->orWhere('cui.cui_id_expiry_date', '<=', $targetDate)
 //                ;
 //            })
             ->select('cu.*', 'cui.*')

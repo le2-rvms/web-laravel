@@ -15,7 +15,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Sale\SaleContract;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -132,7 +132,7 @@ class SaleContractSignPaymentController extends Controller
                 // 押金转移支付校验：记录必须与当前客户匹配且金额一致。
                 if ($request->boolean('payment_refund_deposit.checked')) {
                     $payment_refund_deposit = Payment::query()
-                        ->whereHas('SaleContract', function (\Illuminate\Database\Eloquent\Builder $query) use ($saleContract) {
+                        ->whereHas('SaleContract', function (Builder $query) use ($saleContract) {
                             $query->where('sc_cu_id', '=', $saleContract->sc_cu_id);
                         })
 //                        ->where('p_sc_id', '=', $saleContractPre->sc_id)

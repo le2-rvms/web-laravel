@@ -18,10 +18,10 @@ use App\Models\Vehicle\VehicleInsurance;
 use App\Models\Vehicle\VehicleSchedule;
 use App\Models\Vehicle\VehicleViolation;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -63,7 +63,7 @@ class DeliveryChannel extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('delivery_channels', 'dc')
             ->orderByDesc('dc.dc_id')
             ->select('dc.*')
@@ -77,20 +77,14 @@ class DeliveryChannel extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = DB::query()
+        return static::query()
             ->from('doc_tpls', 'dt')
             ->where('dt.dt_status', '=', DtStatus::ENABLED)
-            ->when($where, $where)
             ->orderBy('dt.dt_id', 'desc')
             ->select(DB::raw("concat(dt_file_type,'|',dt_name,'→docx') as text,concat(dt.dt_id,'|docx') as value"))
-            ->get()->toArray()
         ;
-
-        return [$key => $value];
     }
 
     public function DeliveryLogs(): HasMany
@@ -107,7 +101,7 @@ class DeliveryChannel extends Model
             ->where('p_pay_status', '=', PPayStatus::UNPAID)
             ->where('p_is_valid', '=', PIsValid::VALID)
             ->whereBetween('p_should_pay_date', [$from, $to])
-            ->whereHas('SaleContract', function (\Illuminate\Database\Eloquent\Builder $query) {
+            ->whereHas('SaleContract', function (Builder $query) {
                 $query->where('sc_status', '=', ScStatus::SIGNED);
             })
             ->orderby('p_id')
@@ -310,7 +304,7 @@ class DeliveryChannel extends Model
         VehicleViolation::query()
             ->where('vv_process_status', '=', VvProcessStatus::UNPROCESSED)
             ->whereBetween('vv_violation_datetime', [$from, $to])
-            ->whereHas('VehicleUsage.SaleContract', function (\Illuminate\Database\Eloquent\Builder $q) {
+            ->whereHas('VehicleUsage.SaleContract', function (Builder $q) {
                 $q->where('sc_id', '>', '0');
             })
             ->orderBy('vv_id')

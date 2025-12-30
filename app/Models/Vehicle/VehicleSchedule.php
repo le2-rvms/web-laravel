@@ -9,10 +9,10 @@ use App\Enum\Vehicle\VsInspectionType;
 use App\Models\_\Configuration;
 use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -76,7 +76,7 @@ class VehicleSchedule extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('vehicle_schedules', 'vs')
             ->joinSub(
                 // 直接在 joinSub 中定义子查询
@@ -108,7 +108,7 @@ class VehicleSchedule extends Model
 
     public static function detailQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('vehicle_schedules', 'vs')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vs.vs_ve_id')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
@@ -172,9 +172,9 @@ class VehicleSchedule extends Model
         };
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     public static function stQuery(array $search = []): Builder
@@ -190,7 +190,7 @@ FROM vehicle_schedules
 GROUP BY vs_ve_id
 ";
 
-        return DB::query()
+        return Vehicle::query()
             ->from('vehicles', 've')
             ->leftJoin('vehicle_models as vm', 've.ve_vm_id', '=', 'vm.vm_id')
             ->leftJoinSub($subSql, 'vs', 'vs.vs_ve_id', '=', 've.ve_id')

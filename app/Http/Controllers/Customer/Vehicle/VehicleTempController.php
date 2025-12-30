@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Customer\Vehicle;
 
 use App\Http\Controllers\Controller;
-use App\Models\Sale\VehicleTmp;
-use Illuminate\Database\Query\Builder;
+use App\Models\Sale\VehicleTemp;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class VehicleReplacementController extends Controller
+class VehicleTempController extends Controller
 {
     public static function labelOptions(Controller $controller): void
     {
@@ -27,7 +27,7 @@ class VehicleReplacementController extends Controller
         $auth = auth();
 
         // 按当前客户过滤临时换车记录，使用游标分页。
-        $data = VehicleTmp::indexQuery()
+        $data = VehicleTemp::indexQuery()
             // 仅查询当前客户的临时换车记录。
             ->where('sc.sc_cu_id', '=', $auth->id())
             ->when(

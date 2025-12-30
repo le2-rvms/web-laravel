@@ -5,8 +5,8 @@ namespace App\Models\Payment;
 use App\Attributes\ClassName;
 use App\Enum\Payment\PaStatus;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 #[ClassName('收付款账户')]
@@ -43,7 +43,7 @@ class PaymentAccount extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('payment_accounts', 'pa')
             ->select('*')
             ->addSelect(
@@ -54,16 +54,12 @@ class PaymentAccount extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = static::query()->toBase()
+        return static::query()
             // 下拉仅展示可用账户。
             ->where('pa_status', '!=', PaStatus::DISABLED)
-            ->select(DB::raw('pa_name as text,pa_id as value'))->get()
+            ->select(DB::raw('pa_name as text,pa_id as value'))
         ;
-
-        return [$key => $value];
     }
 }

@@ -4,7 +4,7 @@ namespace App\Models\Admin;
 
 use App\Attributes\ClassName;
 use App\Models\_\ModelTrait;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Models\Permission;
 
 #[ClassName('员工权限')]
@@ -24,9 +24,9 @@ class AdminPermission extends Permission
 
     public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key = static::getOptionKey($key);
+        $key = static::getOptionKey();
 
-        $value = static::query()->toBase()
+        $value = static::query()
             ->orderBy('group_name')->orderBy('name')
             ->get()
             ->groupBy(fn ($row) => $row->group_name)
@@ -37,6 +37,11 @@ class AdminPermission extends Permission
 
     public static function indexQuery(): Builder
     {
-        // TODO: Implement indexQuery() method.
+        return static::query();
+    }
+
+    public static function optionsQuery(): Builder
+    {
+        return static::query();
     }
 }

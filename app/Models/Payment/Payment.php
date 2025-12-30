@@ -18,11 +18,11 @@ use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleMaintenance;
 use App\Models\Vehicle\VehicleRepair;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -131,10 +131,7 @@ class Payment extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $sc_id = $search['sc_id'] ?? null;
-        //        $cu_id = $search['cu_id'] ?? null;
-
-        return DB::query()
+        return static::query()
             ->from('payments', 'p')
             ->leftJoin('payment_accounts as pa', 'pa.pa_id', '=', 'p.p_pa_id')
             ->leftJoin('payment_types as pt', 'pt.pt_id', '=', 'p.p_pt_id')
@@ -142,22 +139,6 @@ class Payment extends Model
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
-//            ->where($where)
-//            ->when($sc_id, function (Builder $query) use ($sc_id) {
-//                $query->where('p.p_sc_id', '=', $sc_id);
-//            })
-//            ->when($cu_id, function (Builder $query) use ($cu_id) {
-//                $query->where('sc.sc_cu_id', '=', $cu_id);
-//            })
-//            ->when(
-//                null === $sc_id && null === $cu_id,
-//                function (Builder $query) {
-//                    $query->orderByDesc('p.p_sc_id')->orderby('p.p_id');
-//                },
-//                function (Builder $query) {
-//                    $query->orderBy('p.p_sc_id')->orderby('p.p_should_pay_date')->orderby('p.p_id');
-//                }
-//            )
             ->select('*')
             ->addSelect(
                 DB::raw(ScStatus::toCaseSQL()),
@@ -201,16 +182,17 @@ class Payment extends Model
     {
         $accounts_receivable_amount = $actual_received_amount = $pending_receivable_amount = $pending_receivable_size = $less_receivable_amount = '0';
         foreach ($list as $key => $value) {
-            if (PIsValid::VALID == $value->p_is_valid) {
+            /** @var Payment $value */
+            if (PIsValid::VALID == $value->p_is_valid->value) {
                 $accounts_receivable_amount = bcadd($accounts_receivable_amount, $value->p_should_pay_amount, 2); // 应收
             }
-            if (PPayStatus::PAID == $value->p_pay_status) {
+            if (PPayStatus::PAID == $value->p_pay_status->value) {
                 $actual_received_amount = bcadd($actual_received_amount, $value->p_actual_pay_amount, 2); // 实收
 
                 $less_receivable_amount = bcadd($less_receivable_amount, bcsub($value->p_should_pay_amount, $value->p_actual_pay_amount, 2), 2); // 减免
             }
 
-            if (PIsValid::VALID == $value->p_is_valid && PPayStatus::UNPAID == $value->p_pay_status) {
+            if (PIsValid::VALID == $value->p_is_valid->value && PPayStatus::UNPAID == $value->p_pay_status->value) {
                 $pending_receivable_amount = bcadd($pending_receivable_amount, $value->p_should_pay_amount, 2); // 待收
                 ++$pending_receivable_size; // 待收笔数
             }
@@ -221,7 +203,7 @@ class Payment extends Model
 
     public static function option(Collection $Payments): array
     {
-        $key = static::getOptionKey($key);
+        $key = static::getOptionKey();
 
         return [
             $key => (function () use ($Payments) {
@@ -311,9 +293,9 @@ class Payment extends Model
         };
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function pDayOfWeekName(): Attribute

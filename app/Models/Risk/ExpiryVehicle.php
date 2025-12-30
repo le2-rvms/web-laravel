@@ -5,8 +5,8 @@ namespace App\Models\Risk;
 use App\Enum\Vehicle\VeStatusService;
 use App\Models\_\ModelTrait;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 class ExpiryVehicle extends Model
@@ -20,7 +20,7 @@ class ExpiryVehicle extends Model
 
         $targetDate = Carbon::today()->addDays($days)->toDateString();
 
-        return DB::query()
+        return static::query()
             ->from('vehicles', 've')
             ->leftJoin('vehicle_models as vm', 've.ve_vm_id', '=', 'vm.vm_id')
             ->select('ve.*', 'vm.vm_brand_name', 'vm.vm_model_name')
@@ -34,8 +34,8 @@ class ExpiryVehicle extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 }

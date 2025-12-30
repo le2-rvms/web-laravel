@@ -13,7 +13,7 @@ use App\Models\Sale\BookingVehicle;
 use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
 use App\Services\Uploader;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -72,9 +72,7 @@ class BookingVehicleController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('bv.bv_plate_no', 'like', '%'.$value.'%')
-                        ->orWhere('bv.bv_note', 'like', '%'.$value.'%')
-                    ;
+                    $builder->where('bv.bv_plate_no', 'like', '%'.$value.'%')->orWhere('bv.bv_note', 'like', '%'.$value.'%');
                 });
             },
         ]);

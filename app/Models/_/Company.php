@@ -3,10 +3,9 @@
 namespace App\Models\_;
 
 use App\Attributes\ClassName;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\DB;
 
 #[ClassName('公司')]
 /**
@@ -45,12 +44,12 @@ class Company extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query();
+        return static::query();
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function cpCompanyPhoto(): Attribute

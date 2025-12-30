@@ -6,10 +6,10 @@ use App\Attributes\ColumnDesc;
 use App\Enum\Vehicle\VcStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Admin\Admin;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -70,30 +70,24 @@ class VehicleCenter extends Model
         return $this->hasMany(VehicleAccident::class, 'va_vc_id', 'vc_id');
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
         /** @var Admin $admin */
         $admin = Auth::user();
 
-        $value = DB::query()
-            ->from('vehicle_centers', 'vc')
-            ->where('vc.vc_status', VcStatus::ENABLED)
+        return static::query()
+            ->where('vc_status', VcStatus::ENABLED)
             // 非超级角色仅可见授权列表包含自己 ID 的修理厂。
             ->when(!$admin->hasRole(config('setting.super_role.name')), function (Builder $query) use ($admin) {
                 $query->whereRaw('vc_permitted @> ?', [json_encode([$admin->id])]);
             })
             ->select(DB::raw('vc_name as text,vc_id as value'))
-            ->get()
         ;
-
-        return [$key => $value];
     }
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('vehicle_centers', 'vc')
             ->select('vc.*')
             ->addSelect(

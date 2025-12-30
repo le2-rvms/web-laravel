@@ -23,13 +23,13 @@ use App\Models\Customer\Customer;
 use App\Models\Payment\Payment;
 use App\Models\Vehicle\Vehicle;
 use App\Rules\PaymentDayCheck;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\App;
@@ -80,7 +80,7 @@ use PhpOffice\PhpWord\SimpleType\TblWidth;
  * @property null|string                            $sc_payment_period_label                付款类型-中文
  * @property int                                    $sc_cu_id                               客户序号；指向客户表
  * @property int                                    $sc_ve_id                               车辆序号；指向车辆表
- * @property null|int                               $sc_ve_id_tmp                           临时车辆序号
+ * @property null|int                               $sc_ve_id_temp                          临时车辆序号
  * @property null|int                               $sc_group_no                            ;续租分组No
  * @property int                                    $sc_group_seq                           ;分组内顺序
  * @property string                                 $sc_no                                  合同编号
@@ -194,9 +194,9 @@ class SaleContract extends Model
         return $this->belongsTo(Vehicle::class, 'sc_ve_id', 've_id')->with('VehicleModel');
     }
 
-    public function VehicleReplace(): BelongsTo
+    public function VehicleTemp(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class, 'sc_ve_id_tmp', 've_id')->with('VehicleModel');
+        return $this->belongsTo(Vehicle::class, 'sc_ve_id_temp', 've_id')->with('VehicleModel');
     }
 
     public function Payments(): HasMany
@@ -269,17 +269,11 @@ class SaleContract extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $cu_id                 = $search['cu_id'] ?? null;
-
-        return DB::query()
+        return static::query()
             ->from('sale_contracts', 'sc')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-//            ->where($where)
-//            ->when($cu_id, function (Builder $query) use ($cu_id) {
-//                $query->where('cu.cu_id', '=', $cu_id);
-//            })
             ->orderByDesc('sc.sc_id')
             ->select('sc.*', 'cu.*', 've.*', '_vm.vm_brand_name', '_vm.vm_model_name')
             ->addSelect(
@@ -331,7 +325,7 @@ class SaleContract extends Model
     {
         $cu_id = auth()->id();
 
-        return DB::query()
+        return static::query()
             ->from('sale_contracts', 'sc')
             ->where('sc.sc_cu_id', '=', $cu_id)
             ->whereIn('sc.sc_status', [ScStatus::SIGNED])
@@ -339,24 +333,12 @@ class SaleContract extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = static::options_value($where);
-
-        return [$key => $value];
-    }
-
-    public static function options_value(?\Closure $where = null): array
-    {
-        return DB::query()
+        return static::query()
             ->from('sale_contracts', 'sc')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->when($where, function (Builder $builder) use ($where) {
-                $builder->where($where);
-            })
             ->orderBy('sc.sc_id', 'desc')
             ->select(
                 DB::raw(sprintf(
@@ -367,21 +349,18 @@ class SaleContract extends Model
                     ScStatus::toCaseSQL(false)
                 ))
             )
-            ->get()->toArray()
         ;
     }
 
     public static function optionsVeReplace(?\Closure $where = null): array
     {
-        $key = static::getOptionKey($key);
+        $key = static::getOptionKey();
 
-        $value = DB::query()
+        $query = static::query()
             ->from('sale_contracts', 'sc')
-            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id_tmp')
+            ->leftJoin('vehicles as ve', 've.ve_id', '=', 'sc.sc_ve_id_temp')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->when($where, function (Builder $builder) use ($where) {
-                $builder->where($where);
-            })
+            ->when($where, $where)
             ->orderBy('sc.sc_id', 'desc')
             ->select(
                 DB::raw(sprintf(
@@ -392,8 +371,9 @@ class SaleContract extends Model
                     ScStatus::toCaseSQL(false)
                 ))
             )
-            ->get()->toArray()
         ;
+
+        $value = $query->get()->toArray();
 
         return [$key => $value];
     }
@@ -501,7 +481,7 @@ class SaleContract extends Model
         static $kv = null;
 
         if (null === $kv) {
-            $kv = DB::query()
+            $kv = static::query()
                 ->from('sale_contracts')
                 ->select('sc_id', 'sc_no')
                 ->pluck('sc_id', 'sc_no')

@@ -16,11 +16,11 @@ use App\Models\_\ModelTrait;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminTeam;
 use App\Models\One\OneAccount;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -198,29 +198,23 @@ class Vehicle extends Model
         return $this->update($update);
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = DB::query()
+        return static::query()
             ->from('vehicles', 've')
             ->leftJoin('vehicle_models as vm', function ($join) {
                 $join->on('vm.vm_id', '=', 've.ve_vm_id');
             })
             ->where('ve.ve_status_service', VeStatusService::YES)
-            ->where($where)
             ->select(DB::raw("CONCAT(ve.ve_plate_no,'-',COALESCE(vm.vm_brand_name,'未知品牌'),'-', COALESCE(vm.vm_model_name,'未知车型')) as text,ve.ve_id as value"))
-            ->get()
         ;
-
-        return [$key => $value];
     }
 
     public static function optionsNo(?\Closure $where = null, ?string $key = null): array
     {
         $key = static::getOptionKey($key);
 
-        $value = DB::query()
+        $value = static::query()
             ->from('vehicles', 've')
             ->leftJoin('vehicle_models as vm', function ($join) {
                 $join->on('vm.vm_id', '=', 've.ve_vm_id');
@@ -267,7 +261,7 @@ class Vehicle extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('vehicles', 've')
             ->leftJoin('vehicle_models as vm', 've.ve_vm_id', '=', 'vm.vm_id')
             ->leftJoin('admins as a', 've.ve_vehicle_manager', '=', 'a.id')

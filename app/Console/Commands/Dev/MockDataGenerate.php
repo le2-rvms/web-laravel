@@ -22,7 +22,7 @@ use App\Models\Payment\PaymentAccount;
 use App\Models\Payment\PaymentInout;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleSettlement;
-use App\Models\Sale\VehicleTmp;
+use App\Models\Sale\VehicleTemp;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleAccident;
 use App\Models\Vehicle\VehicleCenter;
@@ -75,7 +75,7 @@ class MockDataGenerate extends Command
             VehicleRepair::query()->delete();
             VehicleUsage::query()->delete();
             VehicleInspection::query()->delete();
-            VehicleTmp::query()->delete();
+            VehicleTemp::query()->delete();
             VehicleCenter::query()->delete();
             VehicleAccident::query()->delete();
             VehicleViolation::query()->delete();
@@ -200,7 +200,7 @@ class MockDataGenerate extends Command
                     }
 
                     if (ScStatus::PENDING === $saleContract->sc_status->value) {
-                        VehicleTmp::factory()->for($saleContract)->for($Vehicle, 'CurrentVehicle')->for($Vehicles->random(), 'NewVehicle')->create();
+                        VehicleTemp::factory()->for($saleContract)->for($Vehicle, 'CurrentVehicle')->for($Vehicles->random(), 'NewVehicle')->create();
                     }
 
                     if (in_array($saleContract->sc_status, [ScStatus::SIGNED, ScStatus::COMPLETED, ScStatus::EARLY_TERMINATION])) {

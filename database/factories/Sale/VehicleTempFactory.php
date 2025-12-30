@@ -3,13 +3,13 @@
 namespace Database\Factories\Sale;
 
 use App\Enum\Sale\VtChangeStatus;
-use App\Models\Sale\VehicleTmp;
+use App\Models\Sale\VehicleTemp;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<VehicleTmp>
+ * @extends Factory<VehicleTemp>
  */
-class VehicleTmpFactory extends Factory
+class VehicleTempFactory extends Factory
 {
     public function definition(): array
     {

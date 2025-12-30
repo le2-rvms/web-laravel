@@ -14,7 +14,7 @@ use App\Models\Admin\AdminRole;
 use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehiclePreparation;
 use App\Services\PaginateService;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -142,11 +142,7 @@ class VehiclePreparationController extends Controller
                 ->where('ve_id', '=', $input['ve_id'])
                 ->where(
                     function (Builder $query) {
-                        $query->where('vp_annual_check_is', '=', YesNo::NO)
-                            ->orWhere('vp_insured_check_is', '=', YesNo::NO)
-                            ->orWhere('vp_vehicle_check_is', '=', YesNo::NO)
-                            ->orWhere('vp_document_check_is', '=', YesNo::NO)
-                        ;
+                        $query->where('vp_annual_check_is', '=', YesNo::NO)->orWhere('vp_insured_check_is', '=', YesNo::NO)->orWhere('vp_vehicle_check_is', '=', YesNo::NO)->orWhere('vp_document_check_is', '=', YesNo::NO);
                     }
                 )->first()
             ;

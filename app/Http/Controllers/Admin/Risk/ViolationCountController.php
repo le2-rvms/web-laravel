@@ -8,8 +8,9 @@ use App\Enum\VehicleManualViolation\VvStatus;
 use App\Enum\VehicleViolation\VvPaymentStatus;
 use App\Enum\VehicleViolation\VvProcessStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Vehicle\VehicleViolation;
 use App\Services\PaginateService;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
@@ -55,7 +56,7 @@ class ViolationCountController extends Controller
         $combinedViolations = $violations->unionAll($manualViolations);
 
         // 按合同/车辆聚合违章数量与金额，用于高风险排行。
-        $query = DB::query()
+        $query = VehicleViolation::query()
             ->fromSub($combinedViolations, 'combined_violations')
             ->select(
                 'sc_id',

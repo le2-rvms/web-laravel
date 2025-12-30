@@ -12,10 +12,10 @@ use App\Models\_\ImportTrait;
 use App\Models\_\ModelTrait;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminTeam;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Carbon;
@@ -86,16 +86,11 @@ class Customer extends Authenticatable
         'cu_type_label',
     ];
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = static::query()->toBase()
+        return static::query()
             ->select(DB::raw("CONCAT(cu_contact_name,' | ',cu_contact_phone) as text,cu_id as value"))
-            ->get()
         ;
-
-        return [$key => $value];
     }
 
     public static function contractPhoneKv(?string $contact_phone = null)
@@ -126,7 +121,7 @@ class Customer extends Authenticatable
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('customers', 'cu')
             // 按客户类型限定 join，避免公司/个人字段交叉混入。
             ->leftJoin('customer_companies as cuc', function (JoinClause $join) {

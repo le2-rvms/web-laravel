@@ -9,7 +9,7 @@ use App\Enum\Delivery\DlSendStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Delivery\DeliveryLog;
 use App\Services\PaginateService;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 

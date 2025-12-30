@@ -60,9 +60,7 @@ abstract class ConfigurationController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('cfg_key', 'like', '%'.$value.'%')
-                        ->orWhere('cfg_remark', 'like', '%'.$value.'%')
-                    ;
+                    $builder->where('cfg_key', 'like', '%'.$value.'%')->orWhere('cfg_remark', 'like', '%'.$value.'%');
                 });
             },
         ]);

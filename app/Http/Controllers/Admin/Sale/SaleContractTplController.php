@@ -15,7 +15,7 @@ use App\Models\Sale\SaleContractTpl;
 use App\Rules\PaymentDayCheck;
 use App\Services\PaginateService;
 use App\Services\Uploader;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -51,8 +51,7 @@ class SaleContractTplController extends Controller
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
                     $builder
-                        ->where('sct.sct_name', 'like', '%'.$value.'%')
-                        ->orWhere('sct.sct_remark', 'like', '%'.$value.'%')
+                        ->where('sct.sct_name', 'like', '%'.$value.'%')->orWhere('sct.sct_remark', 'like', '%'.$value.'%')
                     ;
                 });
             },

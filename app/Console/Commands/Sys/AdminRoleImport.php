@@ -39,7 +39,7 @@ use App\Http\Controllers\Admin\Sale\SaleContractTplController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementApproveController;
 use App\Http\Controllers\Admin\Sale\SaleSettlementController;
 use App\Http\Controllers\Admin\Sale\VehiclePreparationController;
-use App\Http\Controllers\Admin\Sale\VehicleTmpController;
+use App\Http\Controllers\Admin\Sale\VehicleTempController;
 use App\Http\Controllers\Admin\Vehicle\OneAccountController;
 use App\Http\Controllers\Admin\Vehicle\VehicleController;
 use App\Http\Controllers\Admin\Vehicle\VehicleInspectionController;
@@ -99,7 +99,7 @@ class AdminRoleImport extends Command
             SaleContractCancelController::class                 => [PermissionAction::WRITE],
             SaleContractTplController::class                    => [PermissionAction::READ, PermissionAction::WRITE],
             SaleSettlementController::class                     => [PermissionAction::READ, PermissionAction::WRITE],
-            VehicleTmpController::class                         => [PermissionAction::READ, PermissionAction::WRITE],
+            VehicleTempController::class                        => [PermissionAction::READ, PermissionAction::WRITE],
             CustomerController::class                           => [PermissionAction::READ, PermissionAction::WRITE]],
 
         AdminRole::role_vehicle_service => [VehicleAccidentController::class => [PermissionAction::READ, PermissionAction::WRITE],

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Customer\Vehicle;
 use App\Attributes\PermissionAction;
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle\VehicleAccident;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 

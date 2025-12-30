@@ -6,10 +6,10 @@ use App\Attributes\ClassName;
 use App\Enum\Vehicle\VeStatusService;
 use App\Enum\VehicleModel\VmStatus;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 #[ClassName('车型')]
@@ -44,22 +44,17 @@ class VehicleModel extends Model
         return $this->hasMany(Vehicle::class, 've_vm_id', 'vm_id');
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = static::query()->toBase()
+        return static::query()
             ->select(DB::raw("(vm_brand_name || '-' || vm_model_name) as text,vm_id as value"))
             ->where('vm_status', '=', VmStatus::ENABLED)
-            ->get()
         ;
-
-        return [$key => $value];
     }
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('vehicle_models', 'vm')
             ->select(
                 'vm.*',
@@ -73,7 +68,7 @@ class VehicleModel extends Model
         ;
     }
 
-    public static function modelQuery(array $search = []): \Illuminate\Database\Eloquent\Builder
+    public static function modelQuery(array $search = []): Builder
     {
         return static::query()
             ->withCount([

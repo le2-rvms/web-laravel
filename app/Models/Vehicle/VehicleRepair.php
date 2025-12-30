@@ -19,11 +19,11 @@ use App\Models\_\ModelTrait;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentType;
 use App\Models\Sale\SaleContract;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -187,39 +187,13 @@ class VehicleRepair extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $ve_id = $search['ve_id'] ?? null;
-        //        $sc_id = $search['sc_id'] ?? null;
-        //        $cu_id = $search['cu_id'] ?? null;
-        //        $vc_id = $search['vc_id'] ?? null;
-
-        return DB::query()
+        return static::query()
             ->from('vehicle_repairs', 'vr')
             ->leftJoin('vehicle_centers as vc', 'vc.vc_id', '=', 'vr.vr_vc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vr.vr_ve_id')
             ->leftJoin('vehicle_models as _vm', '_vm.vm_id', '=', 've.ve_vm_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vr.vr_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-//            ->when($ve_id, function (Builder $query) use ($ve_id) {
-//                $query->where('vr.vr_ve_id', '=', $ve_id);
-//            })
-//            ->when($sc_id, function (Builder $query) use ($sc_id) {
-//                $query->where('vr.vr_sc_id', '=', $sc_id);
-//            })
-//            ->when($cu_id, function (Builder $query) use ($cu_id) {
-//                $query->where('sc.sc_cu_id', '=', $cu_id);
-//            })
-//            ->when($vc_id, function (Builder $query) use ($vc_id) {
-//                $query->where('vr.vr_vc_id', '=', $vc_id);
-//            })
-//            ->when(
-//                null === $ve_id && null === $sc_id && null === $cu_id,
-//                function (Builder $query) {
-//                    $query->orderByDesc('vr.vr_id');
-//                },
-//                function (Builder $query) {
-//                    $query->orderBy('vr.vr_id');
-//                }
-//            )
             ->select('vr.*', 'vc.vc_name', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', '_vm.vm_brand_name', '_vm.vm_model_name')
             ->addSelect(
                 DB::raw(VrRepairAttribute::toCaseSQL()),
@@ -323,9 +297,9 @@ class VehicleRepair extends Model
         };
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function vrRepairStatusLabel(): Attribute

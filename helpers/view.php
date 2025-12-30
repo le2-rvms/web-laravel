@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 
 function str_render($info, $tpl): string
 {
-    return view('excel.'.$tpl, ['info' => json_decode($info, true)])->render();
+    return view('excel.'.$tpl, ['info' => $info])->render();
 }
 
 function get_view_file(Request $request): string

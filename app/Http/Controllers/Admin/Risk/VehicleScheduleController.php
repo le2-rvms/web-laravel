@@ -11,7 +11,7 @@ use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleSchedule;
 use App\Services\PaginateService;
 use App\Services\Uploader;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;

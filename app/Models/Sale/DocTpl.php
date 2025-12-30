@@ -7,9 +7,9 @@ use App\Enum\Sale\DtFileType;
 use App\Enum\Sale\DtStatus;
 use App\Enum\Sale\DtType;
 use App\Models\_\ModelTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 #[ClassName('生成合同文件模板')]
@@ -52,7 +52,7 @@ class DocTpl extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('doc_tpls', 'dt')
             ->orderByDesc('dt.dt_id')
             ->select('dt.*')
@@ -67,9 +67,7 @@ class DocTpl extends Model
 
     public static function options(?\Closure $where = null, ?string $key = null): array
     {
-        $key = static::getOptionKey($key);
-
-        $value1 = DB::query()
+        $value1 = static::query()
             ->from('doc_tpls', 'dt')
             ->where('dt.dt_status', '=', DtStatus::ENABLED)
             ->when($where, $where)
@@ -78,7 +76,7 @@ class DocTpl extends Model
             ->get()->toArray()
         ;
 
-        $value2 = DB::query()
+        $value2 = static::query()
             ->from('doc_tpls', 'dt')
             ->where('dt.dt_status', '=', DtStatus::ENABLED)
             ->when($where, $where)
@@ -88,6 +86,11 @@ class DocTpl extends Model
         ;
 
         return [$key => array_merge($value1, $value2)];
+    }
+
+    public static function optionsQuery(): Builder
+    {
+        return static::query();
     }
 
     protected function dtTypeLabel(): Attribute

@@ -3,14 +3,11 @@
 namespace App\Models\_;
 
 use App\Enum\AuthUserType;
-use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
-use App\Models\Sale\SaleContract;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -37,7 +34,7 @@ trait ModelTrait
     //        return array_merge($this->hidden, ['created_at', 'updated_at']);
     //    }
 
-    abstract public static function indexQuery();
+    abstract public static function indexQuery(): Builder;
 
     public function toArray(): array|object
     {
@@ -51,11 +48,9 @@ trait ModelTrait
         //        $query = array_filter($query);
         $key = preg_replace('/^.*\\\/', '', get_called_class()).'IndexList';
 
-        $query = static::indexQuery();
-
-        if ($callback) {
-            $callback($query); // 注意：这里是对主查询操作
-        }
+        $query = static::indexQuery()
+            ->when($callback, $callback)
+        ;
 
         static::$indexValue = $value = $query->get();
 
@@ -83,43 +78,23 @@ trait ModelTrait
         return [$key => $value];
     }
 
-    //    public static function customerQuery(Controller $controller): Builder
-    //    {
-    //        $perPage = 20;
-    //
-    //        $controller->response()->withExtras(
-    //            ['perPage' => $perPage]
-    //        );
-    //
-    //        $auth = auth();
-    //
-    //        return static::indexQuery(['cu_id' => $auth->id()])
-    //            ->forPage(1, $perPage)
-    //        ;
-    //    }
-
-    //    public static function customerQueryWithOrderVeId(Controller $controller, Request $request): Builder
-    //    {
-    //        $page = $request->input('page', 1);
-    //
-    //        $perPage = 20;
-    //
-    //        $controller->response()->withExtras(
-    //            ['perPage' => $perPage]
-    //        );
-    //
-    //        return static::indexQuery()
-    //            ->whereIn('ve.ve_id', SaleContract::CustomerHasVeId())
-    //            ->forPage($page, $perPage)
-    //        ;
-    //    }
-
     public function ProcessedBy(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'processed_by', 'id');
     }
 
-    abstract public static function options(?\Closure $where = null, ?string $key = null): array;
+    abstract public static function optionsQuery(): Builder;
+
+    public static function options(?\Closure $where = null, ?string $key = null): array
+    {
+        $key   = static::getOptionKey($key);
+        $value = static::optionsQuery()
+            ->when($where, $where)
+            ->get()
+        ;
+
+        return [$key => $value];
+    }
 
     protected function uploadFile(): Attribute
     {

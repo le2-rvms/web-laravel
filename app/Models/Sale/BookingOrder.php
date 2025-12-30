@@ -12,10 +12,10 @@ use App\Models\_\ModelTrait;
 use App\Models\Customer\Customer;
 use App\Models\Vehicle\Vehicle;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 #[ClassName('预定租车')]
@@ -86,7 +86,7 @@ class BookingOrder extends Model
     public function Vehicle(): BelongsTo
     {
         // 通过车牌号关联车辆信息。
-        return $this->belongsTo(Vehicle::class, 'bo_plate_no', 've_plate_no')->with('VehicleModel');
+        return $this->belongsTo(Vehicle::class, 'bo_plate_no', 've_plate_no')->withDefault()->with('VehicleModel');
     }
 
     public function Customer(): BelongsTo
@@ -97,7 +97,7 @@ class BookingOrder extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('booking_orders', 'bo')
             // 拼装车辆/客户信息，供列表展示。
             ->leftJoin('vehicles as ve', 'bo.bo_plate_no', '=', 've.ve_plate_no')
@@ -116,9 +116,9 @@ class BookingOrder extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function boTypeLabel(): Attribute

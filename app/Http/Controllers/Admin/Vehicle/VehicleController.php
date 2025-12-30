@@ -25,7 +25,7 @@ use App\Models\Vehicle\VehicleUsage;
 use App\Models\Vehicle\VehicleViolation;
 use App\Services\PaginateService;
 use App\Services\Uploader;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -51,7 +51,7 @@ class VehicleController extends Controller
         $this->options(true);
         $this->response()->withExtras(
             VehicleModel::options(),
-            Admin::options(function (\Illuminate\Database\Eloquent\Builder $builder) {
+            Admin::options(function (Builder $builder) {
                 $builder->role(AdminRole::role_vehicle_mgr);
             }),
             AdminTeam::options(),
@@ -94,10 +94,7 @@ class VehicleController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')
-                            ->orWhere('ve.ve_license_owner', 'like', '%'.$value.'%')
-                            ->orWhere('ve.ve_license_address', 'like', '%'.$value.'%')
-                        ;
+                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('ve.ve_license_owner', 'like', '%'.$value.'%')->orWhere('ve.ve_license_address', 'like', '%'.$value.'%');
                     });
                 },
             ],
@@ -201,7 +198,7 @@ class VehicleController extends Controller
 
         $this->response()->withExtras(
             VehicleModel::options(),
-            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+            Admin::optionsWithRoles(function (Builder $builder) {
                 $builder->role(AdminRole::role_vehicle_mgr);
             }),
             AdminTeam::options(),
@@ -220,7 +217,7 @@ class VehicleController extends Controller
 
         $this->response()->withExtras(
             VehicleModel::options(),
-            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+            Admin::optionsWithRoles(function (Builder $builder) {
                 $builder->role(AdminRole::role_vehicle_mgr);
             }),
             AdminTeam::options(),

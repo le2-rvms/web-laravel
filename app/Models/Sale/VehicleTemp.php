@@ -9,10 +9,10 @@ use App\Enum\SaleContract\ScRentalType_ShortOnlyShort;
 use App\Enum\SaleContract\ScStatus;
 use App\Models\_\ModelTrait;
 use App\Models\Vehicle\Vehicle;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -33,7 +33,7 @@ use Illuminate\Support\Facades\DB;
  * @property string                $vt_current_ve_plate_no 旧车车牌号
  * @property string                $vt_new_ve_plate_no     新车车牌号
  */
-class VehicleTmp extends Model
+class VehicleTemp extends Model
 {
     use ModelTrait;
 
@@ -72,30 +72,12 @@ class VehicleTmp extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $sc_id = $search['sc_id'] ?? null;
-        //        $cu_id = $search['cu_id'] ?? null;
-
-        return DB::query()
-            ->from('vehicle_tmps', 'vt')
+        return static::query()
+            ->from('vehicle_temps', 'vt')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vt.vt_sc_id')
             ->leftJoin('vehicles as ve1', 've1.ve_id', '=', 'vt.vt_current_ve_id')
             ->leftJoin('vehicles as ve2', 've2.ve_id', '=', 'vt.vt_new_ve_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-//            ->when($sc_id, function (Builder $query) use ($sc_id) {
-//                $query->where('sc.sc_id', '=', $sc_id);
-//            })
-//            ->when($cu_id, function (Builder $query) use ($cu_id) {
-//                $query->where('sc.sc_cu_id', '=', $cu_id);
-//            })
-//            ->when(
-//                null === $sc_id && null === $cu_id,
-//                function (Builder $query) {
-//                    $query->orderByDesc('vt.vt_id');
-//                },
-//                function (Builder $query) {
-//                    $query->orderBy('vt.vt_id');
-//                }
-//            )
             ->select('vt.*', 'sc.*', 'cu.*', 've1.ve_plate_no as current_ve_plate_no', 've2.ve_plate_no as new_ve_plate_no')
             ->addSelect(
                 DB::raw(VtChangeStatus::toCaseSQL()),
@@ -117,23 +99,13 @@ class VehicleTmp extends Model
         ];
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = static::options_value($where);
-
-        return [$key => $value];
-    }
-
-    public static function options_value(?\Closure $where = null): array
-    {
-        return DB::query()
-            ->from('vehicle_tmps', 'vt')
+        return static::query()
+            ->from('vehicle_temps', 'vt')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vt.vt_sc_id')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vt.vt_new_ve_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-            ->where($where)
             ->orderBy('vt.vt_id', 'desc')
             ->select(
                 DB::raw(sprintf(
@@ -144,7 +116,6 @@ class VehicleTmp extends Model
                     ScStatus::toCaseSQL(false)
                 ))
             )
-            ->get()->toArray()
         ;
     }
 

@@ -10,7 +10,7 @@ use App\Enum\SaleContract\ScStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleContractExt;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;

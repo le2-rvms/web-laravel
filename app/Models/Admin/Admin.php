@@ -7,9 +7,9 @@ use App\Enum\Admin\ATeamLimit;
 use App\Enum\Admin\AUserType;
 use App\Models\_\ModelTrait;
 use App\Models\Vehicle\Vehicle;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -71,22 +71,17 @@ class Admin extends Authenticatable
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('admins as a')
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = static::query()
-            ->where($where)
+        return static::query()
             ->orderBy('id')
-            ->select(DB::raw('name as text,id as value'))->get()
+            ->select(DB::raw('name as text,id as value'))
         ;
-
-        return [$key => $value];
     }
 
     public static function optionsWithRoles(?\Closure $where = null, ?string $key = null): array

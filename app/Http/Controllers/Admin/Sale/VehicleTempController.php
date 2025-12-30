@@ -12,11 +12,11 @@ use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
 use App\Models\Sale\SaleContract;
-use App\Models\Sale\VehicleTmp;
+use App\Models\Sale\VehicleTemp;
 use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
 use App\Services\Uploader;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -24,7 +24,7 @@ use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('临时车')]
-class VehicleTmpController extends Controller
+class VehicleTempController extends Controller
 {
     public static function labelOptions(Controller $controller): void
     {
@@ -40,8 +40,8 @@ class VehicleTmpController extends Controller
         $this->response()->withExtras(
         );
 
-        $query   = VehicleTmp::indexQuery();
-        $columns = VehicleTmp::indexColumns();
+        $query   = VehicleTemp::indexQuery();
+        $columns = VehicleTemp::indexColumns();
 
         // 车队查询条件
         if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
@@ -112,14 +112,14 @@ class VehicleTmpController extends Controller
             ),
         );
 
-        $vehicleTmp = new VehicleTmp([
+        $vehicleTemp = new VehicleTemp([
             'vt_sc_id'             => $saleContract?->sc_id,
             'vt_change_start_date' => now(),
             'vt_change_status'     => VtChangeStatus::IN_PROGRESS,
         ]);
-        $vehicleTmp->SaleContract = $saleContract;
+        $vehicleTemp->SaleContract = $saleContract;
 
-        return $this->response()->withData($vehicleTmp)->respond();
+        return $this->response()->withData($vehicleTemp)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
@@ -142,7 +142,7 @@ class VehicleTmpController extends Controller
             ]
                 + Uploader::validator_rule_upload_array('vt_additional_photos'),
             [],
-            trans_property(VehicleTmp::class)
+            trans_property(VehicleTemp::class)
         )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$saleContract, &$vehicle0, &$vehicle) {
             if ($validator->failed()) {
                 return;
@@ -178,21 +178,21 @@ class VehicleTmpController extends Controller
             ->validate()
         ;
 
-        DB::transaction(function () use (&$input, &$vehicleTmp, &$saleContract, $vehicle) {
-            $vehicleTmp = VehicleTmp::query()
+        DB::transaction(function () use (&$input, &$vehicleTemp, &$saleContract, $vehicle) {
+            $vehicleTemp = VehicleTemp::query()
                 ->create($input + ['vt_current_ve_id' => $saleContract->sc_ve_id])
             ;
 
             // 根据变更状态同步合同临时车字段。
             switch ($input['vt_change_status']) {
                 case VtChangeStatus::IN_PROGRESS:
-                    $saleContract->sc_ve_id_tmp = $vehicle->ve_id;
+                    $saleContract->sc_ve_id_temp = $vehicle->ve_id;
                     $saleContract->save();
 
                     break;
 
                 case VtChangeStatus::COMPLETED:
-                    $saleContract->sc_ve_id_tmp = null;
+                    $saleContract->sc_ve_id_temp = null;
                     $saleContract->save();
 
                     break;
@@ -202,25 +202,25 @@ class VehicleTmpController extends Controller
             $vehicle->updateStatus(ve_status_rental: VeStatusRental::RENTED);
         });
 
-        return $this->response()->withData($vehicleTmp)->respond();
+        return $this->response()->withData($vehicleTemp)->respond();
     }
 
-    public function show(VehicleTmp $vehicleTmp) {}
+    public function show(VehicleTemp $vehicleTemp) {}
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function edit(VehicleTmp $vehicleTmp): Response
+    public function edit(VehicleTemp $vehicleTemp): Response
     {
         $this->options();
         $this->response()->withExtras(
         );
 
-        $vehicleTmp->load('CurrentVehicle', 'NewVehicle');
+        $vehicleTemp->load('CurrentVehicle', 'NewVehicle');
 
-        return $this->response()->withData($vehicleTmp)->respond();
+        return $this->response()->withData($vehicleTemp)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function update(Request $request, VehicleTmp $vehicleTmp): Response
+    public function update(Request $request, VehicleTemp $vehicleTemp): Response
     {
         $input = Validator::make(
             $request->all(),
@@ -232,7 +232,7 @@ class VehicleTmpController extends Controller
             ]
                 + Uploader::validator_rule_upload_array('vt_additional_photos'),
             [],
-            trans_property(VehicleTmp::class)
+            trans_property(VehicleTemp::class)
         )->after(function (\Illuminate\Validation\Validator $validator) {
             if ($validator->failed()) {
                 return;
@@ -241,23 +241,23 @@ class VehicleTmpController extends Controller
             ->validate()
         ;
 
-        DB::transaction(function () use (&$input, &$vehicleTmp) {
-            $vehicleTmp->update($input);
+        DB::transaction(function () use (&$input, &$vehicleTemp) {
+            $vehicleTemp->update($input);
 
-            $change_status_changed = $vehicleTmp->wasChanged('vt_change_status');
+            $change_status_changed = $vehicleTemp->wasChanged('vt_change_status');
             if ($change_status_changed) {
-                $saleContract = $vehicleTmp->SaleContract;
+                $saleContract = $vehicleTemp->SaleContract;
 
                 // 状态变更时同步合同临时车字段。
                 switch ($input['vt_change_status']) {
                     case VtChangeStatus::IN_PROGRESS:
-                        $saleContract->sc_ve_id_tmp = $vehicleTmp->vt_new_ve_id;
+                        $saleContract->sc_ve_id_temp = $vehicleTemp->vt_new_ve_id;
                         $saleContract->save();
 
                         break;
 
                     case VtChangeStatus::COMPLETED:
-                        $saleContract->sc_ve_id_tmp = null;
+                        $saleContract->sc_ve_id_temp = null;
                         $saleContract->save();
 
                         break;
@@ -265,10 +265,10 @@ class VehicleTmpController extends Controller
             }
         });
 
-        return $this->response()->withData($vehicleTmp)->respond();
+        return $this->response()->withData($vehicleTemp)->respond();
     }
 
-    public function destroy(VehicleTmp $vehicleTmp) {}
+    public function destroy(VehicleTemp $vehicleTemp) {}
 
     #[PermissionAction(PermissionAction::WRITE)]
     public function upload(Request $request): Response

@@ -13,7 +13,7 @@ use App\Models\Vehicle\VehicleCenter;
 use App\Models\Vehicle\VehicleMaintenance;
 use App\Models\Vehicle\VehicleRepair;
 use App\Services\PaginateService;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -47,12 +47,7 @@ class VehicleCenterController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('vc.vc_name', 'like', '%'.$value.'%')
-                        ->orWhere('vc.vc_address', 'like', '%'.$value.'%')
-                        ->orWhere('vc.vc_contact_name', 'like', '%'.$value.'%')
-                        ->orWhere('vc.vc_contact_phone', 'like', '%'.$value.'%')
-                        ->orWhere('vc.vc_note', 'like', '%'.$value.'%')
-                    ;
+                    $builder->where('vc.vc_name', 'like', '%'.$value.'%')->orWhere('vc.vc_address', 'like', '%'.$value.'%')->orWhere('vc.vc_contact_name', 'like', '%'.$value.'%')->orWhere('vc.vc_contact_phone', 'like', '%'.$value.'%')->orWhere('vc.vc_note', 'like', '%'.$value.'%');
                 });
             },
         ]);
@@ -71,7 +66,7 @@ class VehicleCenterController extends Controller
         ]);
 
         $this->response()->withExtras(
-            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+            Admin::optionsWithRoles(function (Builder $builder) {
                 $builder->role(AdminRole::role_vehicle_service);
             }),
         );
@@ -100,7 +95,7 @@ class VehicleCenterController extends Controller
     {
         $this->options();
         $this->response()->withExtras(
-            Admin::optionsWithRoles(function (\Illuminate\Database\Eloquent\Builder $builder) {
+            Admin::optionsWithRoles(function (Builder $builder) {
                 $builder->role(AdminRole::role_vehicle_service);
             }),
             // 展示该修理厂关联的维修/保养/出险记录。

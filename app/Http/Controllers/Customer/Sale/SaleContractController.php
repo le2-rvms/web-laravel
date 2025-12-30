@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Customer\Sale;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sale\SaleContract;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 

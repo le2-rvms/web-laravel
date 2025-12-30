@@ -7,9 +7,10 @@ use App\Enum\Delivery\DlSendStatus;
 use App\Enum\Sale\DtStatus;
 use App\Models\_\ModelTrait;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -75,7 +76,7 @@ class DeliveryLog extends Model
 
     public static function indexQuery(): Builder
     {
-        return DB::query()
+        return static::query()
             ->from('delivery_logs', 'dl')
             ->orderByDesc('dl.dl_id')
             ->select('dl.*')
@@ -86,20 +87,14 @@ class DeliveryLog extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array // todo
+    public static function optionsQuery(): Builder
     {
-        $key = static::getOptionKey($key);
-
-        $value = DB::query()
-            ->from('doc_tpls', 'dt')
+        return static::query()
+            ->from('doc_tpls', 'dt') // todo doc 是错的？
             ->where('dt.dt_status', '=', DtStatus::ENABLED)
-            ->when($where, $where)
             ->orderBy('dt.dt_id', 'desc')
             ->select(DB::raw("concat(dt_file_type,'|',dt_name,'→docx') as text,concat(dt.dt_id,'|docx') as value"))
-            ->get()->toArray()
         ;
-
-        return [$key => $value];
     }
 
     public function DeliveryChannel(): BelongsTo
@@ -159,5 +154,19 @@ class DeliveryLog extends Model
         }
 
         return $resp->body();
+    }
+
+    protected function dlDcKeyLabel(): Attribute
+    {
+        return Attribute::make(
+            get : fn () => $this->getAttribute('dl_dc_key')?->label
+        );
+    }
+
+    protected function dlSendStatusLabel(): Attribute
+    {
+        return Attribute::make(
+            get : fn () => $this->getAttribute('dl_send_status')?->label
+        );
     }
 }

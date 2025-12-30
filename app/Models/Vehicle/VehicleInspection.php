@@ -15,11 +15,11 @@ use App\Models\_\ModelTrait;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentType;
 use App\Models\Sale\SaleContract;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -140,33 +140,11 @@ class VehicleInspection extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $ve_id = $search['ve_id'] ?? null;
-        //        $sc_id = $search['sc_id'] ?? null;
-        //        $cu_id = $search['cu_id'] ?? null;
-
-        return DB::query()
+        return static::query()
             ->from('vehicle_inspections', 'vi')
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vi.vi_ve_id')
             ->leftJoin('sale_contracts as sc', 'sc.sc_id', '=', 'vi.vi_sc_id')
             ->leftJoin('customers as cu', 'cu.cu_id', '=', 'sc.sc_cu_id')
-//            ->when($ve_id, function (Builder $query) use ($ve_id) {
-//                $query->where('vi.vi_ve_id', '=', $ve_id);
-//            })
-//            ->when($sc_id, function (Builder $query) use ($sc_id) {
-//                $sc_id && $query->where('vi.vi_sc_id', '=', $sc_id);
-//            })
-//            ->when($cu_id, function (Builder $query) use ($cu_id) {
-//                $query->where('cu.cu_id', '=', $cu_id);
-//            })
-//            ->when(
-//                null === $sc_id && null === $sc_id && null === $cu_id,
-//                function (Builder $query) {
-//                    $query->orderByDesc('vi.vi_id');
-//                },
-//                function (Builder $query) {
-//                    $query->orderBy('vi.vi_id');
-//                }
-//            )
             ->select('vi.*', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone')
             ->addSelect(
                 DB::raw(ViInspectionType::toCaseSQL()),
@@ -180,9 +158,9 @@ class VehicleInspection extends Model
         ;
     }
 
-    public static function options(?\Closure $where = null, ?string $key = null): array
+    public static function optionsQuery(): Builder
     {
-        return [];
+        return static::query();
     }
 
     protected function viAdditionalPhotos(): Attribute
