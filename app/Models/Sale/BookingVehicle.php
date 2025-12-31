@@ -5,6 +5,7 @@ namespace App\Models\Sale;
 use App\Attributes\ClassName;
 use App\Enum\Booking\BvIsListed;
 use App\Enum\Booking\BvType;
+use App\Models\_\Configuration;
 use App\Models\_\ModelTrait;
 use App\Models\Vehicle\Vehicle;
 use Carbon\Carbon;
@@ -129,9 +130,9 @@ class BookingVehicle extends Model
             get: function ($value) {
                 // 缺省生成预定编号。
                 if (!$value) {
-                    return 'BK'.gen_sc_no();
+                    return Configuration::fetch('booking-order.no-prefix').gen_sc_no();
                 }
-            }
+            },
         );
     }
 }

@@ -34,6 +34,8 @@ class Configuration extends Model
 
     public const UPDATED_AT = 'cfg_updated_at';
 
+    public const UPDATED_BY = 'cfg_updated_by';
+
     protected $primaryKey = 'cfg_id';
 
     protected $guarded = ['cfg_id'];

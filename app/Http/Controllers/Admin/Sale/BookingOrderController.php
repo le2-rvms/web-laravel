@@ -188,10 +188,19 @@ class BookingOrderController extends Controller
     public function generate(Request $request, BookingVehicle $bookingVehicle): Response
     {
         // 根据预定车辆生成订单草稿数据。
-        $bookingVehicle->append('bo_no'); // todo 可以不需要编号？
+        $bookingVehicle->append('bo_no');
         $bookingVehicle->load(['Vehicle']);
 
-        $result = array_filter($bookingVehicle->toArray());
+        $bookingVehicleArray = $bookingVehicle->toArray();
+
+        $result = [];
+        foreach ($bookingVehicleArray as $key => $value) {
+            if (null === $value || '' === $value) {
+            } else {
+                $key          = preg_replace('/^bv_/', 'bo_', $key);
+                $result[$key] = $value;
+            }
+        }
 
         return $this->response()->withData($result)->respond();
     }
