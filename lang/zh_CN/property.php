@@ -108,7 +108,7 @@ return [
         'dl_id'                     => '消息序号',
         'dl_dc_key'                 => '消息类型key',
         'dl_key'                    => '消息key',
-        'dl_p_id'                   => '关联对象ID // todo ??',
+        'dl_p_id'                   => '关联对象ID',
         'dl_sc_id'                  => '关联对象ID',
         'dl_recipients'             => '收件人',
         'dl_recipients_url'         => '收件人地址',
