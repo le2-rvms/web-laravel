@@ -56,8 +56,6 @@ use Illuminate\Validation\Validator;
  * @property string|VeStatusRental        $ve_status_rental            租赁状态；
  * @property string|VePendingStatusRental $ve_pending_status_rental    待租赁状态；
  * @property string|VeStatusDispatch      $ve_status_dispatch          是否发车；例如未发车或已发车
- * @property mixed                        $ve_status_accident__        ；出险状态；例如无出险或发生事故 //todo
- * @property mixed                        $ve_status_maintenance__     ；保养状态；例如无需保养、保养中
  * @property null|array                   $ve_license_face_photo       行驶证照片
  * @property null|array                   $ve_license_back_photo       行驶证背面照片
  * @property null|string                  $ve_license_owner            车辆所有人
