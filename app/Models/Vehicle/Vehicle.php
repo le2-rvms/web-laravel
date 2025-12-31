@@ -339,7 +339,7 @@ class Vehicle extends Model
             $item['ve_type']                 = VeType::searchValue($item['ve_type'] ?? null);
             static::$fields['ve_plate_no'][] = $item['ve_plate_no'];
             static::$fields['ve_vm_id'][]    = $item['ve_vm_id'] ?? null;
-            static::$fields['ve_team_id'][]  = $item['ve_team_id'] ?? null; // todo
+            $item['ve_team_id']              = AdminTeam::nameValue($item['ve_team_id'] ?? null);
         };
     }
 

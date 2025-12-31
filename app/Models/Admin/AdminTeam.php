@@ -43,6 +43,21 @@ class AdminTeam extends Model
 
     protected $guarded = ['at_id'];
 
+    public static function nameValue(mixed $at_name)
+    {
+        static $kv = null;
+
+        if (null === $kv) {
+            $kv = static::query()
+                ->select('at_id', 'at_name')
+                ->pluck('at_id', 'at_name')
+                ->toArray()
+            ;
+        }
+
+        return $kv[$at_name] ?? null;
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(static::class, 'parent_id');
