@@ -77,7 +77,7 @@ abstract class ConfigurationController extends Controller
 
     public function editConfirm(Request $request, Configuration $configuration): Response
     {
-        $input = $this->validatedEditRequest($request, $configuration);
+        $input = $this->validatedRequest($request, $configuration);
 
         $configuration->fill($input);
 
@@ -87,7 +87,7 @@ abstract class ConfigurationController extends Controller
 
     public function update(Request $request, Configuration $configuration): Response
     {
-        $input = $this->validatedEditRequest($request, $configuration);
+        $input = $this->validatedRequest($request, $configuration);
 
         DB::transaction(function () use ($configuration, $input) {
             $configuration->update($input);
@@ -126,7 +126,7 @@ abstract class ConfigurationController extends Controller
 
     public function createConfirm(Request $request): View
     {
-        $input = $this->validatedCreateRequest($request);
+        $input = $this->validatedRequest($request);
 
         $configuration = new Configuration($input);
 
@@ -136,11 +136,11 @@ abstract class ConfigurationController extends Controller
 
     public function store(Request $request): Response
     {
-        $input = $this->validatedCreateRequest($request);
+        $input = $this->validatedRequest($request);
 
         DB::transaction(function () use ($input) {
             // 强制写入当前 usageCategory，避免越权写入其他分类。
-            $configuration = Configuration::query()->create($input + ['cfg_usage_category' => $this->usageCategory]); // todo 改为前端要传，控制器要验证。
+            $configuration = Configuration::query()->create($input);
         });
 
         $this->response()->withMessages(message_success(str_replace(get_parent_class($this), get_called_class(), __METHOD__)));
@@ -155,32 +155,16 @@ abstract class ConfigurationController extends Controller
         );
     }
 
-    private function validatedCreateRequest(Request $request): array
-    {
-        return Validator::make(
-            $request->all(),
-            [
-                'cfg_key'    => ['required', 'max:255', Rule::unique(Configuration::class, 'cfg_key')],
-                'cfg_value'  => ['required'],
-                'cfg_masked' => ['required', Rule::in(CfgMasked::label_keys())],
-                'cfg_remark' => ['nullable'],
-            ],
-            [],
-            trans_property(Configuration::class)
-        )
-            ->validate()
-        ;
-    }
-
-    private function validatedEditRequest(Request $request, Configuration $configuration): array
+    private function validatedRequest(Request $request, ?Configuration $configuration = null): array
     {
         $input = Validator::make(
             $request->all(),
             [
-                'cfg_key'    => ['required', 'max:255', Rule::unique(Configuration::class, 'cfg_key')->ignore($configuration, 'cfg_key')],
-                'cfg_value'  => ['required'],
-                'cfg_masked' => ['required', Rule::in(CfgMasked::label_keys())],
-                'cfg_remark' => ['nullable'],
+                'cfg_key'            => ['required', 'max:255', Rule::unique(Configuration::class, 'cfg_key')->ignore($configuration, 'cfg_key')],
+                'cfg_value'          => ['required'],
+                'cfg_masked'         => ['required', Rule::in(CfgMasked::label_keys())],
+                'cfg_usage_category' => ['required', Rule::in([$this->usageCategory])],
+                'cfg_remark'         => ['nullable'],
             ],
             [],
             trans_property(Configuration::class)
