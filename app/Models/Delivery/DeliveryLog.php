@@ -4,7 +4,6 @@ namespace App\Models\Delivery;
 
 use App\Enum\Delivery\DlDcKey;
 use App\Enum\Delivery\DlSendStatus;
-use App\Enum\Sale\DtStatus;
 use App\Models\_\ModelTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,7 +18,7 @@ use Illuminate\Support\Facades\Http;
  * @property int            $dl_id     消息序号
  * @property DlDcKey|string $dl_dc_key 消息类型key
  * @property string         $dl_key    消息key
- * @property int            $dl_p_id   关联对象ID // todo ??
+ * @property int            $dl_p_id   关联对象ID
  * @property string         $dl_sc_id  关联对象ID
  *
  * -- 收件人与消息体
@@ -89,12 +88,7 @@ class DeliveryLog extends Model
 
     public static function optionsQuery(): Builder
     {
-        return static::query()
-            ->from('doc_tpls', 'dt') // todo doc 是错的？
-            ->where('dt.dt_status', '=', DtStatus::ENABLED)
-            ->orderBy('dt.dt_id', 'desc')
-            ->select(DB::raw("concat(dt_file_type,'|',dt_name,'→docx') as text,concat(dt.dt_id,'|docx') as value"))
-        ;
+        return static::query();
     }
 
     public function DeliveryChannel(): BelongsTo

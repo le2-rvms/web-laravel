@@ -130,16 +130,16 @@ class DeliveryChannel extends Model
                     }
 
                     DeliveryLog::query()->insert([
-                        'dc_key'         => $dc_key,
-                        'dc_tn'          => $dc_tn,
-                        'dl_key'         => $dl_key,
-                        'p_id'           => $payment->p_id,
-                        'recipients_url' => $sce_wecom_group_url,
-                        'content_title'  => $this->dc_title,
-                        'content_body'   => Blade::render($this->dc_template, $payment),
-                        'send_status'    => DlSendStatus::ST_PENDING,
-                        'send_attempt'   => '0',
-                        'scheduled_for'  => now(),
+                        'dl_dc_key'         => $dc_key,
+                        'dl_dc_tn'          => $dc_tn,
+                        'dl_key'            => $dl_key,
+                        'dl_p_id'           => $payment->p_id,
+                        'dl_recipients_url' => $sce_wecom_group_url,
+                        'dl_content_title'  => $this->dc_title,
+                        'dl_content_body'   => Blade::render($this->dc_template, $payment),
+                        'dl_send_status'    => DlSendStatus::ST_PENDING,
+                        'dl_send_attempt'   => '0',
+                        'dl_scheduled_for'  => now(),
                     ]);
                 }
             })
@@ -181,16 +181,16 @@ class DeliveryChannel extends Model
                     }
 
                     DeliveryLog::query()->insert([
-                        'dc_key'         => $dc_key,
-                        'dc_tn'          => $dc_tn,
-                        'dl_key'         => $dl_key,
-                        'sc_id'          => $saleContract->sc_id,
-                        'recipients_url' => $sce_wecom_group_url,
-                        'content_title'  => $this->dc_title,
-                        'content_body'   => Blade::render($this->dc_template, $saleContract),
-                        'send_status'    => DlSendStatus::ST_PENDING,
-                        'send_attempt'   => '0',
-                        'scheduled_for'  => now(),
+                        'dl_dc_key'         => $dc_key,
+                        'dl_dc_tn'          => $dc_tn,
+                        'dl_key'            => $dl_key,
+                        'dl_sc_id'          => $saleContract->sc_id,
+                        'dl_recipients_url' => $sce_wecom_group_url,
+                        'dl_content_title'  => $this->dc_title,
+                        'dl_content_body'   => Blade::render($this->dc_template, $saleContract),
+                        'dl_send_status'    => DlSendStatus::ST_PENDING,
+                        'dl_send_attempt'   => '0',
+                        'dl_scheduled_for'  => now(),
                     ]);
                 }
             })
@@ -231,16 +231,16 @@ class DeliveryChannel extends Model
                     }
 
                     DeliveryLog::query()->insert([
-                        'dc_key'        => $dc_key,
-                        'dc_tn'         => $dc_tn,
-                        'dl_key'        => $dl_key,
-                        'vi_id'         => $vehicleInsurance->vi_id,
-                        'recipients'    => json_encode([$a_wecom_name]),
-                        'content_title' => $this->dc_title,
-                        'content_body'  => Blade::render($this->dc_template, $vehicleInsurance),
-                        'send_status'   => DlSendStatus::ST_PENDING,
-                        'send_attempt'  => '0',
-                        'scheduled_for' => now(),
+                        'dl_dc_key'        => $dc_key,
+                        'dl_dc_tn'         => $dc_tn,
+                        'dl_key'           => $dl_key,
+                        'dl_vi_id'         => $vehicleInsurance->vi_id,
+                        'dl_recipients'    => json_encode([$a_wecom_name]),
+                        'dl_content_title' => $this->dc_title,
+                        'dl_content_body'  => Blade::render($this->dc_template, $vehicleInsurance),
+                        'dl_send_status'   => DlSendStatus::ST_PENDING,
+                        'dl_send_attempt'  => '0',
+                        'dl_scheduled_for' => now(),
                     ]);
                 }
             })
@@ -280,16 +280,16 @@ class DeliveryChannel extends Model
                         continue;
                     }
                     DeliveryLog::query()->insert([
-                        'dc_key'        => $dc_key,
-                        'dc_tn'         => $dc_tn,
-                        'dl_key'        => $dl_key,
-                        'vs_id'         => $vehicleSchedule->vs_id,
-                        'recipients'    => json_encode([$a_wecom_name]),
-                        'content_title' => $this->dc_title,
-                        'content_body'  => Blade::render($this->dc_template, $vehicleSchedule),
-                        'send_status'   => DlSendStatus::ST_PENDING,
-                        'send_attempt'  => '0',
-                        'scheduled_for' => now(),
+                        'dl_dc_key'        => $dc_key,
+                        'dl_dc_tn'         => $dc_tn,
+                        'dl_key'           => $dl_key,
+                        'dl_vs_id'         => $vehicleSchedule->vs_id,
+                        'dl_recipients'    => json_encode([$a_wecom_name]),
+                        'dl_content_title' => $this->dc_title,
+                        'dl_content_body'  => Blade::render($this->dc_template, $vehicleSchedule),
+                        'dl_send_status'   => DlSendStatus::ST_PENDING,
+                        'dl_send_attempt'  => '0',
+                        'dl_scheduled_for' => now(),
                     ]);
                 }
             })
@@ -335,16 +335,16 @@ class DeliveryChannel extends Model
                     }
 
                     DeliveryLog::query()->insert([
-                        'dc_key'         => $dc_key,
-                        'dc_tn'          => $dc_tn,
-                        'dl_key'         => $dl_key,
-                        'vv_id'          => $vehicleViolation->vv_id,
-                        'recipients_url' => $sce_wecom_group_url,
-                        'content_title'  => $this->dc_title,
-                        'content_body'   => Blade::render($this->dc_template, $vehicleViolation),
-                        'send_status'    => DlSendStatus::ST_PENDING,
-                        'send_attempt'   => '0',
-                        'scheduled_for'  => now(),
+                        'dl_dc_key'         => $dc_key,
+                        'dl_dc_tn'          => $dc_tn,
+                        'dl_key'            => $dl_key,
+                        'dl_vv_id'          => $vehicleViolation->vv_id,
+                        'dl_recipients_url' => $sce_wecom_group_url,
+                        'dl_content_title'  => $this->dc_title,
+                        'dl_content_body'   => Blade::render($this->dc_template, $vehicleViolation),
+                        'dl_send_status'    => DlSendStatus::ST_PENDING,
+                        'dl_send_attempt'   => '0',
+                        'dl_scheduled_for'  => now(),
                     ]);
                 }
             })
