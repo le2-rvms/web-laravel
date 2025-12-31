@@ -144,6 +144,31 @@ class OneAccount extends Model
         return $this->hasMany(Vehicle::class, 've_oa_id', 'oa_id');
     }
 
+    /**
+     * @return Collection<OneAccount>
+     */
+    public static function getListForFetch(): Collection
+    {
+        return OneAccount::query()
+            ->whereRaw('LENGTH(oa_cookie_string) > ?', [30])
+            ->where(function (Builder $query) {
+                $query->where('oa_cookie_refresh_at', '>=', now()->subMinutes(30))->orWhereNull('oa_cookie_refresh_at');
+            })
+
+            ->get()
+        ;
+    }
+
+    public static function getListForSync(): \Illuminate\Support\Collection
+    {
+        return OneAccount::query()
+            ->where('oa_is_sync_rental_contract', OaIsSyncRentalContract::ENABLED)
+            ->whereRaw('LENGTH(oa_cookie_string) > ?', [30])
+            ->orderBy('oa_id')
+            ->get()
+        ;
+    }
+
     protected function oaTypeLabel(): Attribute
     {
         return Attribute::make(

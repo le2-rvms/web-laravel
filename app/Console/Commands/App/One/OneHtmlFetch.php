@@ -7,7 +7,6 @@ use App\Models\One\OneAccount;
 use App\Models\One\OneRequest;
 use GuzzleHttp\Client;
 use Illuminate\Console\Command;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -29,14 +28,8 @@ class OneHtmlFetch extends Command
     {
         $this->turn = $this->option('turn') ?: Carbon::now()->format('Y-m-d');
 
-        $oneAccounts = OneAccount::query()
-            ->whereRaw('LENGTH(oa_cookie_string) > ?', [30])
-            ->where(function (Builder $query) {
-                $query->where('oa_cookie_refresh_at', '>=', now()->subMinutes(30))->orWhereNull('oa_cookie_refresh_at');
-            })
+        $oneAccounts = OneAccount::getListForFetch();
 
-            ->get()
-        ;
         foreach ($oneAccounts as $oneAccount) {
             switch ($oneAccount->oa_type) {
                 case OaType::PERSON:
