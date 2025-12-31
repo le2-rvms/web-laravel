@@ -66,14 +66,14 @@ class VehicleTempController extends Controller
     public function create(Request $request): Response
     {
         /** @var SaleContract $saleContract */
-        $saleContract = null; // todo  去掉？
+        $saleContract = null;
         $input        = Validator::make(
             $request->all(),
             [
                 'sc_id' => ['nullable', 'integer'],
             ],
             [],
-            []
+            trans_property(SaleContract::class)
         )
             ->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$saleContract, &$vehicle0) {
                 if ($validator->failed()) {

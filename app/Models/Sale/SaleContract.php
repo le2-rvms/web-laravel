@@ -717,7 +717,7 @@ class SaleContract extends Model
     {
         return Attribute::make(
             get: fn () => join(' | ', array_filter([
-                $this->Customer?->getOriginal('sc_contact_name'),
+                $this->Customer?->getOriginal('cu_contact_name'),
                 substr($this->Customer?->getOriginal('cu_contact_phone'), -4),
                 $this->Vehicle?->getOriginal('ve_plate_no'),
                 $this->getOriginal('sc_rental_type_short_label'),
