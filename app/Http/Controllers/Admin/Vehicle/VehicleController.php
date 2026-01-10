@@ -94,7 +94,7 @@ class VehicleController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('ve.ve_license_owner', 'like', '%'.$value.'%')->orWhere('ve.ve_license_address', 'like', '%'.$value.'%');
+                        $builder->where('ve.ve_plate_no', 'ilike', '%'.$value.'%')->orWhere('ve.ve_license_owner', 'ilike', '%'.$value.'%')->orWhere('ve.ve_license_address', 'ilike', '%'.$value.'%');
                     });
                 },
             ],

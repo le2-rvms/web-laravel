@@ -83,7 +83,7 @@ class ViolationCountController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('vv.vv_violation_content', 'like', '%'.$value.'%');
+                    $builder->where('vv.vv_violation_content', 'ilike', '%'.$value.'%');
                 });
             },
         ]);

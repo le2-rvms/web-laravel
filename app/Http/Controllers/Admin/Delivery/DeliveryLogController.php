@@ -43,7 +43,7 @@ class DeliveryLogController extends Controller
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
                     // 根据消息标题关键字搜索发送记录。
-                    $builder->where('dc.dc_title', 'like', '%'.$value.'%');
+                    $builder->where('dc.dc_title', 'ilike', '%'.$value.'%');
                 });
             },
         ]);

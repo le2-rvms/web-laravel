@@ -48,7 +48,7 @@ class DeliveryChannelController extends Controller
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
                     // 按消息标题关键字过滤。
-                    $builder->where('dc.dc_title', 'like', '%'.$value.'%');
+                    $builder->where('dc.dc_title', 'ilike', '%'.$value.'%');
                 });
             },
         ]);

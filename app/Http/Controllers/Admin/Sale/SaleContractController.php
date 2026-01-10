@@ -109,7 +109,7 @@ class SaleContractController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('sc.sc_no', 'like', '%'.$value.'%')->orWhere('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('cu.cu_contact_name', 'like', '%'.$value.'%')->orWhere('sc.sc_remark', 'like', '%'.$value.'%');
+                        $builder->where('sc.sc_no', 'ilike', '%'.$value.'%')->orWhere('ve.ve_plate_no', 'ilike', '%'.$value.'%')->orWhere('cu.cu_contact_name', 'ilike', '%'.$value.'%')->orWhere('sc.sc_remark', 'ilike', '%'.$value.'%');
                     });
                 },
             ],

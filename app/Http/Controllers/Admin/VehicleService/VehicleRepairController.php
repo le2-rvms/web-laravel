@@ -92,7 +92,7 @@ class VehicleRepairController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('vr.vr_remark', 'like', '%'.$value.'%');
+                        $builder->where('ve.ve_plate_no', 'ilike', '%'.$value.'%')->orWhere('vr.vr_remark', 'ilike', '%'.$value.'%');
                     });
                 },
             ],

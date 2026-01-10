@@ -154,8 +154,8 @@ class PaginateService
 
                     break;
 
-                case 'like':
-                    $this->builder->where($keyAs.'.'.$_keyName, 'like', "%{$value}%");
+                case 'ilike':
+                    $this->builder->where($keyAs.'.'.$_keyName, 'ilike', "%{$value}%");
 
                     break;
 

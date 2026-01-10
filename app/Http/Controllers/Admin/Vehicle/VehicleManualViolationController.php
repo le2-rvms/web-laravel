@@ -58,7 +58,7 @@ class VehicleManualViolationController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('vv.violation_content', 'like', '%'.$value.'%')->orWhere('vv.vv_remark', 'like', "%{$value}%");
+                    $builder->where('vv.violation_content', 'ilike', '%'.$value.'%')->orWhere('vv.vv_remark', 'ilike', "%{$value}%");
                 });
             },
         ]);

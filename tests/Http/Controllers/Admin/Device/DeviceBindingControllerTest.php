@@ -2,6 +2,7 @@
 
 namespace Tests\Http\Controllers\Admin\Device;
 
+use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
 use App\Models\Admin\Admin;
 use App\Models\Iot\IotDevice;
@@ -42,14 +43,14 @@ class DeviceBindingControllerTest extends TestCase
         $this->device = IotDevice::factory()->create(['device_code' => 'test-123']);
 
         Vehicle::query()->whereLike('ve_plate_no', 'TEST-%')->delete();
-        $this->vehicle = Vehicle::factory()->create(['ve_plate_no' => 'TEST-004']);
+        $this->vehicle = Vehicle::factory()->create(['ve_plate_no' => 'TEST-004', 've_status_service' => VeStatusService::YES]);
 
         $this->deviceBinding = IotDeviceBinding::factory()->create([
-            'd_id'         => $this->device->getKey(),
-            've_id'        => $this->vehicle->getKey(),
-            'processed_by' => $this->admin->getKey(),
-            'db_start_at'  => now()->subDays(3),
-            'db_end_at'    => now()->subDays(2),
+            'db_d_code'       => $this->device->getKey(),
+            'db_ve_id'        => $this->vehicle->getKey(),
+            'db_processed_by' => $this->admin->getKey(),
+            'db_start_at'     => now()->subDays(3),
+            'db_end_at'       => now()->subDays(2),
         ]);
     }
 
@@ -105,18 +106,18 @@ class DeviceBindingControllerTest extends TestCase
         $res->assertOk()
             ->assertJson([
                 'data' => [
-                    'd_id'  => $payload['d_id'],
-                    've_id' => $payload['ve_id'],
+                    'db_d_code' => $payload['db_d_code'],
+                    'db_ve_id'  => $payload['db_ve_id'],
                 ],
             ])
         ;
 
         $this->assertDatabaseHas((new IotDeviceBinding())->getTable(), [
-            'd_id'         => $payload['d_id'],
-            've_id'        => $payload['ve_id'],
-            'processed_by' => $payload['processed_by'],
-            'db_start_at'  => $payload['db_start_at'],
-            'db_end_at'    => $payload['db_end_at'],
+            'db_d_code'       => $payload['db_d_code'],
+            'db_ve_id'        => $payload['db_ve_id'],
+            'db_processed_by' => $payload['db_processed_by'],
+            'db_start_at'     => $payload['db_start_at'],
+            'db_end_at'       => $payload['db_end_at'],
         ]);
     }
 
@@ -217,8 +218,8 @@ class DeviceBindingControllerTest extends TestCase
                 ->for($this->admin, 'ProcessedBy')
                 ->raw(
                     [
-                        'd_id'  => 'non-exist',
-                        've_id' => 'non-exist',
+                        'db_d_code' => 'non-exist',
+                        'db_ve_id'  => 'non-exist',
                     ]
                 )
         ;
@@ -229,7 +230,7 @@ class DeviceBindingControllerTest extends TestCase
         );
 
         $res->assertStatus(422)
-            ->assertJsonValidationErrors(['d_id', 've_id'])
+            ->assertJsonValidationErrors(['db_d_code', 'db_ve_id'])
         ;
     }
 

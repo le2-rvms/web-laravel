@@ -7,7 +7,7 @@ use App\Attributes\PermissionType;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
-use App\Models\Iot\IotDevice;
+use App\Models\Iot\GpsDevice;
 use App\Models\Iot\IotDeviceBinding;
 use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
@@ -39,11 +39,20 @@ class IotDeviceBindingController extends Controller
             [],
             // 默认按最新绑定记录排序。
             [['db.db_id', 'desc']],
-            [],
+            ['kw'],
             []
         );
 
-        $paginate->paginator($query, $request, []);
+        $paginate->paginator($query, $request, [
+            'kw__func' => function ($value, Builder $builder) {
+                $builder->where(function (Builder $builder) use ($value) {
+                    $like = '%'.$value.'%';
+                    $builder->where('db.db_d_code', 'ilike', $like)
+                        ->orWhere('ve.ve_plate_no', 'ilike', $like)
+                    ;
+                });
+            },
+        ]);
 
         return $this->response()->withData($paginate)->respond();
     }
@@ -54,6 +63,8 @@ class IotDeviceBindingController extends Controller
         $this->options();
         $this->response()->withExtras(
         );
+
+        $iotDeviceBinding->load('Vehicle', 'GpsDevice');
 
         return $this->response()->withData($iotDeviceBinding)->respond();
     }
@@ -77,9 +88,11 @@ class IotDeviceBindingController extends Controller
         if (null === $iotDeviceBinding) {
             // 新建时预填开始时间与处理人。
             $iotDeviceBinding = new IotDeviceBinding([
-                'start_at'     => now(),
-                'processed_by' => Auth::id(),
+                'db_start_at'     => now()->format('Y-m-d H:i:00'),
+                'db_processed_by' => Auth::id(),
             ]);
+        } else {
+            $iotDeviceBinding->load('Vehicle', 'GpsDevice');
         }
 
         return $this->response()->withData($iotDeviceBinding)->respond();
@@ -97,13 +110,12 @@ class IotDeviceBindingController extends Controller
         $input = Validator::make(
             $request->all(),
             [
-                'd_id' => ['required', 'integer', Rule::exists(IotDevice::class)],
-                // 仅允许绑定在役车辆。
-                've_id'        => ['required', 'integer', Rule::exists(Vehicle::class, 've_id')->where('ve_status_service', VeStatusService::YES)],
-                'db_start_at'  => ['required', 'date'],
-                'db_end_at'    => ['nullable', 'date', 'after:db_start_at'],
-                'db_note'      => ['nullable', 'string', 'max:200'],
-                'processed_by' => ['required', Rule::exists(Admin::class, 'id')],
+                'db_d_code'       => ['required', 'string', Rule::exists(GpsDevice::class, 'terminal_id')],
+                'db_ve_id'        => ['required', 'integer', Rule::exists(Vehicle::class, 've_id')->where('ve_status_service', VeStatusService::YES)], // 仅允许绑定在役车辆。
+                'db_start_at'     => ['required', 'date'],
+                'db_end_at'       => ['nullable', 'date', 'after:db_start_at'],
+                'db_note'         => ['nullable', 'string', 'max:200'],
+                'db_processed_by' => ['required', Rule::exists(Admin::class, 'id')],
             ],
             trans_property(IotDeviceBinding::class),
         )->after(function (\Illuminate\Validation\Validator $validator) use ($iotDeviceBinding, $request) {
@@ -113,7 +125,7 @@ class IotDeviceBindingController extends Controller
             // 如果当前绑定未结束，则同设备不能有其他未结束绑定。
             if (!$request->input('db_end_at')) {
                 $count = IotDeviceBinding::query()
-                    ->where('d_id', $request->input('d_id'))
+                    ->where('db_d_code', $request->input('db_d_code'))
                     ->whereNull('db_end_at')
                     ->when($iotDeviceBinding, function (Builder $query) use ($iotDeviceBinding) {
                         // 编辑时排除当前记录，避免误判重复绑定。

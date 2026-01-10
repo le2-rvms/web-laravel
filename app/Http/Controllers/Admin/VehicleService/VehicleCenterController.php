@@ -47,7 +47,7 @@ class VehicleCenterController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('vc.vc_name', 'like', '%'.$value.'%')->orWhere('vc.vc_address', 'like', '%'.$value.'%')->orWhere('vc.vc_contact_name', 'like', '%'.$value.'%')->orWhere('vc.vc_contact_phone', 'like', '%'.$value.'%')->orWhere('vc.vc_note', 'like', '%'.$value.'%');
+                    $builder->where('vc.vc_name', 'ilike', '%'.$value.'%')->orWhere('vc.vc_address', 'ilike', '%'.$value.'%')->orWhere('vc.vc_contact_name', 'ilike', '%'.$value.'%')->orWhere('vc.vc_contact_phone', 'ilike', '%'.$value.'%')->orWhere('vc.vc_note', 'ilike', '%'.$value.'%');
                 });
             },
         ]);

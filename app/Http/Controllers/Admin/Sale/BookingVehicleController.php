@@ -72,7 +72,7 @@ class BookingVehicleController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('bv.bv_plate_no', 'like', '%'.$value.'%')->orWhere('bv.bv_note', 'like', '%'.$value.'%');
+                    $builder->where('bv.bv_plate_no', 'ilike', '%'.$value.'%')->orWhere('bv.bv_note', 'ilike', '%'.$value.'%');
                 });
             },
         ]);

@@ -37,7 +37,7 @@ class AdminTeamController extends Controller
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
                     // 支持按名称或备注检索车队。
-                    $builder->where('at_name', 'like', '%'.$value.'%')->orWhere('at_remark', 'like', '%'.$value.'%');
+                    $builder->where('at_name', 'ilike', '%'.$value.'%')->orWhere('at_remark', 'ilike', '%'.$value.'%');
                 });
             },
         ]);

@@ -63,7 +63,7 @@ class VehicleViolationController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('violation_content', 'like', '%'.$value.'%')->orWhere('vv_remark', 'like', "%{$value}%");
+                        $builder->where('violation_content', 'ilike', '%'.$value.'%')->orWhere('vv_remark', 'ilike', "%{$value}%");
                     });
                 },
             ],

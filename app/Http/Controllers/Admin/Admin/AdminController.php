@@ -54,7 +54,7 @@ class AdminController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('name', 'like', '%'.$value.'%')->orWhere('email', 'like', '%'.$value.'%');
+                    $builder->where('name', 'ilike', '%'.$value.'%')->orWhere('email', 'ilike', '%'.$value.'%');
                 });
             },
         ]);

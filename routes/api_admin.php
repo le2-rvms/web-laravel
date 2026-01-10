@@ -203,7 +203,8 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     Route::resource('expiry-vehicles', ExpiryVehicleController::class)->only('index');
 
-    // device
+    // iot
     Route::resource('iot-device-bindings', IotDeviceBindingController::class);
-    Route::get('gps-data/history/{vehicle}', [GpsDataController::class, 'history']);
+    Route::get('gps-data/history-vehicle', [GpsDataController::class, 'history_vehicle']);
+    Route::get('gps-data/history-device', [GpsDataController::class, 'history_device']);
 });

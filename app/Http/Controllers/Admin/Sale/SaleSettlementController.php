@@ -82,7 +82,7 @@ class SaleSettlementController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('cu.cu_contact_name', 'like', '%'.$value.'%')->orWhere('cu.cu_contact_phone', 'like', '%'.$value.'%')->orWhere('ss.ss_remark', 'like', '%'.$value.'%');
+                        $builder->where('ve.ve_plate_no', 'ilike', '%'.$value.'%')->orWhere('cu.cu_contact_name', 'ilike', '%'.$value.'%')->orWhere('cu.cu_contact_phone', 'ilike', '%'.$value.'%')->orWhere('ss.ss_remark', 'ilike', '%'.$value.'%');
                     });
                 },
             ],

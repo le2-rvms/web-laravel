@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin\Device;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Http\Controllers\Controller;
+use App\Models\Iot\GpsDevice;
 use App\Models\Iot\IotDeviceBinding;
 use App\Models\Vehicle\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,7 +29,7 @@ class GpsDataController extends Controller
      * @throws ValidationException
      */
     #[PermissionAction(PermissionAction::READ)]
-    public function history(Request $request, Vehicle $vehicle): Response
+    public function history_vehicle(Request $request, Vehicle $vehicle): Response
     {
         $input = Validator::make(
             $request->all(),
@@ -47,8 +49,8 @@ class GpsDataController extends Controller
                 $end   = Carbon::parse($request->input('db_end_at'));
 
                 // 限制查询窗口，避免扫描过大轨迹区间。
-                if ($end->gt($start->copy()->addDays(3))) {
-                    $validator->errors()->add('db_end_at', '开始与结束的时间间隔不能超过 3 天。');
+                if ($end->gt($start->copy()->addMonths(2))) {
+                    $validator->errors()->add('db_end_at', '开始与结束的时间间隔不能超过2个月。');
                 }
             })
             ->validate()
@@ -98,6 +100,60 @@ WHERE g.ts >= w.start_ts AND g.ts < w.end_ts
 ORDER BY g.ts;
 SQL,
             [$json, $input['db_start_at'], $input['db_end_at']]
+        );
+
+        return $this->response()->withData($results)->respond();
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    #[PermissionAction(PermissionAction::READ)]
+    public function history_device(Request $request): Response
+    {
+        $input = Validator::make(
+            $request->all(),
+            [
+                'db_d_code'   => ['required', 'string', Rule::exists(GpsDevice::class, 'terminal_id')],
+                'db_start_at' => ['required', 'date'],
+                'db_end_at'   => ['required', 'date', 'after:db_start_at'],
+            ],
+            [],
+            trans_property(IotDeviceBinding::class)
+        )
+            ->after(function (\Illuminate\Validation\Validator $validator) use ($request) {
+                if ($validator->failed()) {
+                    return;
+                }
+
+                $start = Carbon::parse($request->input('db_start_at'));
+                $end   = Carbon::parse($request->input('db_end_at'));
+
+                // 限制查询窗口，避免扫描过大轨迹区间。
+                if ($end->gt($start->copy()->addMonths(2))) {
+                    $validator->errors()->add('db_end_at', '开始与结束的时间间隔不能超过2个月。');
+                }
+            })
+            ->validate()
+        ;
+
+        /** @var GpsDevice $gpsDevice */
+        $gpsDevice = GpsDevice::query()->where('terminal_id', $input['db_d_code'])->first();
+
+        $results = DB::connection('pgsql-iot')->select(
+            <<<'SQL'
+SELECT device_id, to_char(gps_time, 'YYYY-MM-DD HH24:MI:SS') as gps_time,latitude_gcj as latitude,longitude_gcj as longitude,altitude,direction,speed
+FROM public.gps_position_histories ph
+WHERE
+    device_id = :device_id
+  AND ph.gps_time >= :start_at AND ph.gps_time < :end_at
+ORDER BY ph.gps_time;
+SQL,
+            [
+                'device_id' => $gpsDevice->id,
+                'start_at'  => $input['db_start_at'],
+                'end_at'    => $input['db_end_at'],
+            ]
         );
 
         return $this->response()->withData($results)->respond();

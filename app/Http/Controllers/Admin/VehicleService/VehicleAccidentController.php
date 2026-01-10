@@ -62,7 +62,7 @@ class VehicleAccidentController extends Controller
             [
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('va.va_accident_location', 'like', '%'.$value.'%')->orWhere('va.va_description', 'like', '%'.$value.'%')->orWhere('cu.cu_contact_name', 'like', '%'.$value.'%');
+                        $builder->where('ve.ve_plate_no', 'ilike', '%'.$value.'%')->orWhere('va.va_accident_location', 'ilike', '%'.$value.'%')->orWhere('va.va_description', 'ilike', '%'.$value.'%')->orWhere('cu.cu_contact_name', 'ilike', '%'.$value.'%');
                     });
                 },
             ],

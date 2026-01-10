@@ -50,7 +50,7 @@ class DocTplController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('dt.dt_name', 'like', '%'.$value.'%')->orWhere('dt.dt_remark', 'like', '%'.$value.'%');
+                    $builder->where('dt.dt_name', 'ilike', '%'.$value.'%')->orWhere('dt.dt_remark', 'ilike', '%'.$value.'%');
                 });
             },
         ]);

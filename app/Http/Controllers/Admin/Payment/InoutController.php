@@ -48,7 +48,7 @@ class InoutController extends Controller
                 // Keyword search across customer, vehicle, remark, and contract.
                 'kw__func' => function ($value, Builder $builder) {
                     $builder->where(function (Builder $builder) use ($value) {
-                        $builder->where('cu.cu_contact_name', 'like', '%'.$value.'%')->orWhere('ve.ve_plate_no', 'like', '%'.$value.'%')->orWhere('p.p_remark', 'like', '%'.$value.'%')->orWhere('sc.sc_no', 'like', '%'.$value.'%');
+                        $builder->where('cu.cu_contact_name', 'ilike', '%'.$value.'%')->orWhere('ve.ve_plate_no', 'ilike', '%'.$value.'%')->orWhere('p.p_remark', 'ilike', '%'.$value.'%')->orWhere('sc.sc_no', 'ilike', '%'.$value.'%');
                     });
                 },
             ],

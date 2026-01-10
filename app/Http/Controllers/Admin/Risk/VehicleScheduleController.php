@@ -48,7 +48,7 @@ class VehicleScheduleController extends Controller
         $paginate->paginator($query, $request, [
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
-                    $builder->where('ve.ve_plate_no', 'like', '%'.$value.'%');
+                    $builder->where('ve.ve_plate_no', 'ilike', '%'.$value.'%');
                 });
             },
         ]);

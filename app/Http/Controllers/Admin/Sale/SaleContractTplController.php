@@ -51,7 +51,7 @@ class SaleContractTplController extends Controller
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
                     $builder
-                        ->where('sct.sct_name', 'like', '%'.$value.'%')->orWhere('sct.sct_remark', 'like', '%'.$value.'%')
+                        ->where('sct.sct_name', 'ilike', '%'.$value.'%')->orWhere('sct.sct_remark', 'ilike', '%'.$value.'%')
                     ;
                 });
             },

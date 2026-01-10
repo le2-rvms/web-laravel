@@ -46,7 +46,7 @@ class AdminPermissionController extends Controller
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
                     // 支持按权限名/标题模糊查询。
-                    $builder->where('name', 'like', '%'.$value.'%')->orWhere('title', 'like', '%'.$value.'%');
+                    $builder->where('name', 'ilike', '%'.$value.'%')->orWhere('title', 'ilike', '%'.$value.'%');
                 });
             },
         ]);

@@ -18,7 +18,7 @@ class IotDeviceFactory extends Factory
         $salt = Str::random(10);
 
         return [
-            'device_code'   => $this->faker->userName,
+            'device_code'   => $this->faker->userName(),
             'password_hash' => hash('sha256', 'password'.$salt),  // 默认密码 "password"
             'salt'          => $salt,
             'is_superuser'  => $this->faker->boolean() ? 1 : 0,

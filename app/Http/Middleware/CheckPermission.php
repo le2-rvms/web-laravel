@@ -32,7 +32,7 @@ class CheckPermission
         $actionName_ = str_replace('@', '::', $actionName);
 
         try {
-            $reflectionMethod = new \ReflectionMethod($actionName_);
+            $reflectionMethod = \ReflectionMethod::createFromMethodName($actionName_);
         } catch (\ReflectionException $e) {
             return false;
         }
