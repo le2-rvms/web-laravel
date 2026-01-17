@@ -6,6 +6,7 @@ use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Http\Controllers\Controller;
 use App\Models\Iot\GpsDevice;
+use App\Models\Iot\GpsDeviceLastPosition;
 use App\Models\Iot\IotDeviceBinding;
 use App\Models\Vehicle\Vehicle;
 use Illuminate\Http\Request;
@@ -23,6 +24,49 @@ class GpsDataController extends Controller
     {
         $controller->response()->withExtras(
         );
+    }
+
+    #[PermissionAction(PermissionAction::READ)]
+    public function latest(Request $request): Response
+    {
+        $input = Validator::make(
+            $request->all(),
+            [
+                'device_ids'   => ['array'],
+                'device_ids.*' => ['string', 'max:64', Rule::exists(GpsDevice::class, 'terminal_id')],
+            ]
+        )->validate();
+
+        $query = GpsDeviceLastPosition::query();
+
+        $companyId = config('app.company_id');
+        if ($companyId) {
+            $query->where('tenant_id', $companyId);
+        }
+
+        if (!empty($input['device_ids'])) {
+            $query->whereIn('terminal_id', $input['device_ids']);
+        }
+
+        $positions = $query->get()->map(function (GpsDeviceLastPosition $row) {
+            $timestamp = $row->gps_time;
+
+            try {
+                $timestamp = Carbon::parse($row->gps_time, 'UTC')->toIso8601String();
+            } catch (\Throwable) {
+            }
+
+            return [
+                'terminal_id' => $row->terminal_id,
+                'ts'          => $timestamp,
+                'latitude'    => null !== $row->latitude_gcj ? (float) $row->latitude_gcj : null,
+                'longitude'   => null !== $row->longitude_gcj ? (float) $row->longitude_gcj : null,
+                'coord_sys'   => 'GCJ02',
+                'source'      => 'snapshot',
+            ];
+        });
+
+        return $this->response()->withData($positions)->respond();
     }
 
     /**

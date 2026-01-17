@@ -56,6 +56,7 @@ use App\Http\Controllers\Admin\VehicleService\VehicleMaintenanceController;
 use App\Http\Controllers\Admin\VehicleService\VehicleRepairController;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\TemporaryAdmin;
+use Illuminate\Broadcasting\BroadcastController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('no-auth')->group(function () {
@@ -69,6 +70,8 @@ Route::prefix('no-auth')->group(function () {
     Route::get('/storage/tmp/{filename}', [StorageController::class, 'downloadTmp'])->name('storage.tmp')->middleware('signed');
     Route::get('/storage/share/{filename}', [StorageController::class, 'downloadShare'])->name('storage.share')->middleware('signed');
 });
+
+Route::post('broadcasting/auth', [BroadcastController::class, 'authenticate'])->name('broadcasting.auth')->middleware([config('setting.mock.enable') ? TemporaryAdmin::class : 'auth:sanctum']);
 
 Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::class : 'auth:sanctum', CheckPermission::class]], function () {
     //    Route::apiResource('file', FileController::class);
@@ -205,6 +208,7 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     // iot
     Route::resource('iot-device-bindings', IotDeviceBindingController::class);
+    Route::get('gps-data/latest', [GpsDataController::class, 'latest']);
     Route::get('gps-data/history-vehicle', [GpsDataController::class, 'history_vehicle']);
     Route::get('gps-data/history-device', [GpsDataController::class, 'history_device']);
 });

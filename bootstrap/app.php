@@ -2,12 +2,16 @@
 
 use App\Exceptions\ClientException;
 use App\Http\Middleware\LogRequests;
+use App\Providers\BroadcastServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
+    ->withProviders([
+        BroadcastServiceProvider::class,
+    ])
     ->withRouting(
         commands: __DIR__.'/../routes/console.php',
         health: '/status',

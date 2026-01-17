@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\_\HomeController;
+use App\Http\Controllers\Admin\_\ReverbWsDemoController;
 use App\Http\Controllers\Admin\Admin\AdminController;
 use App\Http\Controllers\Admin\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\Admin\AdminProfileController;
@@ -18,9 +19,14 @@ Route::get('/', function () {
 Auth::routes(['register' => false]);
 // Auth::routes();
 
+Route::get('/reverb/ws-demo-token', [ReverbWsDemoController::class, 'token']);
+Route::get('/reverb/vue-demo', [ReverbWsDemoController::class, 'vueDemo']);
+
 // Web pages
 Route::group(['middleware' => ['auth', CheckPermission::class]], function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    //    Route::get('/reverb/ws-demo', [ReverbWsDemoController::class, 'index']);
+    //    Route::get('/reverb/echo-demo', [ReverbWsDemoController::class, 'echoDemo']);
 
     Route::controller(AdminProfileController::class)->group(function () {
         Route::get('/profile/edit', 'edit')->name('profile.edit');
