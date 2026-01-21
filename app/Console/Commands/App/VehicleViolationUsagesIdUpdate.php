@@ -16,8 +16,7 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 )]
 class VehicleViolationUsagesIdUpdate extends Command
 {
-    protected $signature   = '_app:vehicle-violation-vu-id:update';
-    protected $description = '更新 *_violations,*_manual_violations 表中的 vu_id 字段，每次处理指定数量的记录';
+    protected $signature = '_app:vehicle-violation-vu-id:update';
 
     public function handle(): int
     {

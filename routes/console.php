@@ -9,11 +9,15 @@ use App\Console\Commands\App\VehicleViolationUsagesIdUpdate;
 use App\Console\Commands\Sys\SmtpSelfTest;
 use Illuminate\Support\Facades\Schedule;
 
+// Schedule::call(function () {
+//    echo 'schedule tick: '.date('c').PHP_EOL;
+// })->everyMinute()->description('test every minute');
+
 // Schedule::command(DeliveryLogMake::class)->cron('* 8-20 * * *')->withoutOverlapping();
 
 Schedule::command(OneRefreshCookie::class)->everyFifteenMinutes()->withoutOverlapping();
 
-Schedule::command(VehicleViolationUsagesIdUpdate::class)->everyTenMinutes();
+// Schedule::command(VehicleViolationUsagesIdUpdate::class)->everyTenMinutes();
 
 Schedule::command(SmtpSelfTest::class)->dailyAt('09:00')->description('SMTP 每日自检邮件');
 

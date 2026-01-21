@@ -13,7 +13,7 @@ class GpsDeviceChannel
             return false;
         }
 
-        $query = DB::connection('pgsql-iot')
+        $query = DB::connection('timescaledb')
             ->table('gps_devices')
             ->where('terminal_id', $terminalId)
         ;

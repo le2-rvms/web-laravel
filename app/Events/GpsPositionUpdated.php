@@ -16,21 +16,15 @@ class GpsPositionUpdated implements ShouldBroadcastNow
     use SerializesModels;
 
     public function __construct(
-        public readonly string $terminalId,
-        public readonly string $datetime,
-        public readonly float $latitude,
-        public readonly float $longitude,
-        public readonly ?float $speed = null,
-        public readonly ?float $direction = null,
-        public readonly ?float $altitude = null,
-        public readonly string $source = 'pgsql_listen',
+        public readonly array $payload,
+        public readonly string $source,
     ) {}
 
     public function broadcastOn(): array
     {
         // 同时推送单设备与全量频道，保证单设备/全图监控复用同一事件流。
         return [
-            new PrivateChannel('gps.device.'.$this->terminalId),
+            new PrivateChannel('gps.device.'.($this->payload['terminal_id'] ?? '')),
             new PrivateChannel('gps.device.all'),
         ];
     }
@@ -42,19 +36,13 @@ class GpsPositionUpdated implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
-        return [
-            'terminal_id' => $this->terminalId,
-            'datetime'    => $this->datetime,
-            'latitude'    => $this->latitude,
-            'longitude'   => $this->longitude,
-            'speed'       => $this->speed,
-            'direction'   => $this->direction,
-            'altitude'    => $this->altitude,
-            'coord_sys'   => 'GCJ02',
-            'source'      => $this->source,
-            'meta'        => [
-                'trace_id' => (string) Str::uuid(),
-            ],
-        ];
+        return
+            $this->payload
+            + [
+                'meta' => [
+                    'source'   => $this->source,
+                    'trace_id' => (string) Str::uuid(),
+                ],
+            ];
     }
 }

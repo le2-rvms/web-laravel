@@ -83,6 +83,7 @@ return [
 
         'pgsql' => [
             'driver'         => 'pgsql',
+            'timezone'       => 'Asia/Shanghai',
             'url'            => env('DB_URL'),
             'host'           => env('DB_HOST', '127.0.0.1'),
             'port'           => env('DB_PORT', '5432'),
@@ -96,14 +97,15 @@ return [
             'sslmode'        => 'prefer',
         ],
 
-        'pgsql-iot' => [
+        'timescaledb' => [
             'driver'         => 'pgsql',
+            'timezone'       => 'Asia/Shanghai',
             'url'            => env('DB_URL'),
-            'host'           => env('DB_HOST').'-iot',
+            'host'           => 'timescaledb',
             'port'           => env('DB_PORT', '5432'),
-            'database'       => env('DB_IOT_DATABASE', 'iot'),
-            'username'       => env('DB_IOT_USERNAME', 'iot'),
-            'password'       => env('DB_IOT_PASSWORD', 'iot'),
+            'database'       => env('TIMESCALEDB_DATABASE', 'iot'),
+            'username'       => env('TIMESCALEDB_USERNAME', 'iot'),
+            'password'       => env('TIMESCALEDB_PASSWORD', 'iot'),
             'charset'        => env('DB_CHARSET', 'utf8'),
             'prefix'         => '',
             'prefix_indexes' => true,

@@ -6,7 +6,7 @@
 - 仅使用 WebSocket 订阅；单实例部署，不依赖 Redis。
 
 ## 数据链路
-1) 首屏数据：`GET /api-admin/gps-data/latest` 从 `pgsql-iot.gps_device_last_positions` 拉取（可传 `device_ids[]` 过滤；`COMPANY_ID` 存在时按 `tenant_id` 限制）。  
+1) 首屏数据：`GET /api-admin/gps-data/latest` 从 `timescaledb.gps_device_last_positions` 拉取（可传 `device_ids[]` 过滤；`COMPANY_ID` 存在时按 `tenant_id` 限制）。  
 2) 实时增量：命令 `php artisan app:iot:gps-listen` 监听 `device_last_position_${COMPANY_ID}`（租户隔离），NOTIFY 负载含设备 ID、坐标、时间等，直接解析广播，无需再查库。示例负载：
 ```json
 {"tenant_id":"rc-local","terminal_id":"013912345681","gps_time":"2026-01-12T12:45:57Z","latitude_gcj":30.487180213845548,"longitude_gcj":104.07431018102561}
@@ -24,7 +24,7 @@
 - 鉴权：`auth:sanctum` 用于 `/broadcasting/auth`。
 - 通道授权（在 `routes/channels.php` 中定义，由 `BroadcastServiceProvider` 加载）：
   - 需具备“轨迹数据”读取权限（`GpsData::read`）。
-  - 设备通道：校验终端号在 `pgsql-iot.gps_devices` 中存在（可选按 `COMPANY_ID` 过滤 `tenant_id`）。
+  - 设备通道：校验终端号在 `timescaledb.gps_devices` 中存在（可选按 `COMPANY_ID` 过滤 `tenant_id`）。
   - 全量通道：仅校验权限即可订阅。
   - 失败即拒绝订阅，并记录原因（脱敏）。
 

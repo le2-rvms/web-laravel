@@ -37,8 +37,6 @@ class OneContractsSync extends Command
         {--skip-fetch : 跳过线上合同拉取，仅使用本地 one_contract}
         {--dry-run : 仅输出统计，不提交请求}';
 
-    protected $description = '同步 122 平台租赁合同';
-
     private static string $listUrl   = ''; // 122 合同列表接口地址
     private static string $createUrl = ''; //  122 合同新增接口地址
     private static string $voidUrl   = ''; // 122 合同作废接口地址

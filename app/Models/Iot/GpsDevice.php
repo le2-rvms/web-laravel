@@ -21,7 +21,7 @@ class GpsDevice extends Model
     public const CREATED_AT = 'created_at';
     public const UPDATED_AT = 'updated_at';
 
-    protected $connection = 'pgsql-iot';
+    protected $connection = 'timescaledb';
 
     protected $primaryKey = 'id';
 

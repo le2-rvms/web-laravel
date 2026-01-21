@@ -22,7 +22,7 @@ class GpsDeviceLastPosition extends Model
 
     public $incrementing = false;
 
-    protected $connection = 'pgsql-iot';
+    protected $connection = 'timescaledb';
 
     protected $table = 'gps_device_last_positions';
 

@@ -32,41 +32,59 @@ class GpsDataController extends Controller
         $input = Validator::make(
             $request->all(),
             [
-                'device_ids'   => ['array'],
-                'device_ids.*' => ['string', 'max:64', Rule::exists(GpsDevice::class, 'terminal_id')],
+                'terminal_ids'   => ['array'],
+                'terminal_ids.*' => ['string', 'max:64', Rule::exists(GpsDevice::class, 'terminal_id')],
             ]
         )->validate();
 
-        $query = GpsDeviceLastPosition::query();
+        $now = Carbon::now()->format('Y-m-d H:i:s');
 
-        $companyId = config('app.company_id');
-        if ($companyId) {
-            $query->where('tenant_id', $companyId);
-        }
+        // 查询当前绑定的设备列表
+        $deviceBindings = DB::connection()
+            ->table('iot_device_bindings as db')
+            ->leftJoin('vehicles as ve', 'db.db_ve_id', '=', 've.ve_id')
+            ->select(
+                'db.db_d_code as terminal_id',
+                'db.db_ve_id as ve_id',
+                've.ve_plate_no as plate_no'
+            )
+            ->whereRaw('db.db_start_at::timestamptz < ?', [$now])
+            ->whereRaw('COALESCE(db.db_end_at, ?) >= ?', [$now, $now])
+            ->when(!empty($input['terminal_ids']), function ($query) use ($input) {
+                $query->whereIn('db.db_d_code', $input['terminal_ids']);
+            })
+            ->orderBy('db.db_id')
+            ->get()
+        ;
 
-        if (!empty($input['device_ids'])) {
-            $query->whereIn('terminal_id', $input['device_ids']);
-        }
+        $terminal_id_array = $deviceBindings->pluck('terminal_id');
 
-        $positions = $query->get()->map(function (GpsDeviceLastPosition $row) {
-            $timestamp = $row->gps_time;
+        // 位置信息 //有设备不代表就一定有位置信息。
+        $positions = GpsDeviceLastPosition::query()
+            ->select(
+                'terminal_id',
+                'latitude_gcj',
+                'longitude_gcj',
+                DB::raw("to_char( (gps_time AT TIME ZONE 'Asia/Shanghai')::timestamptz, 'YYYY-MM-DD\"T\"HH24:MI:SSOF') as gps_time"),
+                DB::raw("'GCJ02' as coord_sys"),
+                DB::raw("'snapshot' as source")
+            )
+//            ->where('tenant_id', $companyId = config('app.company_id'))
+            ->whereIn('terminal_id', $terminal_id_array)
+            ->when(!empty($input['terminal_ids']), function ($query) use ($input) {
+                $query->whereIn('terminal_id', $input['terminal_ids']);
+            })
+            ->get()
+        ;
 
-            try {
-                $timestamp = Carbon::parse($row->gps_time, 'UTC')->toIso8601String();
-            } catch (\Throwable) {
-            }
+        $this->response()->withExtras(
+            [
+                'positions' => $positions,
+            ]
+        );
+        $this->response()->withData($deviceBindings);
 
-            return [
-                'terminal_id' => $row->terminal_id,
-                'ts'          => $timestamp,
-                'latitude'    => null !== $row->latitude_gcj ? (float) $row->latitude_gcj : null,
-                'longitude'   => null !== $row->longitude_gcj ? (float) $row->longitude_gcj : null,
-                'coord_sys'   => 'GCJ02',
-                'source'      => 'snapshot',
-            ];
-        });
-
-        return $this->response()->withData($positions)->respond();
+        return $this->response()->respond();
     }
 
     /**
@@ -129,7 +147,7 @@ SQL,
 
         $json = json_encode($winRows);
 
-        $results = DB::connection('pgsql-iot')->select(
+        $results = DB::connection('timescaledb')->select(
             <<<'SQL'
 WITH w AS (
   SELECT *
@@ -184,7 +202,7 @@ SQL,
         /** @var GpsDevice $gpsDevice */
         $gpsDevice = GpsDevice::query()->where('terminal_id', $input['db_d_code'])->first();
 
-        $results = DB::connection('pgsql-iot')->select(
+        $results = DB::connection('timescaledb')->select(
             <<<'SQL'
 SELECT device_id, to_char(gps_time, 'YYYY-MM-DD HH24:MI:SS') as gps_time,latitude_gcj as latitude,longitude_gcj as longitude,altitude,direction,speed
 FROM public.gps_position_histories ph

@@ -27,7 +27,7 @@ class GpsDataControllerTest extends TestCase
     {
         $res = $this->getJson(
             action(
-                [GpsDataController::class, 'history'],
+                [GpsDataController::class, 'history_vehicle'],
                 [
                     'vehicle'     => 14,
                     'db_start_at' => '2025-08-13 12:24',
@@ -36,6 +36,19 @@ class GpsDataControllerTest extends TestCase
             ),
         );
 
+        $res->assertOk();
+    }
+
+    public function testLatest(): void
+    {
+        $res = $this->getJson(
+            action(
+                [GpsDataController::class, 'latest'],
+                [
+                ]
+            ),
+        );
+        echo json_encode($res->json());
         $res->assertOk();
     }
 }

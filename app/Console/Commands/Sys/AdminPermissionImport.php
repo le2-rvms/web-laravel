@@ -23,9 +23,6 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 )]
 class AdminPermissionImport extends Command
 {
-    protected $signature   = '_sys:admin-permission:import';
-    protected $description = '';
-
     private array $permissions = [];
     private array $lang_zh_CN;
 

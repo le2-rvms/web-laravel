@@ -11,17 +11,18 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 
 /**
  * @internal
+ *
+ * @coversNothing
  */
-#[CoversNothing]
 #[AsCommand(
     name: '_sys:smtp:self-test',
     description: 'Send a self-check email to verify SMTP delivery'
 )]
 class SmtpSelfTest extends Command
 {
-    protected $signature = '_sys:smtp:self-test {--to= : Override the recipient email address} {--subject= : Override the email subject}';
-
-    protected $description = 'Send a self-check email to verify SMTP delivery';
+    protected $signature = '_sys:smtp:self-test
+        {--to= : Override the recipient email address}
+        {--subject= : Override the email subject}';
 
     public function handle(): int
     {

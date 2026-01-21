@@ -19,9 +19,6 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 )]
 class AdminSuperUserUpsert extends Command
 {
-    protected $signature   = '_sys:admin-super-user:upsert';
-    protected $description = 'Create or update super-admin user from config/setting.php';
-
     public function handle(): int
     {
         // 一次性拉取并设默认

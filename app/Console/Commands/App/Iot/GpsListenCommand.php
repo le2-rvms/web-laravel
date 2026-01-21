@@ -4,7 +4,6 @@ namespace App\Console\Commands\App\Iot;
 
 use App\Events\GpsPositionUpdated;
 use Illuminate\Console\Command;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -94,9 +93,9 @@ class GpsListenCommand extends Command
     private function connectAndListen(string $channel): \PDO
     {
         // 断线重连时清理旧连接，避免复用失效句柄。
-        DB::purge('pgsql-iot');
+        DB::purge('timescaledb');
 
-        $connection = DB::connection('pgsql-iot');
+        $connection = DB::connection('timescaledb');
         $pdo        = $connection->getPdo();
 
         $escaped = '"'.str_replace('"', '""', $channel).'"';
@@ -126,26 +125,10 @@ class GpsListenCommand extends Command
             return;
         }
 
-        $datetime = $payload['gps_time'];
-
-        try {
-            $datetime = Carbon::parse($payload['gps_time'], 'UTC')
-                ->setTimezone(config('app.timezone', date_default_timezone_get()))
-                ->toIso8601String()
-            ;
-        } catch (\Throwable) {
-        }
-
         try {
             // 广播失败不影响监听主循环，避免单条数据导致服务中断。
             broadcast(new GpsPositionUpdated(
-                terminalId: (string) $payload['terminal_id'],
-                datetime: $datetime,
-                latitude: (float) $payload['latitude_gcj'],
-                longitude: (float) $payload['longitude_gcj'],
-                speed: isset($payload['speed']) ? (float) $payload['speed'] : null,
-                direction: isset($payload['direction']) ? (float) $payload['direction'] : null,
-                altitude: isset($payload['altitude']) ? (float) $payload['altitude'] : null,
+                payload: $payload,
                 source: 'pgsql_listen'
             ));
         } catch (\Throwable $exception) {

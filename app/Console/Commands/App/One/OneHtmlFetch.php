@@ -19,8 +19,7 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 )]
 class OneHtmlFetch extends Command
 {
-    protected $signature   = '_app:one-html:fetch {--turn=}';
-    protected $description = 'Fetch vehicle information from sc.122.gov.cn and save request and response to database';
+    protected $signature = '_app:one-html:fetch {--turn=}';
 
     private string $turn;
 

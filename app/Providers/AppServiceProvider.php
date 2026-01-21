@@ -18,6 +18,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        //        $tz = config('app.timezone') ?: date_default_timezone_get();
+        //        date_default_timezone_set($tz);
+
         foreach (glob(base_path().'/helpers/*.php') as $filename) {
             require_once $filename;
         }

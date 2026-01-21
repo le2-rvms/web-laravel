@@ -30,7 +30,7 @@ class IotDevice extends Model
     public const UPDATED_AT = 'd_updated_at';
     public const UPDATED_BY = 'd_updated_by';
 
-    protected $connection = 'pgsql-iot';
+    protected $connection = 'timescaledb';
 
     protected $primaryKey = 'd_id';
 

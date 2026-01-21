@@ -15,9 +15,6 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 )]
 class PaymentTypeImport extends Command
 {
-    protected $signature   = '_dev:payment-type:import';
-    protected $description = '';
-
     public function handle(): int
     {
         $this->info('开始更新 payment-type...');

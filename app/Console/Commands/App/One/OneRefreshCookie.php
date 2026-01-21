@@ -30,9 +30,6 @@ class OneRefreshCookie extends Command
         'User-Agent'                => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
     ];
 
-    protected $signature   = '_app:one-cookie:refresh';
-    protected $description = 'Refresh cookies for 122.gov.cn service';
-
     public function handle(): int
     {
         $accounts = OneAccount::query()

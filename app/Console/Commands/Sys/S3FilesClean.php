@@ -13,8 +13,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 )]
 class S3FilesClean extends Command
 {
-    protected $signature   = '_sys:s3-files:clean {--dry-run : Only show the files that would be deleted}';
-    protected $description = 'Clean up S3 files that are not present in the database';
+    protected $signature = '_sys:s3-files:clean {--dry-run : Only show the files that would be deleted}';
 
     public function handle()
     {

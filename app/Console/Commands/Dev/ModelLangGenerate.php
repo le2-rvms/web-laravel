@@ -14,9 +14,6 @@ use Symfony\Component\Console\Attribute\AsCommand;
 )]
 class ModelLangGenerate extends Command
 {
-    protected $signature   = '_dev:model-lang:generate';
-    protected $description = 'Generate a single language package file for all Eloquent models in the project';
-
     public function handle(): void
     {
         $models = $this->getAllModelsUsingReflection();

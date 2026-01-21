@@ -15,8 +15,7 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 )]
 class OneVehiclesImport extends Command
 {
-    protected $signature   = '_app:one-vehicles:import {--turn=}';
-    protected $description = '从 vehicle_122_requests 表中获取车辆信息并写入 vehicles 表';
+    protected $signature = '_app:one-vehicles:import {--turn=}';
 
     public function handle(): int
     {

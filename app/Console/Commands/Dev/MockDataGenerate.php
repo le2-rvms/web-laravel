@@ -48,8 +48,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 #[AsCommand(name: '_dev:mock-data:generate', description: 'Command description')]
 class MockDataGenerate extends Command
 {
-    protected $signature   = '_dev:mock-data:generate {--month=1-12}';
-    protected $description = 'Command description';
+    protected $signature = '_dev:mock-data:generate {--month=1-12}';
 
     public function handle(): void
     {
