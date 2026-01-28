@@ -7,7 +7,6 @@ use App\Attributes\PermissionType;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
-use App\Models\Iot\GpsDevice;
 use App\Models\Iot\IotDeviceBinding;
 use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
@@ -47,7 +46,7 @@ class IotDeviceBindingController extends Controller
             'kw__func' => function ($value, Builder $builder) {
                 $builder->where(function (Builder $builder) use ($value) {
                     $like = '%'.$value.'%';
-                    $builder->where('db.db_d_code', 'ilike', $like)
+                    $builder->where('db.db_terminal_id', 'ilike', $like)
                         ->orWhere('ve.ve_plate_no', 'ilike', $like)
                     ;
                 });
@@ -64,7 +63,7 @@ class IotDeviceBindingController extends Controller
         $this->response()->withExtras(
         );
 
-        $iotDeviceBinding->load('Vehicle', 'GpsDevice');
+        $iotDeviceBinding->load('Vehicle');
 
         return $this->response()->withData($iotDeviceBinding)->respond();
     }
@@ -110,7 +109,7 @@ class IotDeviceBindingController extends Controller
         $input = Validator::make(
             $request->all(),
             [
-                'db_d_code'       => ['required', 'string', Rule::exists(GpsDevice::class, 'terminal_id')],
+                'db_terminal_id'  => ['required', 'string'],
                 'db_ve_id'        => ['required', 'integer', Rule::exists(Vehicle::class, 've_id')->where('ve_status_service', VeStatusService::YES)], // 仅允许绑定在役车辆。
                 'db_start_at'     => ['required', 'date'],
                 'db_end_at'       => ['nullable', 'date', 'after:db_start_at'],
@@ -125,7 +124,7 @@ class IotDeviceBindingController extends Controller
             // 如果当前绑定未结束，则同设备不能有其他未结束绑定。
             if (!$request->input('db_end_at')) {
                 $count = IotDeviceBinding::query()
-                    ->where('db_d_code', $request->input('db_d_code'))
+                    ->where('db_terminal_id', $request->input('db_terminal_id'))
                     ->whereNull('db_end_at')
                     ->when($iotDeviceBinding, function (Builder $query) use ($iotDeviceBinding) {
                         // 编辑时排除当前记录，避免误判重复绑定。

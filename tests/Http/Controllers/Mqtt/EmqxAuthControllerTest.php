@@ -3,12 +3,12 @@
 namespace Tests\Http\Controllers\Mqtt;
 
 use App\Http\Controllers\Iot\Mqtt\EmqxAuthController;
-use App\Models\Iot\IotDevice;
+use App\Models\Iot\MqttAccount;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Tests\TestCase;
 
 /**
- * @property IotDevice $device
+ * @property MqttAccount $device
  *
  * @internal
  */
@@ -20,9 +20,9 @@ class EmqxAuthControllerTest extends TestCase
     {
         parent::setUp();
 
-        IotDevice::query()->whereLike('device_code', 'test-%')->delete();
+        MqttAccount::query()->whereLike('user_name', 'test-%')->delete();
 
-        $this->device = IotDevice::factory()->create(['device_code' => 'test-123']);
+        $this->device = MqttAccount::factory()->create(['user_name' => 'test-123']);
     }
 
     public function testAuthenticateWithInvalidData()
@@ -62,7 +62,7 @@ class EmqxAuthControllerTest extends TestCase
         $response = $this->postJson(
             action([EmqxAuthController::class, 'authenticate']),
             [
-                'username' => $this->device->username,
+                'username' => $this->device->user_name,
                 'password' => 'wrong_password',
             ]
         );
@@ -77,7 +77,7 @@ class EmqxAuthControllerTest extends TestCase
         $response = $this->postJson(
             action([EmqxAuthController::class, 'authenticate']),
             [
-                'username' => $this->device->username,
+                'username' => $this->device->user_name,
                 'password' => 'password',
             ]
         );
@@ -97,12 +97,12 @@ class EmqxAuthControllerTest extends TestCase
     public function testAuthenticateWithCorrectCredentials2()
     {
         // Create a fake user
-        $device = IotDevice::query()->find(1);
+        $device = MqttAccount::query()->find(1);
 
         $response = $this->postJson(
             action([EmqxAuthController::class, 'authenticate']),
             [
-                'username' => $device->username,
+                'username' => $device->user_name,
                 'password' => 'public',
             ]
         );

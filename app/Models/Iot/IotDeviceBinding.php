@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int         $db_id           绑定ID
- * @property int         $db_d_code       设备编号
+ * @property int         $db_terminal_id  设备编号
  * @property int         $db_ve_id        车辆ID
  * @property Carbon      $db_start_at     绑定开始时间
  * @property null|Carbon $db_end_at       绑定结束时间
@@ -38,21 +38,21 @@ class IotDeviceBinding extends Model
             ->from('iot_device_bindings', 'db')
             ->leftJoin('vehicles as ve', 'db.db_ve_id', '=', 've.ve_id')
             ->leftJoin('vehicle_models as vm', 've.ve_vm_id', '=', 'vm.vm_id')
-            ->with('GpsDevice')
+//            ->with('GpsDevice')
         ;
     }
 
-    public function IotDevice(): BelongsTo
+    public function MqttAccount(): BelongsTo
     {
         // 绑定设备信息。
-        return $this->belongsTo(IotDevice::class, 'db_d_id', 'd_id');
+        return $this->belongsTo(MqttAccount::class, 'db_d_id', 'd_id');
     }
 
-    public function GpsDevice(): BelongsTo
-    {
-        // 绑定设备信息。
-        return $this->belongsTo(GpsDevice::class, 'db_d_code', 'terminal_id');
-    }
+    //    public function GpsDevice(): BelongsTo
+    //    {
+    //        // 绑定设备信息。
+    //        return $this->belongsTo(GpsDevice::class, 'db_terminal_id', 'terminal_id');
+    //    }
 
     public function Vehicle(): BelongsTo
     {

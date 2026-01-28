@@ -29,7 +29,15 @@ return [
         'name'   => '个人客户',
         'suffix' => '',
     ],
-    'IotDevice' => [
+    'GpsDevice' => [
+        'name'   => '',
+        'suffix' => '',
+    ],
+    'MqttAccount' => [
+        'name'   => '',
+        'suffix' => '',
+    ],
+    'MqttClientSession' => [
         'name'   => '',
         'suffix' => '',
     ],

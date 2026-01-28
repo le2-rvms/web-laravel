@@ -14,6 +14,7 @@ variables_order = "EGPCS"
 ; opcache
 ; https://www.php.net/manual/zh/opcache.installation.php
 opcache.enable=1
+opcache.enable_cli=1
 opcache.memory_consumption=256
 ; opcache.interned_strings_buffer=8
 opcache.max_accelerated_files=40000

@@ -3,7 +3,7 @@
 namespace App\Broadcasting;
 
 use App\Models\Admin\Admin;
-use Illuminate\Support\Facades\DB;
+use App\Models\Iot\IotDeviceBinding;
 
 class GpsDeviceChannel
 {
@@ -13,16 +13,9 @@ class GpsDeviceChannel
             return false;
         }
 
-        $query = DB::connection('timescaledb')
-            ->table('gps_devices')
-            ->where('terminal_id', $terminalId)
+        return IotDeviceBinding::query()
+            ->where('db_terminal_id', $terminalId)
+            ->exists()
         ;
-
-        $companyId = config('app.company_id');
-        if ($companyId) {
-            $query->where('tenant_id', $companyId);
-        }
-
-        return $query->exists();
     }
 }

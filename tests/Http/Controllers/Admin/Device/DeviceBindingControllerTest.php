@@ -5,17 +5,17 @@ namespace Tests\Http\Controllers\Admin\Device;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
 use App\Models\Admin\Admin;
-use App\Models\Iot\IotDevice;
 use App\Models\Iot\IotDeviceBinding;
+use App\Models\Iot\MqttAccount;
 use App\Models\Vehicle\Vehicle;
 use Illuminate\Database\Eloquent\Builder;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Tests\TestCase;
 
 /**
- * @property IotDevice $device
- * @property Admin     $admin
- * @property Vehicle   $vehicle
+ * @property MqttAccount $device
+ * @property Admin       $admin
+ * @property Vehicle     $vehicle
  *
  * @internal
  */
@@ -39,14 +39,14 @@ class DeviceBindingControllerTest extends TestCase
             ->delete()
         ;
 
-        IotDevice::query()->whereLike('device_code', 'test-%')->delete();
-        $this->device = IotDevice::factory()->create(['device_code' => 'test-123']);
+        MqttAccount::query()->whereLike('user_name', 'test-%')->delete();
+        $this->device = MqttAccount::factory()->create(['user_name' => 'test-123']);
 
         Vehicle::query()->whereLike('ve_plate_no', 'TEST-%')->delete();
         $this->vehicle = Vehicle::factory()->create(['ve_plate_no' => 'TEST-004', 've_status_service' => VeStatusService::YES]);
 
         $this->deviceBinding = IotDeviceBinding::factory()->create([
-            'db_d_code'       => $this->device->getKey(),
+            'db_terminal_id'  => $this->device->getKey(),
             'db_ve_id'        => $this->vehicle->getKey(),
             'db_processed_by' => $this->admin->getKey(),
             'db_start_at'     => now()->subDays(3),
@@ -106,14 +106,14 @@ class DeviceBindingControllerTest extends TestCase
         $res->assertOk()
             ->assertJson([
                 'data' => [
-                    'db_d_code' => $payload['db_d_code'],
-                    'db_ve_id'  => $payload['db_ve_id'],
+                    'db_terminal_id' => $payload['db_terminal_id'],
+                    'db_ve_id'       => $payload['db_ve_id'],
                 ],
             ])
         ;
 
         $this->assertDatabaseHas((new IotDeviceBinding())->getTable(), [
-            'db_d_code'       => $payload['db_d_code'],
+            'db_terminal_id'  => $payload['db_terminal_id'],
             'db_ve_id'        => $payload['db_ve_id'],
             'db_processed_by' => $payload['db_processed_by'],
             'db_start_at'     => $payload['db_start_at'],
@@ -218,8 +218,8 @@ class DeviceBindingControllerTest extends TestCase
                 ->for($this->admin, 'ProcessedBy')
                 ->raw(
                     [
-                        'db_d_code' => 'non-exist',
-                        'db_ve_id'  => 'non-exist',
+                        'db_terminal_id' => 'non-exist',
+                        'db_ve_id'       => 'non-exist',
                     ]
                 )
         ;
@@ -230,7 +230,7 @@ class DeviceBindingControllerTest extends TestCase
         );
 
         $res->assertStatus(422)
-            ->assertJsonValidationErrors(['db_d_code', 'db_ve_id'])
+            ->assertJsonValidationErrors(['db_terminal_id', 'db_ve_id'])
         ;
     }
 

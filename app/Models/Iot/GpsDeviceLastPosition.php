@@ -24,7 +24,7 @@ class GpsDeviceLastPosition extends Model
 
     protected $connection = 'timescaledb';
 
-    protected $table = 'gps_device_last_positions';
+    protected $table = 'gps_position_last';
 
     protected $primaryKey = 'terminal_id';
 

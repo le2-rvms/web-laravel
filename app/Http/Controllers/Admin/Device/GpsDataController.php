@@ -33,7 +33,7 @@ class GpsDataController extends Controller
             $request->all(),
             [
                 'terminal_ids'   => ['array'],
-                'terminal_ids.*' => ['string', 'max:64', Rule::exists(GpsDevice::class, 'terminal_id')],
+                'terminal_ids.*' => ['string', 'max:64', Rule::exists(IotDeviceBinding::class, 'db_terminal_id')],
             ]
         )->validate();
 
@@ -44,14 +44,14 @@ class GpsDataController extends Controller
             ->table('iot_device_bindings as db')
             ->leftJoin('vehicles as ve', 'db.db_ve_id', '=', 've.ve_id')
             ->select(
-                'db.db_d_code as terminal_id',
+                'db.db_terminal_id as terminal_id',
                 'db.db_ve_id as ve_id',
                 've.ve_plate_no as plate_no'
             )
             ->whereRaw('db.db_start_at::timestamptz < ?', [$now])
             ->whereRaw('COALESCE(db.db_end_at, ?) >= ?', [$now, $now])
             ->when(!empty($input['terminal_ids']), function ($query) use ($input) {
-                $query->whereIn('db.db_d_code', $input['terminal_ids']);
+                $query->whereIn('db.db_terminal_id', $input['terminal_ids']);
             })
             ->orderBy('db.db_id')
             ->get()
@@ -176,9 +176,9 @@ SQL,
         $input = Validator::make(
             $request->all(),
             [
-                'db_d_code'   => ['required', 'string', Rule::exists(GpsDevice::class, 'terminal_id')],
-                'db_start_at' => ['required', 'date'],
-                'db_end_at'   => ['required', 'date', 'after:db_start_at'],
+                'db_terminal_id' => ['required', 'string'],
+                'db_start_at'    => ['required', 'date'],
+                'db_end_at'      => ['required', 'date', 'after:db_start_at'],
             ],
             [],
             trans_property(IotDeviceBinding::class)
@@ -199,22 +199,24 @@ SQL,
             ->validate()
         ;
 
-        /** @var GpsDevice $gpsDevice */
-        $gpsDevice = GpsDevice::query()->where('terminal_id', $input['db_d_code'])->first();
+        // todo 跨多个区间
+
+        //        /** @var GpsDevice $gpsDevice */
+        //        $gpsDevice = GpsDevice::query()->where('terminal_id', $input['db_terminal_id'])->first();
 
         $results = DB::connection('timescaledb')->select(
             <<<'SQL'
-SELECT device_id, to_char(gps_time, 'YYYY-MM-DD HH24:MI:SS') as gps_time,latitude_gcj as latitude,longitude_gcj as longitude,altitude,direction,speed
+SELECT terminal_id, to_char(gps_time, 'YYYY-MM-DD HH24:MI:SS') as gps_time,latitude_gcj as latitude,longitude_gcj as longitude,altitude,direction,speed
 FROM public.gps_position_histories ph
 WHERE
-    device_id = :device_id
+    terminal_id = :terminal_id
   AND ph.gps_time >= :start_at AND ph.gps_time < :end_at
 ORDER BY ph.gps_time;
 SQL,
             [
-                'device_id' => $gpsDevice->id,
-                'start_at'  => $input['db_start_at'],
-                'end_at'    => $input['db_end_at'],
+                'terminal_id' => $input['db_terminal_id'],
+                'start_at'    => $input['db_start_at'],
+                'end_at'      => $input['db_end_at'],
             ]
         );
 
