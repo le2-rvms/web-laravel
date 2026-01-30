@@ -6,34 +6,36 @@ use App\Attributes\ClassName;
 use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[ClassName('')]
-/**
- * @property int         $id          设备ID
- * @property null|string $terminal_id 设备的MQTT客户端序号
- * @property string      $name        设备编号
- */
-class GpsDevice extends Model
+class IotDeviceProduct extends Model
 {
     use ModelTrait;
 
-    // 设备信息存于独立 IoT 数据库。
     public const CREATED_AT = 'created_at';
     public const UPDATED_AT = 'updated_at';
 
     protected $connection = 'timescaledb';
 
-    protected $primaryKey = 'id';
+    protected $table = 'device_products';
 
-    protected $guarded = ['id'];
+    protected $primaryKey = 'product_id';
+
+    protected $guarded = ['product_id'];
 
     public static function indexQuery(): Builder
     {
-        return static::query();
+        return static::query()->from('device_products', 'pro');
     }
 
     public static function optionsQuery(): Builder
     {
         return static::query();
+    }
+
+    public function IotDevices(): HasMany
+    {
+        return $this->hasMany(IotDevice::class, 'product_key', 'product_key');
     }
 }

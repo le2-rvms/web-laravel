@@ -2,25 +2,28 @@
 
 namespace App\Models\Iot;
 
-use App\Attributes\ClassName;
 use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-#[ClassName('')]
-class MqttClientSession extends Model
+class IotGpsPositionHistory extends Model
 {
     use ModelTrait;
 
-    // 设备信息存于独立 IoT 数据库。
     public const CREATED_AT = 'created_at';
-    public const UPDATED_AT = 'updated_at';
+    public const UPDATED_AT = null;
+
+    public $incrementing = false;
 
     protected $connection = 'timescaledb';
 
-    protected $primaryKey = 'client_id';
+    protected $table = 'gps_position_histories';
 
-    protected $guarded = ['client_id'];
+    protected $primaryKey;
+
+    protected $keyType = 'string';
+
+    protected $guarded = [];
 
     public static function indexQuery(): Builder
     {

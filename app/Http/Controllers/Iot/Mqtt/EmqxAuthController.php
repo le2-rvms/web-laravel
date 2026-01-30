@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Iot\Mqtt;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Mqtt\EmqxAuthRequest;
-use App\Models\Iot\MqttAccount;
+use App\Models\Iot\IotMqttAccount;
 use Illuminate\Http\JsonResponse;
 
 class EmqxAuthController extends Controller
@@ -20,7 +20,7 @@ class EmqxAuthController extends Controller
         $input = $request->validated();
 
         // 查找设备并校验口令（password + salt 的 sha256）。
-        $mqttAccount = MqttAccount::query()->where(['user_name' => $input['username']])->first();
+        $mqttAccount = IotMqttAccount::query()->where(['user_name' => $input['username']])->first();
 
         if ($mqttAccount && hash('sha256', $input['password'].$mqttAccount->salt) === $mqttAccount->password_hash) {
             return $this->respond(

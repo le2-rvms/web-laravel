@@ -45,7 +45,7 @@ class IotDeviceBinding extends Model
     public function MqttAccount(): BelongsTo
     {
         // 绑定设备信息。
-        return $this->belongsTo(MqttAccount::class, 'db_d_id', 'd_id');
+        return $this->belongsTo(IotMqttAccount::class, 'db_d_id', 'd_id');
     }
 
     //    public function GpsDevice(): BelongsTo

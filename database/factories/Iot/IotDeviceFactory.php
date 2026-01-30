@@ -2,16 +2,16 @@
 
 namespace Database\Factories\Iot;
 
-use App\Models\Iot\MqttAccount;
+use App\Models\Iot\IotMqttAccount;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<MqttAccount>
+ * @extends Factory<IotMqttAccount>
  */
 class IotDeviceFactory extends Factory
 {
-    protected $model = MqttAccount::class;
+    protected $model = IotMqttAccount::class;
 
     public function definition(): array
     {

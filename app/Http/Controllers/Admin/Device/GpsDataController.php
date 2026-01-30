@@ -5,9 +5,8 @@ namespace App\Http\Controllers\Admin\Device;
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Http\Controllers\Controller;
-use App\Models\Iot\GpsDevice;
-use App\Models\Iot\GpsDeviceLastPosition;
 use App\Models\Iot\IotDeviceBinding;
+use App\Models\Iot\IotGpsPositionLast;
 use App\Models\Vehicle\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -60,7 +59,7 @@ class GpsDataController extends Controller
         $terminal_id_array = $deviceBindings->pluck('terminal_id');
 
         // 位置信息 //有设备不代表就一定有位置信息。
-        $positions = GpsDeviceLastPosition::query()
+        $positions = IotGpsPositionLast::query()
             ->select(
                 'terminal_id',
                 'latitude_gcj',

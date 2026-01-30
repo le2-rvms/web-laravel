@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property null        $device_name   设备名称;没有使用
  * @property null        $product_key   产品ID
  */
-class MqttAccount extends Model
+class IotMqttAccount extends Model
 {
     use ModelTrait;
 
@@ -29,6 +29,8 @@ class MqttAccount extends Model
     public const UPDATED_BY = 'act_updated_by';
 
     protected $connection = 'timescaledb';
+
+    protected $table = 'mqtt_accounts';
 
     protected $primaryKey = 'act_id';
 

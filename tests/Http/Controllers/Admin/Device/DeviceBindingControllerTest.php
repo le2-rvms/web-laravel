@@ -6,16 +6,16 @@ use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
 use App\Models\Admin\Admin;
 use App\Models\Iot\IotDeviceBinding;
-use App\Models\Iot\MqttAccount;
+use App\Models\Iot\IotMqttAccount;
 use App\Models\Vehicle\Vehicle;
 use Illuminate\Database\Eloquent\Builder;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Tests\TestCase;
 
 /**
- * @property MqttAccount $device
- * @property Admin       $admin
- * @property Vehicle     $vehicle
+ * @property IotMqttAccount $device
+ * @property Admin          $admin
+ * @property Vehicle        $vehicle
  *
  * @internal
  */
@@ -39,8 +39,8 @@ class DeviceBindingControllerTest extends TestCase
             ->delete()
         ;
 
-        MqttAccount::query()->whereLike('user_name', 'test-%')->delete();
-        $this->device = MqttAccount::factory()->create(['user_name' => 'test-123']);
+        IotMqttAccount::query()->whereLike('user_name', 'test-%')->delete();
+        $this->device = IotMqttAccount::factory()->create(['user_name' => 'test-123']);
 
         Vehicle::query()->whereLike('ve_plate_no', 'TEST-%')->delete();
         $this->vehicle = Vehicle::factory()->create(['ve_plate_no' => 'TEST-004', 've_status_service' => VeStatusService::YES]);

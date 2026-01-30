@@ -3,12 +3,12 @@
 namespace Tests\Http\Controllers\Mqtt;
 
 use App\Http\Controllers\Iot\Mqtt\EmqxAuthController;
-use App\Models\Iot\MqttAccount;
+use App\Models\Iot\IotMqttAccount;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Tests\TestCase;
 
 /**
- * @property MqttAccount $device
+ * @property IotMqttAccount $device
  *
  * @internal
  */
@@ -20,9 +20,9 @@ class EmqxAuthControllerTest extends TestCase
     {
         parent::setUp();
 
-        MqttAccount::query()->whereLike('user_name', 'test-%')->delete();
+        IotMqttAccount::query()->whereLike('user_name', 'test-%')->delete();
 
-        $this->device = MqttAccount::factory()->create(['user_name' => 'test-123']);
+        $this->device = IotMqttAccount::factory()->create(['user_name' => 'test-123']);
     }
 
     public function testAuthenticateWithInvalidData()
@@ -97,7 +97,7 @@ class EmqxAuthControllerTest extends TestCase
     public function testAuthenticateWithCorrectCredentials2()
     {
         // Create a fake user
-        $device = MqttAccount::query()->find(1);
+        $device = IotMqttAccount::query()->find(1);
 
         $response = $this->postJson(
             action([EmqxAuthController::class, 'authenticate']),
