@@ -7,17 +7,21 @@ use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
-#[ClassName('')]
+#[ClassName('MQTT账号')]
 /**
- * @property int         $act_id        账号ID
- * @property null|string $clientid      设备序号
- * @property string      $user_name     账号名称
- * @property null|string $password_hash 账号密码哈希值
- * @property null|string $certificate   账号证书
- * @property null|string $salt          用于生成密码哈希的盐
- * @property null|int    $is_superuser  是否为超级用户;1表示是，0表示否
- * @property null        $device_name   设备名称;没有使用
- * @property null        $product_key   产品ID
+ * @property int         $act_id         账号ID
+ * @property null|string $clientid       设备序号
+ * @property string      $user_name      账号名称
+ * @property string      $password_hash  账号密码哈希值
+ * @property null|string $certificate    账号证书
+ * @property null|string $salt           用于生成密码哈希的盐
+ * @property null|bool   $is_superuser   是否为超级用户;1表示是，0表示否
+ * @property null|string $act_created_at
+ * @property null|string $act_updated_at
+ * @property null        $device_name    设备名称;没有使用
+ * @property null|string $product_key    产品ID
+ * @property null|string $act_updated_by
+ * @property null|int    $enabled
  */
 class IotMqttAccount extends Model
 {
@@ -44,5 +48,15 @@ class IotMqttAccount extends Model
     public static function optionsQuery(): Builder
     {
         return static::query();
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'is_superuser'   => 'boolean',
+            'enabled'        => 'integer',
+            'act_created_at' => 'datetime:Y-m-d H:i:s',
+            'act_updated_at' => 'datetime:Y-m-d H:i:s',
+        ];
     }
 }

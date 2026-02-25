@@ -7,15 +7,21 @@ use App\Attributes\PermissionType;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
+use App\Models\Iot\IotClientAuthEvent;
+use App\Models\Iot\IotClientCmdEvent;
+use App\Models\Iot\IotClientConnEvent;
+use App\Models\Iot\IotClientSession;
+use App\Models\Iot\IotDevice;
 use App\Models\Iot\IotDeviceBinding;
+use App\Models\Iot\IotGpsPositionHistory;
 use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionType('设备绑定')]
@@ -60,10 +66,20 @@ class IotDeviceBindingController extends Controller
     public function show(IotDeviceBinding $iotDeviceBinding): Response
     {
         $this->options();
-        $this->response()->withExtras(
-        );
+        $terminalId = $iotDeviceBinding->db_terminal_id;
 
-        $iotDeviceBinding->load('Vehicle');
+        $exists = IotDevice::query()
+            ->where('terminal_id', $terminalId)
+            ->exists()
+        ;
+
+        if (!$exists) {
+            throw ValidationException::withMessages([
+                'db_terminal_id' => '设备不属于当前公司或不存在。',
+            ]);
+        }
+
+        $iotDeviceBinding->load('Vehicle', 'IotDevice');
 
         return $this->response()->withData($iotDeviceBinding)->respond();
     }
@@ -71,7 +87,16 @@ class IotDeviceBindingController extends Controller
     #[PermissionAction(PermissionAction::WRITE)]
     public function create(Request $request): Response
     {
-        return $this->edit($request, null);
+        $this->response()->withExtras(
+            IotDevice::options(),
+            Vehicle::options(),
+        );
+
+        $iotDeviceBinding = new IotDeviceBinding([
+            'db_start_at' => now()->format('Y-m-d H:i:00'),
+        ]);
+
+        return $this->response()->withData($iotDeviceBinding)->respond();
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
@@ -84,15 +109,50 @@ class IotDeviceBindingController extends Controller
             Vehicle::options(),
         );
 
-        if (null === $iotDeviceBinding) {
-            // 新建时预填开始时间与处理人。
-            $iotDeviceBinding = new IotDeviceBinding([
-                'db_start_at'     => now()->format('Y-m-d H:i:00'),
-                'db_processed_by' => Auth::id(),
-            ]);
-        } else {
-            $iotDeviceBinding->load('Vehicle', 'GpsDevice');
-        }
+        $this->response()->withExtras(
+            IotGpsPositionHistory::indexList(function (Builder $query) use ($iotDeviceBinding) {
+                $query->where('terminal_id', '=', $iotDeviceBinding->db_terminal_id)
+                    ->whereBetween('gps_time', [$iotDeviceBinding->db_start_at, $iotDeviceBinding->db_end_at ?? now()->format('Y-m-d H:i:s')])
+                    ->orderByDesc('gps_time')
+                    ->limit(200)
+                ;
+            }),
+            IotDeviceBinding::indexList(function (Builder $query) use ($iotDeviceBinding) {
+                $query->where('db.db_terminal_id', '=', $iotDeviceBinding->db_terminal_id)
+                    ->orderByDesc('db.db_id')
+                    ->limit(200)
+                ;
+            }),
+            IotClientSession::indexList(function (Builder $query) use ($iotDeviceBinding) {
+                $query->where('client_id', '=', $iotDeviceBinding->db_terminal_id)
+                    ->whereBetween('last_connect_ts', [$iotDeviceBinding->db_start_at, $iotDeviceBinding->db_end_at ?? now()->format('Y-m-d H:i:s')])
+                    ->orderByDesc('last_connect_ts')
+                    ->limit(200)
+                ;
+            }),
+            IotClientConnEvent::indexList(function (Builder $query) use ($iotDeviceBinding) {
+                $query->where('client_id', '=', $iotDeviceBinding->db_terminal_id)
+                    ->whereBetween('ts', [$iotDeviceBinding->db_start_at, $iotDeviceBinding->db_end_at ?? now()->format('Y-m-d H:i:s')])
+                    ->orderByDesc('id')
+                    ->limit(200)
+                ;
+            }),
+            IotClientCmdEvent::indexList(function (Builder $query) use ($iotDeviceBinding) {
+                $query->where('client_id', '=', $iotDeviceBinding->db_terminal_id)
+                    ->whereBetween('ts', [$iotDeviceBinding->db_start_at, $iotDeviceBinding->db_end_at ?? now()->format('Y-m-d H:i:s')])
+                    ->orderByDesc('id')
+                    ->limit(200)
+                ;
+            }),
+            IotClientAuthEvent::indexList(function (Builder $query) use ($iotDeviceBinding) {
+                $query->where('client_id', '=', $iotDeviceBinding->db_terminal_id)
+                    ->whereBetween('ts', [$iotDeviceBinding->db_start_at, $iotDeviceBinding->db_end_at ?? now()->format('Y-m-d H:i:s')])
+                    ->orderByDesc('id')
+                    ->limit(200)
+                ;
+            }),
+        );
+        $iotDeviceBinding->load('Vehicle', 'IotDevice');
 
         return $this->response()->withData($iotDeviceBinding)->respond();
     }
@@ -109,12 +169,11 @@ class IotDeviceBindingController extends Controller
         $input = Validator::make(
             $request->all(),
             [
-                'db_terminal_id'  => ['required', 'string'],
-                'db_ve_id'        => ['required', 'integer', Rule::exists(Vehicle::class, 've_id')->where('ve_status_service', VeStatusService::YES)], // 仅允许绑定在役车辆。
-                'db_start_at'     => ['required', 'date'],
-                'db_end_at'       => ['nullable', 'date', 'after:db_start_at'],
-                'db_note'         => ['nullable', 'string', 'max:200'],
-                'db_processed_by' => ['required', Rule::exists(Admin::class, 'id')],
+                'db_terminal_id' => ['required', 'string'],
+                'db_ve_id'       => ['required', 'integer', Rule::exists(Vehicle::class, 've_id')], // 仅允许绑定在役车辆。 ->where('ve_status_service', VeStatusService::YES)
+                'db_start_at'    => ['required', 'date'],
+                'db_end_at'      => ['nullable', 'date', 'after:db_start_at'],
+                'db_note'        => ['nullable', 'string', 'max:200'],
             ],
             trans_property(IotDeviceBinding::class),
         )->after(function (\Illuminate\Validation\Validator $validator) use ($iotDeviceBinding, $request) {

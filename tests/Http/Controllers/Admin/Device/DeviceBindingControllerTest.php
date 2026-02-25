@@ -5,6 +5,7 @@ namespace Tests\Http\Controllers\Admin\Device;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
 use App\Models\Admin\Admin;
+use App\Models\Iot\IotDevice;
 use App\Models\Iot\IotDeviceBinding;
 use App\Models\Iot\IotMqttAccount;
 use App\Models\Vehicle\Vehicle;
@@ -27,6 +28,9 @@ class DeviceBindingControllerTest extends TestCase
     {
         parent::setUp();
 
+        config(['app.company_id' => 'test-company']);
+
+        Vehicle::query()->whereLike('ve_plate_no', 'TEST-%')->delete();
         Admin::query()->whereLike('name', 'test-%')->delete();
         $this->admin = Admin::factory()->create([
             'name' => 'test-admin',
@@ -41,6 +45,13 @@ class DeviceBindingControllerTest extends TestCase
 
         IotMqttAccount::query()->whereLike('user_name', 'test-%')->delete();
         $this->device = IotMqttAccount::factory()->create(['user_name' => 'test-123']);
+
+        IotDevice::query()->where('terminal_id', (string) $this->device->getKey())->delete();
+        IotDevice::query()->create([
+            'terminal_id' => (string) $this->device->getKey(),
+            'dev_name'    => 'TEST-DEVICE',
+            'company_id'  => config('app.company_id'),
+        ]);
 
         Vehicle::query()->whereLike('ve_plate_no', 'TEST-%')->delete();
         $this->vehicle = Vehicle::factory()->create(['ve_plate_no' => 'TEST-004', 've_status_service' => VeStatusService::YES]);
@@ -83,6 +94,28 @@ class DeviceBindingControllerTest extends TestCase
                     ],
                 ]
             )
+        ;
+    }
+
+    /** 设备不属于当前公司时应报错 */
+    public function testShowRejectsWhenDeviceNotBelongToCompany(): void
+    {
+        IotDevice::query()->where('terminal_id', 'non-company-device')->delete();
+
+        $binding = IotDeviceBinding::factory()->create([
+            'db_terminal_id'  => 'non-company-device',
+            'db_ve_id'        => $this->vehicle->getKey(),
+            'db_processed_by' => $this->admin->getKey(),
+            'db_start_at'     => now()->subDays(2),
+            'db_end_at'       => now()->subDay(),
+        ]);
+
+        $res = $this->getJson(
+            action([IotDeviceBindingController::class, 'show'], [$binding]),
+        );
+
+        $res->assertStatus(422)
+            ->assertJsonValidationErrors(['db_terminal_id'])
         ;
     }
 

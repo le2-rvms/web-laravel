@@ -20,10 +20,12 @@ class TableLogTriggersCreate extends Command
     {
         $this->auditSchema = config('setting.dblog.schema');
 
-        foreach (config('setting.dblog.models') as $class_name => $pk) {
+        foreach (config('setting.dblog.models') as $class_name) {
             /** @var Model $model */
             $model = new $class_name();
+
             $table = $model->getTable();
+            $pk    = $model->getKeyName();
 
             $this->tables[$table] = $pk;
         }

@@ -19,8 +19,8 @@ if [ "$APP_ENV" = "production" ] || [ "$APP_ENV" = "staging" ]; then
     echo "执行生产环境部署..."
     composer install --no-scripts --prefer-dist --no-interaction --no-progress --optimize-autoloader --classmap-authoritative
     php artisan about
-    php artisan --version 
-    php artisan optimize:clear
+    php artisan --version
+#    php artisan optimize:clear
     php artisan config:cache
     php artisan route:cache
     php artisan view:cache
@@ -28,9 +28,9 @@ if [ "$APP_ENV" = "production" ] || [ "$APP_ENV" = "staging" ]; then
 else
     echo "执行开发环境脚本..."
     # composer config github-protocols https
-    # composer update -vvv
-    composer install
-    php artisan --version 
+     composer update -vvv
+#    composer install
+    php artisan --version
     php artisan about
-    php artisan optimize:clear
+#    php artisan optimize:clear  # 这个时候数据表还没有准备好
 fi

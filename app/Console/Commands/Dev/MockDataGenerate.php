@@ -101,7 +101,7 @@ class MockDataGenerate extends Command
         DB::transaction(function () {
             $auditSchema = config('setting.dblog.schema');
 
-            foreach (config('setting.dblog.models') as $class_name => $pk) {
+            foreach (config('setting.dblog.models') as $class_name) {
                 /** @var Model $model */
                 $model = new $class_name();
                 $table = $model->getTable();

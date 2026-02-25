@@ -48,9 +48,9 @@ trait ModelTrait
         //        $query = array_filter($query);
         $key = preg_replace('/^.*\\\/', '', get_called_class()).'IndexList';
 
-        $query = static::indexQuery()
-            ->when($callback, $callback)
-        ;
+        $query = static::indexQuery();
+
+        $callback && $callback($query);
 
         static::$indexValue = $value = $query->get();
 
@@ -88,10 +88,11 @@ trait ModelTrait
     public static function options(?\Closure $where = null, ?string $key = null): array
     {
         $key   = static::getOptionKey($key);
-        $value = static::optionsQuery()
-            ->when($where, $where)
-            ->get()
-        ;
+        $query = static::optionsQuery();
+
+        $where && $where($query);
+
+        $value = $query->get();
 
         return [$key => $value];
     }

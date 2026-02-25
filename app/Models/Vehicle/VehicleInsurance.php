@@ -124,38 +124,10 @@ class VehicleInsurance extends Model
 
     public static function indexQuery(): Builder
     {
-        //        $ve_id = $search['ve_id'] ?? null;
-
         return static::query()
             ->from('vehicle_insurances', 'vi')
-//            ->when(null === $ve_id, function (Builder $query) {
-//                return $query->joinSub(
-//                    // 直接在 joinSub 中定义子查询
-//                    DB::table('vehicle_insurances')
-//                        ->select('vi_ve_id', DB::raw('MAX(vi_compulsory_start_date) as max_vi_compulsory_start_date'))
-//                        ->groupBy('vi_ve_id'),
-//                    'p2',
-//                    function ($join) {
-//                        $join->on('vi.vi_ve_id', '=', 'p2.vi_ve_id')
-//                            ->on('vi.vi_compulsory_start_date', '=', 'p2.max_vi_compulsory_start_date')
-//                        ;
-//                    }
-//                );
-//            })
             ->leftJoin('vehicles as ve', 've.ve_id', '=', 'vi.vi_ve_id')
             ->leftJoin('vehicle_models as vm', 'vm.vm_id', '=', 've.ve_vm_id')
-//            ->when($ve_id, function (Builder $query) use ($ve_id) {
-//                $query->where('vi.vi_ve_id', '=', $ve_id);
-//            })
-//            ->when(
-//                null === $ve_id,
-//                function (Builder $query) {
-//                    $query->orderByDesc('vi.vi_id');
-//                },
-//                function (Builder $query) {
-//                    $query->orderBy('vi.vi_id');
-//                }
-//            )
             ->select('vi.*', 've.ve_plate_no', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
                 [

@@ -29,16 +29,56 @@ return [
         'name'   => '个人客户',
         'suffix' => '',
     ],
-    'GpsDevice' => [
-        'name'   => '',
+    'IotClientAuthEvent' => [
+        'name'   => '客户端鉴权事件',
         'suffix' => '',
     ],
-    'MqttAccount' => [
-        'name'   => '',
+    'IotClientCmdEvent' => [
+        'name'   => '客户端命令事件',
         'suffix' => '',
     ],
-    'MqttClientSession' => [
-        'name'   => '',
+    'IotClientConnEvent' => [
+        'name'   => '客户端连接事件',
+        'suffix' => '',
+    ],
+    'IotClientSession' => [
+        'name'   => '客户端会话',
+        'suffix' => '',
+    ],
+    'IotDevice' => [
+        'name'   => '设备',
+        'suffix' => '',
+    ],
+    'IotDeviceBinding' => [
+        'name'   => '设备绑定',
+        'suffix' => '记录',
+    ],
+    'IotDeviceGroup' => [
+        'name'   => '设备分组',
+        'suffix' => '',
+    ],
+    'IotDeviceGroupMapping' => [
+        'name'   => '设备分组映射',
+        'suffix' => '',
+    ],
+    'IotDeviceProduct' => [
+        'name'   => '设备产品',
+        'suffix' => '',
+    ],
+    'IotGpsAlarm' => [
+        'name'   => 'GPS告警',
+        'suffix' => '',
+    ],
+    'IotGpsCommand' => [
+        'name'   => 'GPS命令',
+        'suffix' => '',
+    ],
+    'IotGpsGeofence' => [
+        'name'   => 'GPS电子围栏',
+        'suffix' => '',
+    ],
+    'IotMqttAccount' => [
+        'name'   => 'MQTT账号',
         'suffix' => '',
     ],
     'OcrImage' => [

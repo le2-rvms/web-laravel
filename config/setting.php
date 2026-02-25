@@ -6,6 +6,7 @@ use App\Models\Admin\AdminTeam;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerCompany;
 use App\Models\Customer\CustomerIndividual;
+use App\Models\Iot\IotDeviceBinding;
 use App\Models\One\OneAccount;
 use App\Models\Payment\Payment;
 use App\Models\Sale\BookingOrder;
@@ -30,32 +31,33 @@ use App\Models\Vehicle\VehicleSchedule;
 return [
     'dblog' => [
         'models' => [
-            (AdminTeam::class)              => 'at_id',
-            (Admin::class)                  => 'id',
-            (Configuration::class)          => 'cfg_id',
-            (DocTpl::class)                 => 'dt_id',
-            (Customer::class)               => 'cu_id',
-            (CustomerIndividual::class)     => 'cui_id',
-            (CustomerCompany::class)        => 'cuc_id',
-            (VehicleModel::class)           => 'vm_id',
-            (Vehicle::class)                => 've_id',
-            (VehicleAccident::class)        => 'va_id',
-            (OneAccount::class)             => 'oa_id',
-            (VehicleRepair::class)          => 'vr_id',
-            (VehicleMaintenance::class)     => 'vm_id',
-            (VehicleInspection::class)      => 'vi_id',
-            (VehicleManualViolation::class) => 'vv_id',
-            (VehicleForceTake::class)       => 'vft_id',
-            (VehicleTemp::class)            => 'vt_id',
-            (VehicleSchedule::class)        => 'vs_id',
-            (VehicleInsurance::class)       => 'vi_id',
-            (SaleContract::class)           => 'sc_id',
-            (SaleContractTpl::class)        => 'sct_id',
-            (SaleSettlement::class)         => 'ss_id',
-            (Payment::class)                => 'p_id',
-            (BookingVehicle::class)         => 'bv_id',
-            (BookingOrder::class)           => 'bo_id',
-            (VehicleCenter::class)          => 'vc_id',
+            AdminTeam::class,
+            Admin::class,
+            Configuration::class,
+            DocTpl::class,
+            Customer::class,
+            CustomerIndividual::class,
+            CustomerCompany::class,
+            VehicleModel::class,
+            Vehicle::class,
+            VehicleAccident::class,
+            OneAccount::class,
+            VehicleRepair::class,
+            VehicleMaintenance::class,
+            VehicleInspection::class,
+            VehicleManualViolation::class,
+            VehicleForceTake::class,
+            VehicleTemp::class,
+            VehicleSchedule::class,
+            VehicleInsurance::class,
+            SaleContract::class,
+            SaleContractTpl::class,
+            SaleSettlement::class,
+            Payment::class,
+            BookingVehicle::class,
+            BookingOrder::class,
+            VehicleCenter::class,
+            IotDeviceBinding::class,
         ],
 
         'schema' => 'table_log',

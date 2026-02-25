@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Customer\_\AuthController;
+use App\Http\Controllers\Customer\Device\IotTerminalControlController;
 use App\Http\Controllers\Customer\Payment\PaymentController;
 use App\Http\Controllers\Customer\Risk\ExpiryDriverController;
 use App\Http\Controllers\Customer\Risk\ExpiryVehicleController;
@@ -26,6 +27,8 @@ Route::prefix('no-auth')->group(callback: function () {
 
 Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryCustomer::class : 'auth:sanctum']], function () {
     Route::get('user', [AuthController::class, 'getUserInfo']);
+
+    Route::post('iot-terminal-controls', [IotTerminalControlController::class, 'store']);
 
     Route::resource('sale-contracts', SaleContractController::class)->only(['index']);
     Route::resource('payments', PaymentController::class)->only(['index']);

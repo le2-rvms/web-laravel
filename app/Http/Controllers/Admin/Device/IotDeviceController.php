@@ -12,7 +12,6 @@ use App\Models\Vehicle\Vehicle;
 use App\Services\PaginateService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -84,7 +83,6 @@ class IotDeviceController extends Controller
         if (null === $iotDevice) {
             // 新建时预填开始时间与处理人。
             $iotDevice = new IotDevice([
-                'db_processed_by' => Auth::id(),
             ]);
         } else {
             $iotDevice->load('Vehicle', 'GpsDevice');

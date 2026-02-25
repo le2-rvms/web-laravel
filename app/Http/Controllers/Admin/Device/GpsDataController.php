@@ -210,7 +210,9 @@ FROM public.gps_position_histories ph
 WHERE
     terminal_id = :terminal_id
   AND ph.gps_time >= :start_at AND ph.gps_time < :end_at
-ORDER BY ph.gps_time;
+ORDER BY ph.gps_time
+LIMIT 500
+;
 SQL,
             [
                 'terminal_id' => $input['db_terminal_id'],

@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 /**
  * @extends Factory<IotMqttAccount>
  */
-class IotDeviceFactory extends Factory
+class IotMqttAccountFactory extends Factory
 {
     protected $model = IotMqttAccount::class;
 

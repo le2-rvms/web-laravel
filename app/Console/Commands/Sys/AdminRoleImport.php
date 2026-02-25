@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\Delivery\DeliveryWecomGroupController;
 use App\Http\Controllers\Admin\Delivery\DeliveryWecomMemberController;
 use App\Http\Controllers\Admin\Device\GpsDataController;
 use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
+use App\Http\Controllers\Admin\Device\IotTerminalControlController;
 use App\Http\Controllers\Admin\Payment\InoutController;
 use App\Http\Controllers\Admin\Payment\PaymentController;
 use App\Http\Controllers\Admin\Payment\PaymentTypeController;
@@ -65,6 +66,7 @@ class AdminRoleImport extends Command
         AdminRole::role_vehicle_mgr => [
             GpsDataController::class                => [PermissionAction::READ],
             IotDeviceBindingController::class       => [PermissionAction::READ, PermissionAction::WRITE],
+            IotTerminalControlController::class     => [PermissionAction::WRITE],
             ExpiryDriverController::class           => [PermissionAction::READ],
             ExpiryVehicleController::class          => [PermissionAction::READ],
             VehicleForceTakeController::class       => [PermissionAction::READ, PermissionAction::WRITE],

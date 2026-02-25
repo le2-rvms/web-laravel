@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\Delivery\DeliveryWecomGroupController;
 use App\Http\Controllers\Admin\Delivery\DeliveryWecomMemberController;
 use App\Http\Controllers\Admin\Device\GpsDataController;
 use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
+use App\Http\Controllers\Admin\Device\IotTerminalControlController;
 use App\Http\Controllers\Admin\File\StorageController;
 use App\Http\Controllers\Admin\Payment\InoutController;
 use App\Http\Controllers\Admin\Payment\PaymentAccountController;
@@ -207,6 +208,7 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
     Route::resource('expiry-vehicles', ExpiryVehicleController::class)->only('index');
 
     // iot
+    Route::put('iot-device-bindings/{iot_device_binding}/cmd', [IotTerminalControlController::class, 'store']);
     Route::resource('iot-device-bindings', IotDeviceBindingController::class);
     Route::get('gps-data/latest', [GpsDataController::class, 'latest']);
     Route::get('gps-data/history-vehicle', [GpsDataController::class, 'history_vehicle']);

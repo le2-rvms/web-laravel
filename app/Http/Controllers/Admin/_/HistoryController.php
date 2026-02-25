@@ -23,7 +23,7 @@ class HistoryController extends Controller
     public function __invoke(Request $request): Response
     {
         $class_basename_array = $class_basename_models = [];
-        foreach ($this->config['models'] as $model_name => $pk_name) {
+        foreach ($this->config['models'] as $model_name) {
             $class_basename_array[] = $class_basename = class_basename($model_name);
 
             $class_basename_models[$class_basename] = $model_name;
