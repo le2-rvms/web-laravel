@@ -43,7 +43,8 @@ class IotDevice extends Model
 
     protected $table = 'devices';
 
-    protected $primaryKey = 'dev_id';
+    protected $keyType    = 'string';
+    protected $primaryKey = 'terminal_id';
 
     protected $guarded = ['dev_id'];
 

@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\Delivery\DeliveryChannelController;
 use App\Http\Controllers\Admin\Delivery\DeliveryLogController;
 use App\Http\Controllers\Admin\Delivery\DeliveryWecomGroupController;
 use App\Http\Controllers\Admin\Delivery\DeliveryWecomMemberController;
+use App\Http\Controllers\Admin\Device\DeviceBleKeyController;
 use App\Http\Controllers\Admin\Device\GpsDataController;
 use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
 use App\Http\Controllers\Admin\Device\IotTerminalControlController;
@@ -64,6 +65,7 @@ class AdminRoleImport extends Command
     /** 导入的内置角色清单 */
     private array $builtinRoles = [
         AdminRole::role_vehicle_mgr => [
+            DeviceBleKeyController::class           => [PermissionAction::READ],
             GpsDataController::class                => [PermissionAction::READ],
             IotDeviceBindingController::class       => [PermissionAction::READ, PermissionAction::WRITE],
             IotTerminalControlController::class     => [PermissionAction::WRITE],
