@@ -20,18 +20,16 @@ class DeviceBleKeyController extends Controller
         $this->options();
 
         try {
-            $kDevEncHex = BleKeyDeriver::deriveKDevEncHex('');
+            $terminalNo = (string) $request->query('terminal_no', (string) $iot_device->terminal_id);
+            $result     = BleKeyDeriver::deriveByTerminalNo($terminalNo);
         } catch (\InvalidArgumentException $exception) {
             throw ValidationException::withMessages([
-                'ble' => $exception->getMessage(),
+                'terminal_no' => $exception->getMessage(),
             ]);
         }
 
         return $this->response()
-            ->withData([
-                'device_id' => $iot_device->terminal_id,
-                'k_dev_enc' => $kDevEncHex,
-            ])
+            ->withData($result)
             ->respond()
         ;
     }

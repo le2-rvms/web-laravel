@@ -9,31 +9,26 @@ use Symfony\Component\Console\Command\Command as CommandAlias;
 
 #[AsCommand(
     name: 'app:iot:ble:k-dev-enc',
-    description: '按 device_id 派生 BLE 离线命令密钥 K_dev_enc'
+    description: '根据 terminal_no 派生 16 字节 AES 密钥'
 )]
 class BleDeviceKeyDeriveCommand extends Command
 {
     protected $signature = 'app:iot:ble:k-dev-enc
-        {--device_id= : 设备ID（为空时生成通用密钥）}
-       ';
+        {terminal_no : 10 位十进制设备编号字符串}';
 
     public function handle(): int
     {
-        $deviceId = (string) ($this->option('device_id') ?? '');
+        $terminalNo = (string) $this->argument('terminal_no');
 
         try {
-            $normalizedDeviceId = BleKeyDeriver::normalizeDeviceId($deviceId);
-            $kDevEncHex         = BleKeyDeriver::deriveKDevEncHex($deviceId);
+            $result = BleKeyDeriver::deriveByTerminalNo($terminalNo);
         } catch (\InvalidArgumentException $exception) {
             $this->error($exception->getMessage());
 
             return CommandAlias::FAILURE;
         }
 
-        $this->table(
-            ['device_id', 'normalized_device_id', 'k_dev_enc'],
-            [[$deviceId, $normalizedDeviceId, $kDevEncHex]]
-        );
+        $this->line(json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         return CommandAlias::SUCCESS;
     }

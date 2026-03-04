@@ -4,54 +4,59 @@ namespace App\Services;
 
 class BleKeyDeriver
 {
-    public static function deriveKDevEncHex(string $deviceId): string
+    public static function deriveByTerminalNo(string $terminalNo): array
     {
-        return bin2hex(static::deriveKDevEncRaw($deviceId));
-    }
+        $normalized = static::normalizeTerminalNo($terminalNo);
+        $n          = (int) $normalized;
+        $decStr     = str_pad($normalized, 10, '0', STR_PAD_LEFT);
+        $hexStr     = strtolower(dechex($n));
+        $mixed      = static::mixDecAndHex($decStr, $hexStr);
+        $digest     = hash('sha256', $mixed, true);
+        $aesKey     = '';
 
-    public static function deriveKDevEncRaw(string $deviceId): string
-    {
-        return static::deriveByScopeRaw(static::normalizeDeviceId($deviceId));
-    }
-
-    public static function normalizeDeviceId(string $deviceId): string
-    {
-        return strtolower(trim($deviceId));
-    }
-
-    private static function deriveByScopeRaw(string $scope): string
-    {
-        $masterSecret = static::masterSecretBinary();
-
-        $kDevEncRaw = hash_hkdf(
-            'sha256',
-            $masterSecret,
-            16,
-            config('ble.derive_info_prefix').$scope,
-            config('ble.derive_salt')
-        );
-
-        if (false === $kDevEncRaw || 16 !== strlen($kDevEncRaw)) {
-            throw new \InvalidArgumentException('K_dev_enc 派生失败');
+        for ($i = 0; $i < 16; ++$i) {
+            $aesKey .= chr(ord($digest[$i]) ^ ord($digest[$i + 16]));
         }
 
-        return $kDevEncRaw;
+        return [
+            'terminal_no' => $normalized,
+            'aes_key'     => array_values(unpack('C*', $aesKey)),
+            'aes_key_hex' => bin2hex($aesKey),
+        ];
     }
 
-    private static function masterSecretBinary(): string
+    public static function normalizeTerminalNo(string $terminalNo): string
     {
-        $masterSecretHex = trim((string) config('ble.master_secret_hex'));
+        $terminalNo = trim($terminalNo);
 
-        if (!preg_match('/^[0-9a-fA-F]{64}$/', $masterSecretHex)) {
-            throw new \InvalidArgumentException('BLE_MASTER_SECRET_HEX 必须是 64 位 hex');
+        if ('' === $terminalNo || !preg_match('/^\d+$/', $terminalNo)) {
+            throw new \InvalidArgumentException('terminal_no 仅允许数字字符 0-9');
         }
 
-        $masterSecret = hex2bin($masterSecretHex);
-
-        if (false === $masterSecret) {
-            throw new \InvalidArgumentException('BLE_MASTER_SECRET_HEX 解析失败');
+        if (strlen($terminalNo) > 10) {
+            throw new \InvalidArgumentException('terminal_no 长度不能超过 10 位');
         }
 
-        return $masterSecret;
+        $n = (int) $terminalNo;
+        if ($n < 0 || $n > 4294967295) {
+            throw new \InvalidArgumentException('terminal_no 数值必须在 uint32 范围内');
+        }
+
+        return $terminalNo;
+    }
+
+    private static function mixDecAndHex(string $decStr, string $hexStr): string
+    {
+        $mixed  = '';
+        $hexLen = strlen($hexStr);
+
+        for ($i = 0; $i < strlen($decStr); ++$i) {
+            $mixed .= $decStr[$i];
+            if ($i < $hexLen) {
+                $mixed .= $hexStr[$i];
+            }
+        }
+
+        return $mixed;
     }
 }

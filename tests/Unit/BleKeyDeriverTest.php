@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Services\BleKeyDeriver;
 use PHPUnit\Framework\Attributes\CoversNothing;
-use Tests\TestCase;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
@@ -12,57 +12,29 @@ use Tests\TestCase;
 #[CoversNothing]
 class BleKeyDeriverTest extends TestCase
 {
-    public function testDeriveKDevEncHex(): void
+    public function testDeriveByTerminalNoWithGoldenVector(): void
     {
-        config([
-            'ble.master_secret_hex'  => '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f',
-            'ble.derive_salt'        => 'BLE_DERIVE_SALT_V1',
-            'ble.derive_info_prefix' => 'ble-symm-v1|',
-        ]);
+        $result = BleKeyDeriver::deriveByTerminalNo('2510010001');
 
-        $this->assertSame(
-            'ced5e8c8c071e5dc6c43de12dbc665c0',
-            BleKeyDeriver::deriveKDevEncHex('  DVC001 ')
-        );
+        $this->assertSame('2510010001', $result['terminal_no']);
+        $this->assertSame('0b2713097a4f8689289dd58d7d31f0a1', $result['aes_key_hex']);
+        $this->assertCount(16, $result['aes_key']);
+        $this->assertSame([11, 39, 19, 9, 122, 79, 134, 137, 40, 157, 213, 141, 125, 49, 240, 161], $result['aes_key']);
     }
 
-    public function testDeriveKDevEncHexShouldNormalizeDeviceId(): void
+    public function testDeriveByTerminalNoRejectsNonDigit(): void
     {
-        config([
-            'ble.master_secret_hex'  => '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f',
-            'ble.derive_salt'        => 'BLE_DERIVE_SALT_V1',
-            'ble.derive_info_prefix' => 'ble-symm-v1|',
-        ]);
-
-        $this->assertSame(
-            BleKeyDeriver::deriveKDevEncHex('DVC001'),
-            BleKeyDeriver::deriveKDevEncHex('dvc001')
-        );
-    }
-
-    public function testDeriveKDevEncHexShouldThrowWhenMasterSecretInvalid(): void
-    {
-        config([
-            'ble.master_secret_hex' => '1234',
-        ]);
-
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('BLE_MASTER_SECRET_HEX 必须是 64 位 hex');
+        $this->expectExceptionMessage('terminal_no 仅允许数字字符 0-9');
 
-        BleKeyDeriver::deriveKDevEncHex('DVC001');
+        BleKeyDeriver::deriveByTerminalNo('ABC123');
     }
 
-    public function testDeriveKDevEncHexWithEmptyDeviceIdAsCommonMode(): void
+    public function testDeriveByTerminalNoRejectsOutOfUint32Range(): void
     {
-        config([
-            'ble.master_secret_hex'  => '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f',
-            'ble.derive_salt'        => 'BLE_DERIVE_SALT_V1',
-            'ble.derive_info_prefix' => 'ble-symm-v1|',
-        ]);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('terminal_no 数值必须在 uint32 范围内');
 
-        $this->assertSame(
-            'ae5ac8e64fd6ff18d01d5f85b5b3d0fb',
-            BleKeyDeriver::deriveKDevEncHex('')
-        );
+        BleKeyDeriver::deriveByTerminalNo('4294967296');
     }
 }
