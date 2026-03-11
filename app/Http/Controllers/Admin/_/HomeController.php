@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin\_;
 
+use App\Attributes\PermissionNoneType;
 use App\Http\Controllers\Controller;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 
+#[PermissionNoneType('首页')]
 class HomeController extends Controller
 {
     /**

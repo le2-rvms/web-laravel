@@ -54,6 +54,7 @@ class AdminPermissionController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request): Response
     {
         $input = Validator::make(
@@ -77,6 +78,7 @@ class AdminPermissionController extends Controller
         return $this->response()->withRedirect(redirect()->route('permissions.index'))->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, AdminPermission $admin_permission): Response
     {
         $input = Validator::make(
@@ -102,6 +104,7 @@ class AdminPermissionController extends Controller
         return $this->response()->withRedirect(redirect()->route('permissions.index'))->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(AdminPermission $admin_permission): Response
     {
         DB::transaction(function () use (&$admin_permission) {

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin\_;
 
+use App\Attributes\PermissionAction;
+use App\Attributes\PermissionType;
 use App\Enum\Statistics\Dimension;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
@@ -11,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
+#[PermissionType('统计看板')]
 class StatisticsController extends Controller
 {
     public static function labelOptions(Controller $controller): void
@@ -19,6 +22,7 @@ class StatisticsController extends Controller
         );
     }
 
+    #[PermissionAction(PermissionAction::READ)]
     public function index(Request $request)
     {
         $this->options(true);

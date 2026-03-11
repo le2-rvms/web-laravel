@@ -46,6 +46,11 @@ class TemporaryCustomer
 
         /** @var Customer $tempUser */
         $tempUser = Customer::query()->find($cu_id);
+        if (!$tempUser) {
+            Cache::forget("temporary_customer:{$token}");
+
+            return false;
+        }
 
         // 覆盖当前认证用户
         Auth::setUser($tempUser);

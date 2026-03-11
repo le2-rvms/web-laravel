@@ -151,9 +151,11 @@ final class ResponseBuilder
             return $this->redirect;
         }
 
-        // 非 JSON 请求：根据路由/请求推导视图名称并渲染。
-        $this->view = get_view_file($this->request);
-        $payload    = array_merge(
+        // 非 JSON 请求：未指定视图时才按路由自动推导。
+        if (null === $this->view) {
+            $this->view = get_view_file($this->request);
+        }
+        $payload = array_merge(
             $this->payload(),
             $this->viewParams
         );

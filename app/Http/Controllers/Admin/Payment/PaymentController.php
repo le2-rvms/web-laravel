@@ -330,6 +330,7 @@ class PaymentController extends Controller
         return $this->response()->withData($payment)->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(Payment $payment) {}
 
     protected function options(?bool $with_group_count = false): void

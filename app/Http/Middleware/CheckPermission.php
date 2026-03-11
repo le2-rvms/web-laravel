@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Attributes\PermissionAction;
+use App\Attributes\PermissionNoneType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,6 +14,8 @@ class CheckPermission
         if ($this->checkRequestPermission($request)) {
             return $next($request);
         }
+
+        abort(403, trans('You have not permission to this page!'));
     }
 
     private function checkRequestPermission(Request $request): bool
@@ -34,13 +37,19 @@ class CheckPermission
         try {
             $reflectionMethod = \ReflectionMethod::createFromMethodName($actionName_);
         } catch (\ReflectionException $e) {
-            return false;
+            abort(403, trans('You have not permission to this page!'));
         }
 
         $permissionAttributes = $reflectionMethod->getAttributes(PermissionAction::class);
 
         if (!$permissionAttributes) {
-            return true;
+            // 显式标记为“免权限控制”的控制器可以在无方法注解时放行。
+            $permissionNoneAttributes = $reflectionMethod->getDeclaringClass()->getAttributes(PermissionNoneType::class);
+            if ($permissionNoneAttributes) {
+                return true;
+            }
+
+            abort(403, trans('You have not permission to this page!'));
         }
 
         /** @var PermissionAction $permissionAttributeIns */

@@ -51,6 +51,7 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($paginate)->respond();
     }
 
+    #[PermissionAction(PermissionAction::READ)]
     public function create(Request $request): Response
     {
         $this->options();
@@ -64,11 +65,13 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($deliveryLog)->respond();
     }
 
+    #[PermissionAction(PermissionAction::READ)]
     public function store(Request $request): Response
     {
         return $this->update($request, null);
     }
 
+    #[PermissionAction(PermissionAction::READ)]
     public function show(DeliveryLog $deliveryLog): Response
     {
         $this->options();
@@ -78,6 +81,7 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($deliveryLog)->respond();
     }
 
+    #[PermissionAction(PermissionAction::READ)]
     public function edit(DeliveryLog $deliveryLog): Response
     {
         $this->options();
@@ -85,12 +89,14 @@ class DeliveryLogController extends Controller
         return $this->response()->withData($deliveryLog)->respond();
     }
 
+    #[PermissionAction(PermissionAction::READ)]
     public function update(Request $request, ?DeliveryLog $deliveryLog): Response
     {
         // 日志只读，保留资源路由占位。
         return $this->response()->withData($deliveryLog)->respond();
     }
 
+    #[PermissionAction(PermissionAction::READ)]
     public function destroy(DeliveryLog $deliveryLog): Response
     {
         return $this->response()->withData($deliveryLog)->respond();

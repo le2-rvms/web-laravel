@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin\_;
 
+use App\Attributes\PermissionAction;
+use App\Attributes\PermissionType;
 use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
@@ -11,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
+#[PermissionType('操作历史')]
 class HistoryController extends Controller
 {
     protected array $config;
@@ -20,6 +23,7 @@ class HistoryController extends Controller
         $this->config = config('setting.dblog');
     }
 
+    #[PermissionAction(PermissionAction::READ)]
     public function __invoke(Request $request): Response
     {
         $class_basename_array = $class_basename_models = [];

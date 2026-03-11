@@ -11,6 +11,7 @@ use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Admin;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\VehicleTemp;
 use App\Models\Vehicle\Vehicle;
@@ -42,6 +43,9 @@ class VehicleTempController extends Controller
 
         $query   = VehicleTemp::indexQuery();
         $columns = VehicleTemp::indexColumns();
+
+        /** @var Admin $admin */
+        $admin = auth()->user();
 
         // 车队查询条件
         if (($admin->a_team_limit->value ?? null) === ATeamLimit::LIMITED && $admin->a_team_ids) {
@@ -205,6 +209,7 @@ class VehicleTempController extends Controller
         return $this->response()->withData($vehicleTemp)->respond();
     }
 
+    #[PermissionAction(PermissionAction::READ)]
     public function show(VehicleTemp $vehicleTemp) {}
 
     #[PermissionAction(PermissionAction::WRITE)]
@@ -226,7 +231,7 @@ class VehicleTempController extends Controller
             $request->all(),
             [
                 'vt_change_start_date' => ['bail', 'nullable', 'required', 'date'],
-                'vt_change_end_date'   => ['bail', 'nullable', 'required', 'date', 'afterOrEqual:change_start_date'],
+                'vt_change_end_date'   => ['bail', 'nullable', 'required', 'date', 'afterOrEqual:vt_change_start_date'],
                 'vt_change_status'     => ['bail', 'nullable', 'required', Rule::in(VtChangeStatus::label_keys())],
                 'vt_remark'            => ['bail', 'nullable', 'string'],
             ]
@@ -268,6 +273,7 @@ class VehicleTempController extends Controller
         return $this->response()->withData($vehicleTemp)->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(VehicleTemp $vehicleTemp) {}
 
     #[PermissionAction(PermissionAction::WRITE)]

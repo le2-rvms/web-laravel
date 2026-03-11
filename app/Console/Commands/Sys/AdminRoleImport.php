@@ -5,6 +5,8 @@ namespace App\Console\Commands\Sys;
 use App\Attributes\PermissionAction;
 use App\Enum\Admin\ArIsCustom;
 use App\Enum\Admin\AUserType;
+use App\Http\Controllers\Admin\_\HistoryController;
+use App\Http\Controllers\Admin\_\StatisticsController;
 use App\Http\Controllers\Admin\Admin\AdminController;
 use App\Http\Controllers\Admin\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\Admin\AdminRoleController;
@@ -113,6 +115,8 @@ class AdminRoleImport extends Command
         AdminRole::role_manager => [ConfigurationAppController::class => [PermissionAction::READ, PermissionAction::WRITE],
             AdminController::class                                    => [PermissionAction::READ, PermissionAction::WRITE],
             AdminRoleController::class                                => [PermissionAction::READ, PermissionAction::WRITE],
+            HistoryController::class                                  => [PermissionAction::READ],
+            StatisticsController::class                               => [PermissionAction::READ],
             VehicleCenterController::class                            => [PermissionAction::READ, PermissionAction::WRITE],
             DeliveryWecomGroupController::class                       => [PermissionAction::READ, PermissionAction::WRITE],
             DeliveryWecomMemberController::class                      => [PermissionAction::READ, PermissionAction::WRITE],
@@ -122,6 +126,8 @@ class AdminRoleImport extends Command
             AdminTeamController::class                                => [PermissionAction::READ, PermissionAction::WRITE]],
 
         AdminRole::role_system => [ConfigurationSysController::class => [PermissionAction::READ, PermissionAction::WRITE],
+            HistoryController::class                                 => [PermissionAction::READ],
+            StatisticsController::class                              => [PermissionAction::READ],
             ImportController::class                                  => [PermissionAction::WRITE],
             AdminPermissionController::class                         => [PermissionAction::READ]],
     ];

@@ -458,6 +458,7 @@ class SaleSettlementController extends Controller
         return $this->response()->withData($saleSettlement)->respond();
     }
 
+    #[PermissionAction(PermissionAction::WRITE)]
     public function destroy(SaleSettlement $saleSettlement) {}
 
     #[PermissionAction(PermissionAction::WRITE)]

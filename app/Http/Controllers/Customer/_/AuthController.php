@@ -8,6 +8,7 @@ use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -28,18 +29,17 @@ class AuthController extends Controller
             [
                 'phone' => ['required', 'digits:11', Rule::exists(Customer::class, 'cu_contact_phone')],
             ]
-        )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey, &$cacheIpKey) {
+        )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey, &$rateLimitKey) {
             if ($validator->failed()) {
                 return;
             }
             // 客户端ip限制
             $ip = $request->ip();
 
-            $cacheIpKey = 'customer_verification_ip:'.$ip;
-            $attempts   = Cache::get($cacheIpKey, 0);
+            $rateLimitKey = 'customer_verification_ip:'.$ip;
 
-            if ($attempts > 3) {
-                $validator->errors()->add('email', '你已操作超过限制次数，请联系客服。');
+            if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
+                $validator->errors()->add('phone', '你已操作超过限制次数，请联系客服。');
 
                 return;
             }
@@ -47,7 +47,7 @@ class AuthController extends Controller
             // 限制每分钟只能请求一次验证码
             $cacheKey = 'customer_verification_code:'.$request->input('phone');
             if (Cache::has($cacheKey)) {
-                $validator->errors()->add('email', '请求过于频繁，请稍后再试');
+                $validator->errors()->add('phone', '请求过于频繁，请稍后再试');
 
                 return;
             }
@@ -58,7 +58,8 @@ class AuthController extends Controller
         $code = mt_rand(1000, 9999);
 
         Cache::put($cacheKey, $code, 1 * 60);
-        Cache::has($cacheIpKey) ? Cache::increment($cacheIpKey) : Cache::put($cacheIpKey, 1);
+        // 使用衰减窗口统计请求次数，避免计数键无限增长。
+        RateLimiter::hit($rateLimitKey, 3600);
 
         // 发送验证码短信，使用短信服务商的 API 进行发送
         $smsService->verificationCode($input['phone'], $code);
