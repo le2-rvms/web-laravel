@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Device;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Iot\TerminalCmd;
 use App\Http\Controllers\Controller;
 use App\Models\Iot\IotDeviceBinding;
 use App\Services\IotTerminalCommandPublisher;
@@ -15,15 +16,13 @@ use Symfony\Component\HttpFoundation\Response;
 #[PermissionType('终端控制')]
 class IotTerminalControlController extends Controller
 {
-    private const array ACTIONS = ['lock', 'unlock', 'horn'];
-
     #[PermissionAction(PermissionAction::WRITE)]
     public function store(Request $request, IotDeviceBinding $iotDeviceBinding): Response
     {
         $device = null;
 
         $input = Validator::make($request->all(), [
-            'action' => ['required', 'string', 'max:32', Rule::in(self::ACTIONS)],
+            'cmd' => ['required', 'string', 'max:32', Rule::in(array_keys(TerminalCmd::kv))],
         ])->after(function (\Illuminate\Validation\Validator $validator) use ($iotDeviceBinding, &$device) {
             if ($validator->failed()) {
                 return;
@@ -40,10 +39,7 @@ class IotTerminalControlController extends Controller
 
         $result = $publisher->publish(
             $device->terminal_id,
-            $input['action'],
-            [
-                'timeout' => 5,
-            ]
+            TerminalCmd::kv[$input['cmd']],
         );
 
         return $this->response()
@@ -51,7 +47,6 @@ class IotTerminalControlController extends Controller
                 'terminal_id' => $device->terminal_id,
                 'device_id'   => $device->dev_id,
                 'topic'       => $result['topic'],
-                'action'      => $input['action'],
                 'payload'     => $result['payload'],
             ])
             ->withMessages('命令已发布')

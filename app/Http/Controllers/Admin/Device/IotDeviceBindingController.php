@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Device;
 
 use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
+use App\Enum\Iot\TerminalCmd;
 use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\Admin;
@@ -107,6 +108,7 @@ class IotDeviceBindingController extends Controller
         $this->response()->withExtras(
             Admin::optionsWithRoles(),
             Vehicle::options(),
+            TerminalCmd::kv(),
         );
 
         $this->response()->withExtras(

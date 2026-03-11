@@ -9,7 +9,7 @@ use PhpMqtt\Client\Facades\MQTT;
 
 class IotTerminalCommandPublisher
 {
-    public function publish(string $terminalId, string $action, array $params = []): array
+    public function publish(string $terminalId, array $cmd): array
     {
         $commandId = $this->generateCommandId();
 
@@ -17,10 +17,11 @@ class IotTerminalCommandPublisher
             'event'       => 'cmd',
             'terminal_id' => $terminalId,
             'ts'          => now()->timestamp,
+            'cmd_label'   => $cmd['label'],
             'payload'     => [
                 'command_id' => $commandId,
-                'action'     => $action,
-                'params'     => (object) $params,
+                'action'     => $cmd['kind'],
+                'params'     => $cmd['params'] + ['ch' => $cmd['channel']],
                 'expire_ts'  => now()->addMinutes(5)->timestamp,
                 'auth_user'  => AuthUserType::getValue(),
             ],
