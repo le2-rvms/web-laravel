@@ -64,11 +64,6 @@ class Admin extends Authenticatable
         'remember_token',
     ];
 
-    public function adminlte_profile_url()
-    {
-        return route('profile.edit');
-    }
-
     public static function indexQuery(): Builder
     {
         return static::query()

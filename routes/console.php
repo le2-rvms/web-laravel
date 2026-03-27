@@ -6,7 +6,6 @@ use App\Console\Commands\App\One\OneRefreshCookie;
 use App\Console\Commands\App\One\OneVehiclesImport;
 use App\Console\Commands\App\One\OneViolationsImport;
 use App\Console\Commands\App\VehicleViolationUsagesIdUpdate;
-use App\Console\Commands\Sys\SmtpSelfTest;
 use Illuminate\Support\Facades\Schedule;
 
 // Schedule::call(function () {
@@ -18,8 +17,6 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command(OneRefreshCookie::class)->everyFifteenMinutes()->withoutOverlapping();
 
 // Schedule::command(VehicleViolationUsagesIdUpdate::class)->everyTenMinutes();
-
-Schedule::command(SmtpSelfTest::class)->dailyAt('09:00')->description('SMTP 每日自检邮件');
 
 Schedule::call(function () {
     $commands = [OneRefreshCookie::class, OneHtmlFetch::class, OneVehiclesImport::class, OneViolationsImport::class];

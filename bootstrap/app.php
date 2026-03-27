@@ -38,12 +38,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('api-customer')
                 ->group(base_path('routes/api_customer.php'))
             ;
-
-            Route::middleware('api')
-                ->name('api-iot.')
-                ->prefix('api-iot')
-                ->group(base_path('routes/api_iot.php'))
-            ;
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {

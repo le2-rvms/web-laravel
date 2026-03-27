@@ -7,16 +7,14 @@ use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
 use App\Models\Admin\Admin;
 use App\Models\Iot\IotDevice;
 use App\Models\Iot\IotDeviceBinding;
-use App\Models\Iot\IotMqttAccount;
 use App\Models\Vehicle\Vehicle;
 use Illuminate\Database\Eloquent\Builder;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Tests\TestCase;
 
 /**
- * @property IotMqttAccount $device
- * @property Admin          $admin
- * @property Vehicle        $vehicle
+ * @property Admin   $admin
+ * @property Vehicle $vehicle
  *
  * @internal
  */
