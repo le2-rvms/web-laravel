@@ -6,7 +6,6 @@ use App\Attributes\PermissionAction;
 use App\Attributes\PermissionType;
 use App\Enum\Config\CfgUsageCategory;
 use App\Models\_\Configuration;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -35,12 +34,6 @@ class ConfigurationSysController extends ConfigurationController
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function editConfirm(Request $request, Configuration $configuration): Response
-    {
-        return parent::editConfirm($request, $configuration);
-    }
-
-    #[PermissionAction(PermissionAction::WRITE)]
     public function update(Request $request, Configuration $configuration): Response
     {
         return parent::update($request, $configuration);
@@ -56,12 +49,6 @@ class ConfigurationSysController extends ConfigurationController
     public function create(Request $request): Response
     {
         return parent::create($request);
-    }
-
-    #[PermissionAction(PermissionAction::WRITE)]
-    public function createConfirm(Request $request): View
-    {
-        return parent::createConfirm($request);
     }
 
     #[PermissionAction(PermissionAction::WRITE)]

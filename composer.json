@@ -17,7 +17,6 @@
         "laravel/reverb": "^1.7",
         "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10.1",
-        "laravel/ui": "^4.6.1",
         "league/flysystem-aws-s3-v3": "^3.29",
         "monolog/monolog": "^3.0",
         "php-mqtt/laravel-client": "^1.7",
@@ -53,9 +52,7 @@
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
-            "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
+            "@php artisan migrate --force"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",

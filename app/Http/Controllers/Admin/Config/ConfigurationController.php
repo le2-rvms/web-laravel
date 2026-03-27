@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Middleware\CheckAdminIsMock;
 use App\Models\_\Configuration;
 use App\Services\PaginateService;
-use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -75,16 +74,6 @@ abstract class ConfigurationController extends Controller
         return $this->response()->withData($configuration)->respond();
     }
 
-    public function editConfirm(Request $request, Configuration $configuration): Response
-    {
-        $input = $this->validatedRequest($request, $configuration);
-
-        $configuration->fill($input);
-
-        // 二次确认页，避免误操作。
-        return view('config.edit_confirm', compact('input', 'configuration'));
-    }
-
     public function update(Request $request, Configuration $configuration): Response
     {
         $input = $this->validatedRequest($request, $configuration);
@@ -122,16 +111,6 @@ abstract class ConfigurationController extends Controller
         ]);
 
         return $this->response()->withData($config)->respond();
-    }
-
-    public function createConfirm(Request $request): View
-    {
-        $input = $this->validatedRequest($request);
-
-        $configuration = new Configuration($input);
-
-        // 二次确认页，避免误操作。
-        return view('config.create_confirm', compact('input', 'configuration'));
     }
 
     public function store(Request $request): Response

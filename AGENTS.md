@@ -6,7 +6,7 @@
 
 -   框架与运行时
     -   Laravel 12（无 `Kernel`，在 `bootstrap/app.php` 配置路由/中间件）。
-    -   PHP >= 8.4，Composer 2，Node + Vite 前端构建。
+    -   PHP >= 8.4，Composer 2。
     -   主要依赖：Sanctum 鉴权、AdminLTE 后台 UI、Spatie Permission、PhpSpreadsheet/PhpWord、ClickHouse 客户端、阿里云 OCR SDK。
 -   主要模块与入口
     -   Web 管理后台：`routes/web_admin.php`（前缀 `web-admin`）。
@@ -20,11 +20,11 @@
 ## 开发环境与运行
 
 -   前置条件
-    -   PHP 8.4、Composer 2、Node 18+、npm 9+。
+    -   PHP 8.4、Composer 2。
     -   数据库建议使用 PostgreSQL（大量 SQL 使用 JSON/CASE 语法，SQLite 仅用于最小化启动）。
     -   可选：Redis、MinIO/S3（文件上传）、ClickHouse（如需）。
 -   初始化
-    -   安装依赖：`composer install`，`npm ci`（或 `npm i`）。
+    -   安装依赖：`composer install`。
     -   复制环境：`cp .env.example .env` 并填写 DB、S3、阿里云 OCR 等配置。
     -   生成应用密钥：`php artisan key:generate`。
     -   迁移最小表（用户/会话/队列/缓存）：`php artisan migrate`。
@@ -32,8 +32,8 @@
     -   同步权限：`php artisan _sys:permission:import`（从控制器属性读取并入库）。
 -   启动开发
     -   后端：`php artisan serve`、队列：`php artisan queue:listen --tries=1`。
-    -   前端：`npm run dev`（或 `composer dev` 一键并行，见 `composer.json: scripts.dev`）。
-    -   Vite 开发配置：`vite.config.js:1`（读取 `PORT`）。
+    -   当前仓库已移除 `Vite/resources/js/resources/css` 前端构建链，默认按纯 Laravel 后端项目处理。
+    -   注意：`composer.json` 里若仍残留 `composer dev` 对 `npm run dev` 的引用，属于待清理历史脚本，不应作为当前启动方式。
 
 ## 目录结构要点
 
@@ -78,6 +78,7 @@
     -   阿里云 OCR 通过 `OcrServiceProvider` 注册（`app/Providers/OcrServiceProvider.php:1`），读取 `config/setting.php:1` 中的密钥。
     -   IoT/EMQX 认证：`app/Http/Controllers/Iot/Mqtt/EmqxAuthController.php` + `app/Http/Requests/Mqtt/EmqxAuthRequest.php:1`。
     -   ClickHouse 连接别名：`helpers/app.php:1` 的 `app_clickhouse()`。
+    -   `Reverb/Broadcasting` 配置仍可能服务外部客户端或移动端实时能力；不要把它与已移除的 Web 前端构建链混为一谈。
 
 ## 响应规范
 
