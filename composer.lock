@@ -524,11 +524,11 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.374.1",
+            "version": "3.374.2",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.tencent.com/repository/composer/aws/aws-sdk-php/3.374.1/aws-aws-sdk-php-3.374.1.zip",
-                "reference": "fa9801583e679aecc95660838708acfd98aa28e7",
+                "url": "https://mirrors.tencent.com/repository/composer/aws/aws-sdk-php/3.374.2/aws-aws-sdk-php-3.374.2.zip",
+                "reference": "67b6b6210af47319c74c5666388d71bc1bc58276",
                 "shasum": ""
             },
             "require": {
@@ -609,9 +609,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.374.1"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.374.2"
             },
-            "time": "2026-03-26T18:06:13+00:00"
+            "time": "2026-03-27T18:05:55+00:00"
         },
         {
             "name": "brick/math",
@@ -3043,11 +3043,11 @@
         },
         {
             "name": "laravel-lang/starter-kits",
-            "version": "1.10.2",
+            "version": "1.10.3",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.tencent.com/repository/composer/laravel-lang/starter-kits/1.10.2/laravel-lang-starter-kits-1.10.2.zip",
-                "reference": "5206154ce102ec73116f79580677e4ffc7fcf80d",
+                "url": "https://mirrors.tencent.com/repository/composer/laravel-lang/starter-kits/1.10.3/laravel-lang-starter-kits-1.10.3.zip",
+                "reference": "cc460c8295568a73a6525de624e09d5976d24fe8",
                 "shasum": ""
             },
             "require": {
@@ -3098,9 +3098,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Laravel-Lang/starter-kits/issues",
-                "source": "https://github.com/Laravel-Lang/starter-kits/tree/1.10.2"
+                "source": "https://github.com/Laravel-Lang/starter-kits/tree/1.10.3"
             },
-            "time": "2026-03-24T15:20:01+00:00"
+            "time": "2026-03-29T11:52:22+00:00"
         },
         {
             "name": "laravel/framework",
@@ -4986,11 +4986,11 @@
         },
         {
             "name": "php-mqtt/client",
-            "version": "v2.3.1",
+            "version": "v2.3.2",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.tencent.com/repository/composer/php-mqtt/client/v2.3.1/php-mqtt-client-v2.3.1.zip",
-                "reference": "002134028bf0279e411e2419cde6b18983605780",
+                "url": "https://mirrors.tencent.com/repository/composer/php-mqtt/client/v2.3.2/php-mqtt-client-v2.3.2.zip",
+                "reference": "97df2f592599f72fb7975eb504333a8df3841ea9",
                 "shasum": ""
             },
             "require": {
@@ -5031,27 +5031,27 @@
             ],
             "support": {
                 "issues": "https://github.com/php-mqtt/client/issues",
-                "source": "https://github.com/php-mqtt/client/tree/v2.3.1"
+                "source": "https://github.com/php-mqtt/client/tree/v2.3.2"
             },
-            "time": "2025-12-09T19:37:16+00:00"
+            "time": "2026-03-28T12:01:13+00:00"
         },
         {
             "name": "php-mqtt/laravel-client",
-            "version": "v1.7.0",
+            "version": "v1.8.0",
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.tencent.com/repository/composer/php-mqtt/laravel-client/v1.7.0/php-mqtt-laravel-client-v1.7.0.zip",
-                "reference": "1aeb5bd545527e82234d74ae5cfd6ebe62a98de8",
+                "url": "https://mirrors.tencent.com/repository/composer/php-mqtt/laravel-client/v1.8.0/php-mqtt-laravel-client-v1.8.0.zip",
+                "reference": "b8b304b29dd5cad79f751911841b6164b76f0216",
                 "shasum": ""
             },
             "require": {
-                "illuminate/config": "^10.0|^11.0|^12.0",
-                "illuminate/support": "^10.0|^11.0|^12.0",
+                "illuminate/config": "^10.0|^11.0|^12.0|^13.0",
+                "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
                 "php": "^8.2",
                 "php-mqtt/client": "^2.1"
             },
             "require-dev": {
-                "squizlabs/php_codesniffer": "^3.5"
+                "squizlabs/php_codesniffer": "^3.5|^4.0"
             },
             "type": "library",
             "extra": {
@@ -5090,9 +5090,9 @@
             ],
             "support": {
                 "issues": "https://github.com/php-mqtt/laravel-client/issues",
-                "source": "https://github.com/php-mqtt/laravel-client/tree/v1.7.0"
+                "source": "https://github.com/php-mqtt/laravel-client/tree/v1.8.0"
             },
-            "time": "2026-01-10T08:20:56+00:00"
+            "time": "2026-03-27T19:09:32+00:00"
         },
         {
             "name": "phpoffice/math",
