@@ -123,8 +123,4 @@ return [
     ],
 
     'company_id' => env('COMPANY_ID'),
-
-    'host_domain_base' => env('HOST_DOMAIN_BASE'),
-
-    'gw_port' => env('GW_PORT'),
 ];

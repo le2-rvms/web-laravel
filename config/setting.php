@@ -83,8 +83,6 @@ return [
         'factor' => env('GEN_FACTOR', 3),
     ],
 
-    'host_manual' => env('HOST_MANUAL'),
-
     'super_role' => [
         'name' => env('SUPER_ROLE_NAME', 'Super Admin'),
     ],

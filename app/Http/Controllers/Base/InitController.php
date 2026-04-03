@@ -27,20 +27,6 @@ class InitController extends Controller
             'php_version' => phpversion(),
             'os'          => PHP_OS,
             'mock_enable' => config('setting.mock.enable'),
-            'host_manual' => config('setting.host_manual'),
-            'ws'          => (function () {
-                $config  = config('broadcasting.connections.reverb', []);
-                $options = $config['options'] ?? [];
-
-                return [
-                    'host'          => ($options['host'].'.'.config('app.host_domain_base')),
-                    'port'          => config('app.gw_port'),
-                    'scheme'        => 'wss',
-                    'app_key'       => (string) ($config['key'] ?? ''),
-                    'path'          => (string) (config('reverb.servers.reverb.path') ?? ''),
-                    'auth_endpoint' => route('api-admin.broadcasting.auth', absolute: false),
-                ];
-            })(),
         ];
 
         return $this->response()->withData($data)->respond();
