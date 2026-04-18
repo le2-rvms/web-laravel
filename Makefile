@@ -1,32 +1,34 @@
-COMPOSER_BIN := $(shell composer -q global config bin-dir --absolute 2>/dev/null)
+.PHONY: dev print-env serve horizon logs vite cli-bash
 
-.PHONY:
+include ../docker-compose/.env
 
-composer-dump:
-	@composer dump-autoload
+ENV_FILES = \
+	../docker-compose/env/L_/0local.env \
+	../docker-compose/env/L2/0local.env \
+	../docker-compose/env/L3/rc-local.env \
+	../docker-compose/env/.pass.env
 
-composer-global-update:
-	@composer global update -vvv
+LOAD_ENV = set -a; $(foreach file,$(ENV_FILES),. $(file);) set +a;
+PRINT_ENV = echo '===== current env ====='; env | sort; echo '=======================';
+APP_ENV_OVERRIDES = DB_HOST=localhost DB_PORT=$${POSTGRES_PORT}
 
-composer-global-install:
-	@composer global require brainmaestro/composer-git-hooks
-	@composer global require friendsofphp/php-cs-fixer
+dev: print-env
+	@$(MAKE) --no-print-directory -j4 serve horizon logs vite
 
-composer-global-refresh-hooks:
-	@$(COMPOSER_BIN)/cghooks update
+print-env:
+	@$(LOAD_ENV) $(PRINT_ENV)
 
-composer-update:
-	#composer clear-cache
-	# 或指定 Composer 偏好协议为 ssh
-	#composer config github-protocols ssh
-	composer update -vvv
+serve:
+	@$(LOAD_ENV) $(APP_ENV_OVERRIDES) php artisan serve
 
-composer-version:
-	php -v
-	#composer --version
-	composer diagnose
-	php artisan --version
+horizon:
+	@$(LOAD_ENV) $(APP_ENV_OVERRIDES) php artisan horizon
 
-composer-run:
-	php artisan serve
+logs:
+	@$(LOAD_ENV) $(APP_ENV_OVERRIDES) php artisan pail --timeout=0
 
+vite:
+	@$(LOAD_ENV) $(APP_ENV_OVERRIDES) npm run dev
+
+cli-bash:
+	@$(LOAD_ENV) $(APP_ENV_OVERRIDES) exec "$${SHELL:-/bin/bash}" -l
