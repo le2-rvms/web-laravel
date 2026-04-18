@@ -1,0 +1,103 @@
+<?php
+
+use App\Models\_\Configuration;
+use App\Models\Admin\Admin;
+use App\Models\Admin\AdminTeam;
+use App\Models\Customer\Customer;
+use App\Models\Customer\CustomerCompany;
+use App\Models\Customer\CustomerIndividual;
+use App\Models\Iot\IotDeviceBinding;
+use App\Models\One\OneAccount;
+use App\Models\Payment\Payment;
+use App\Models\Sale\BookingOrder;
+use App\Models\Sale\BookingVehicle;
+use App\Models\Sale\DocTpl;
+use App\Models\Sale\SaleContract;
+use App\Models\Sale\SaleContractTpl;
+use App\Models\Sale\SaleSettlement;
+use App\Models\Sale\VehicleTemp;
+use App\Models\Vehicle\Vehicle;
+use App\Models\Vehicle\VehicleAccident;
+use App\Models\Vehicle\VehicleCenter;
+use App\Models\Vehicle\VehicleForceTake;
+use App\Models\Vehicle\VehicleInspection;
+use App\Models\Vehicle\VehicleInsurance;
+use App\Models\Vehicle\VehicleMaintenance;
+use App\Models\Vehicle\VehicleManualViolation;
+use App\Models\Vehicle\VehicleModel;
+use App\Models\Vehicle\VehicleRepair;
+use App\Models\Vehicle\VehicleSchedule;
+
+return [
+    'dblog' => [
+        'models' => [
+            AdminTeam::class,
+            Admin::class,
+            Configuration::class,
+            DocTpl::class,
+            Customer::class,
+            CustomerIndividual::class,
+            CustomerCompany::class,
+            VehicleModel::class,
+            Vehicle::class,
+            VehicleAccident::class,
+            OneAccount::class,
+            VehicleRepair::class,
+            VehicleMaintenance::class,
+            VehicleInspection::class,
+            VehicleManualViolation::class,
+            VehicleForceTake::class,
+            VehicleTemp::class,
+            VehicleSchedule::class,
+            VehicleInsurance::class,
+            SaleContract::class,
+            SaleContractTpl::class,
+            SaleSettlement::class,
+            Payment::class,
+            BookingVehicle::class,
+            BookingOrder::class,
+            VehicleCenter::class,
+            IotDeviceBinding::class,
+        ],
+
+        'schema' => 'table_log',
+
+        'union' => [
+            Customer::class => [
+                [CustomerIndividual::class, 'cui_cu_id'],
+                [CustomerCompany::class, 'cuc_cu_id'],
+            ],
+        ],
+    ],
+
+    'mock' => [
+        'enable' => (bool) env('MOCK_ENABLE', false),
+    ],
+
+    'gen' => [
+        'month' => [
+            'limit_size' => 200000,  // 每个表每月最大不超过20万
+            'offset'     => env('GEN_MONTH_OFFSET', -12), // 月份修正
+        ],
+
+        'factor' => env('GEN_FACTOR', 3),
+    ],
+
+    'super_role' => [
+        'name' => env('SUPER_ROLE_NAME', 'Super Admin'),
+    ],
+
+    'super_user' => [
+        'email'    => env('SUPER_USER_EMAIL', ''),
+        'name'     => env('SUPER_USER_NAME', '超级管理员'),
+        'password' => env('SUPER_USER_PASSWORD', ''),
+    ],
+
+    'wecom' => [
+        'corp_id'                      => env('WECOM_CORP_ID'),
+        'app_delivery_agent_id'        => env('WECOM_APP_DELIVERY_AGENT_ID'),
+        'app_delivery_secret'          => env('WECOM_APP_DELIVERY_SECRET'),
+        'app_delivery_token_cache_key' => env('WECOM_APP_DELIVERY_TOKEN_CACHE_KEY', 'wecom:app_delivery:access_token'),
+        'cache_ttl_buffer'             => (int) env('WECOM_TOKEN_TTL_BUFFER', 120), // 以秒为单位的安全缓冲，避免刚好过期
+    ],
+];

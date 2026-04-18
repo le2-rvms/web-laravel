@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Illuminate\Http\Middleware\TrustHosts as Middleware;
+
+class TrustHosts extends Middleware
+{
+    /**
+     * Get the host patterns that should be trusted.
+     *
+     * @return array<int, null|string>
+     */
+    public function hosts(): array
+    {
+        return [
+            // Trust the app URL and all its subdomains.
+            $this->allSubdomainsOfApplicationUrl(),
+        ];
+    }
+}

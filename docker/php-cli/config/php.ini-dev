@@ -1,0 +1,23 @@
+
+memory_limit = 256M
+
+; upload file
+post_max_size = 100M
+upload_max_filesize = 100M
+
+bcmath.scale = 10
+
+date.timezone = Asia/Shanghai
+
+variables_order = "EGPCS"
+
+; opcache
+; https://www.php.net/manual/zh/opcache.installation.php
+opcache.enable=0
+
+; xdebug3
+xdebug.mode = "debug"
+xdebug.client_host="host.docker.internal"
+; xdebug.client_port = "903" 
+; xdebug.idekey = 'phpstorm'
+xdebug.start_with_request=yes

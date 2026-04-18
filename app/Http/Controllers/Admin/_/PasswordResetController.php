@@ -1,0 +1,133 @@
+<?php
+
+namespace App\Http\Controllers\Admin\_;
+
+use App\Http\Controllers\Controller;
+use App\Mail\PasswordResetCodeMail;
+use App\Models\Admin\Admin;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\Response;
+
+class PasswordResetController extends Controller
+{
+    public static function labelOptions(Controller $controller): void
+    {
+        $controller->response()->withExtras(
+        );
+    }
+
+    /**
+     * 发送验证码
+     */
+    public function store(Request $request): Response
+    {
+        $input = Validator::make(
+            $request->all(),
+            [
+                'email' => ['required', 'email', Rule::exists(Admin::class, 'email')],
+            ]
+        )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey, &$rateLimitKey) {
+            if ($validator->failed()) {
+                return;
+            }
+
+            // 客户端ip限制
+            $ip = $request->ip();
+
+            $rateLimitKey = 'password_reset_ip:'.$ip;
+
+            if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
+                $validator->errors()->add('email', '你已操作超过限制次数，请联系客服。');
+
+                return;
+            }
+
+            // 限制该邮箱每分钟只能请求一次验证码
+            $cacheKey = $this->passwordResetCodeCacheKey($request->input('email'));
+            if (Cache::has($cacheKey)) {
+                $validator->errors()->add('email', '请求过于频繁，请稍后再试');
+
+                return;
+            }
+        })
+            ->validate()
+        ;
+
+        // 生成并缓存验证码
+        $code = mt_rand(1000, 9999);
+        Cache::put($cacheKey, (string) $code, 60);
+
+        // 以固定衰减窗口统计来源 IP 请求次数，避免永久封禁。
+        RateLimiter::hit($rateLimitKey, 3600);
+
+        // 发送验证码
+        Mail::to($input['email'])->send(new PasswordResetCodeMail($code));
+
+        $this->response()->withMessages('验证码已发送，请检查您的邮箱');
+
+        return $this->response()->respond();
+    }
+
+    /**
+     * 重置密码
+     */
+    public function update(Request $request): Response
+    {
+        $input = Validator::make(
+            $request->all(),
+            [
+                'email'                 => ['required', 'email', Rule::exists(Admin::class, 'email')],
+                'code'                  => ['required', 'numeric'],
+                'password'              => ['required', 'min:8', 'confirmed'],
+                'password_confirmation' => ['required', 'min:8'],
+            ]
+        )->after(function (\Illuminate\Validation\Validator $validator) use ($request, &$cacheKey) {
+            if ($validator->failed()) {
+                return;
+            }
+
+            // 校验邮箱对应的验证码缓存。
+            $cacheKey   = $this->passwordResetCodeCacheKey($request->input('email'));
+            $cachedCode = (string) Cache::get($cacheKey, '');
+            $inputCode  = (string) $request->input('code');
+
+            if ('' === $cachedCode || !hash_equals($cachedCode, $inputCode)) {
+                $validator->errors()->add('code', '验证码无效或已过期');
+
+                return;
+            }
+        })
+            ->validate()
+        ;
+
+        // 更新用户密码
+        Admin::query()->where('email', $input['email'])->update([
+            'password'             => Hash::make($input['password']),
+            'password_verified_at' => now(),
+        ]);
+
+        // 删除验证码缓存
+        Cache::forget($cacheKey);
+
+        $this->response()->withMessages('密码已重置');
+
+        return $this->response()->respond();
+    }
+
+    protected function options(?bool $with_group_count = false): void
+    {
+        $this->response()->withExtras(
+        );
+    }
+
+    private function passwordResetCodeCacheKey(string $email): string
+    {
+        return 'password_reset_code:'.mb_strtolower(trim($email));
+    }
+}
