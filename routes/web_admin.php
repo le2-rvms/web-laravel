@@ -1,10 +1,10 @@
 <?php
 
+use App\Http\Controllers\WebAdmin\AppBootstrapController;
+use App\Http\Controllers\WebAdmin\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/', function () {
-//    return redirect()->route('home');
-// });
-
-// Auth::routes(['register' => false]);
-// Auth::routes();
+Route::middleware('auth')->group(function () {
+    Route::get('/', DashboardController::class)->name('web-admin.dashboard');
+    Route::get('/app/bootstrap', AppBootstrapController::class)->name('web-admin.app.bootstrap');
+});

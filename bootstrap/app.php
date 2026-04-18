@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\ClientException;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LogRequests;
 use App\Providers\BroadcastServiceProvider;
 use Illuminate\Foundation\Application;
@@ -41,6 +42,12 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->statefulApi();
+
+        $middleware->web(append: [
+            HandleInertiaRequests::class,
+        ]);
+
         $middleware->api(append: [
             LogRequests::class,
         ]);

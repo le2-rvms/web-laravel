@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+    --surface: #f4efe7;
+    --panel: rgba(255, 255, 255, 0.88);
+    --panel-strong: #fffdf8;
+    --panel-muted: #efe6d8;
+    --ink: #1c1917;
+    --ink-soft: #57534e;
+    --line: rgba(120, 113, 108, 0.24);
+    --brand: #0f766e;
+    --brand-ink: #f0fdfa;
+    --accent: #ca8a04;
+    --danger: #dc2626;
+}
+
+@theme {
+    --font-sans: "IBM Plex Sans", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+}
+
+body {
+    background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.14), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(202, 138, 4, 0.12), transparent 28%),
+        var(--surface);
+}
+
+#app {
+    min-height: 100vh;
+}
