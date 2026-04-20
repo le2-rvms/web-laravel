@@ -2,6 +2,7 @@
 
 namespace App\Enum\VehicleViolation;
 
+use App\Enum\Color;
 use App\Enum\EnumLikeBase;
 
 class VvPaymentStatus extends EnumLikeBase
@@ -16,5 +17,11 @@ class VvPaymentStatus extends EnumLikeBase
         self::UNPAID               => '未交款',
         self::PAID                 => '已缴款',
         self::PAYMENT_NOT_REQUIRED => '无需缴款',
+    ];
+
+    public const array colors = [
+        self::UNPAID               => Color::WARNING,
+        self::PAID                 => Color::SUCCESS,
+        self::PAYMENT_NOT_REQUIRED => Color::PRIMARY,
     ];
 }

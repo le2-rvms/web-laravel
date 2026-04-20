@@ -32,29 +32,16 @@ class MockController extends Controller
 
     public function update(Request $request, Admin $mock): Response
     {
-        if (AUserType::COMMON === $mock->a_user_type->value) {
-            throw ValidationException::withMessages([
-                'mock' => ['该用户不能被体验'],
-            ]);
-        }
-        // 构造体验用户并写入临时缓存 token。
-        $admin = $mock;
-        $admin->forceFill([
-            '_is_mock' => true,
-        ]);
+        $admin = $this->resolveMockAdmin($mock);
         $token = Str::random(32);
 
         Cache::set("temporary_admin:{$token}", $admin->toArray(), 3600 * 4);
 
-        $roleNames = $admin->roles()->pluck('name');
-
-        $permissionNames = $admin->getAllPermissions()->pluck('name');
-
         return $this->response()->withData([
             'admin'       => $admin,
             'token'       => $token,
-            'roles'       => $roleNames,
-            'permissions' => $permissionNames,
+            'roles'       => $admin->roles()->pluck('name'),
+            'permissions' => $admin->getAllPermissions()->pluck('name'),
         ])->respond();
     }
 
@@ -64,5 +51,20 @@ class MockController extends Controller
     {
         $this->response()->withExtras(
         );
+    }
+
+    private function resolveMockAdmin(Admin $admin): Admin
+    {
+        if (AUserType::COMMON === $admin->a_user_type->value) {
+            throw ValidationException::withMessages([
+                'mock' => ['该用户不能被体验'],
+            ]);
+        }
+
+        $admin->forceFill([
+            '_is_mock' => true,
+        ]);
+
+        return $admin;
     }
 }

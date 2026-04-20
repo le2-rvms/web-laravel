@@ -2,116 +2,93 @@
 
 namespace App\Http\Controllers\Admin\File;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Contracts\Filesystem\Filesystem;
+use App\Attributes\PermissionNoneType;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Str;
 
-class FileController extends Controller
+#[PermissionNoneType]
+class FileController
 {
-    public static Filesystem $drive;
+    private string $root = 'admin-files';
 
-    public function __construct()
+    public function index(Request $request): JsonResponse
     {
-        // 默认使用 s3 磁盘（可对接 MinIO/S3）。
-        static::$drive = Storage::disk('s3');
-    }
+        $path = $this->normalizePath($request->string('path')->toString());
+        $disk = Storage::disk('public');
+        $target = $this->fullPath($path);
 
-    public static function labelOptions(Controller $controller): void
-    {
-        $controller->response()->withExtras(
-        );
-    }
+        $directories = array_map(function (string $directory) {
+            return $this->trimRoot($directory);
+        }, $disk->directories($target));
 
-    public static function getDrive(): Filesystem
-    {
-        if (!isset(self::$drive)) {
-            // 延迟初始化，避免静态属性未就绪。
-            static::$drive = Storage::disk('s3');
-        }
-
-        return static::$drive;
-    }
-
-    public function index(Request $request)
-    {
-        $path = $request->query('path');
-
-        // 列出目录与文件，返回大小与访问链接。
-        $dir = static::$drive->directories($path);
-
-        $files = [];
-        foreach (static::$drive->files($path) as $filepath) {
-            $files[] = [
-                'filepath' => $filepath,
-                'size'     => static::$drive->size($filepath),
-                'url'      => static::$drive->url($filepath),
+        $files = array_map(function (string $file) use ($disk) {
+            return [
+                'path' => $this->trimRoot($file),
+                'filepath' => basename($file),
+                'url' => $disk->url($file),
+                'size' => $disk->size($file),
+                'last_modified' => $disk->lastModified($file),
             ];
-        }
+        }, $disk->files($target));
 
-        return $this->response()->withData(compact('dir', 'files'))->respond();
+        return response()->json([
+            'dir' => $directories,
+            'files' => $files,
+        ]);
     }
 
-    public function store(Request $request): Response
+    public function store(Request $request): JsonResponse
     {
-        $input = $request->validate([
-            'file' => 'required|file|max:10240', // 设置最大文件大小为 10MB
+        $request->validate([
+            'file' => ['required', 'file'],
+            'upload_path' => ['nullable', 'string'],
         ]);
 
-        $file = $input['file'];
+        $path = $this->normalizePath($request->string('upload_path')->toString());
+        $disk = Storage::disk('public');
+        $target = $this->fullPath($path);
+        $filename = Str::uuid().'.'.$request->file('file')->getClientOriginalExtension();
+        $stored = $request->file('file')->storeAs($target, $filename, 'public');
 
-        $upload_path = $request->input('upload_path');
-
-        $filename = $file->getClientOriginalName();
-
-        // 按原文件名保存到指定目录。
-        $filepath = static::$drive->putFileAs($upload_path, $file, $filename);
-
-        //        $url = static::$drive->url($filepath);
-
-        return $this->response()->withData([
-            'filepath' => $filepath,
-            //            'url'      => $url,
-            //            'name'     => basename($filepath),
-            //            'extname'  => pathinfo($filename, PATHINFO_EXTENSION),
-        ])->respond();
+        return response()->json([
+            'message' => '上传成功',
+            'data' => [
+                'filepath' => $this->trimRoot($stored),
+                'url' => $disk->url($stored),
+            ],
+        ]);
     }
 
-    public function show(string $id)
+    public function destroy(Request $request): JsonResponse
     {
-        // 生成 minio 临时访问链接。
-        $filePath = 'uploads/'.$filename;
+        $request->validate([
+            'path' => ['required', 'string'],
+        ]);
 
-        if (Storage::disk('minio')->exists($filePath)) {
-            $url = Storage::disk('minio')->temporaryUrl($filePath, now()->addMinutes(5));
+        $path = $this->normalizePath($request->string('path')->toString());
+        Storage::disk('public')->delete($this->fullPath($path));
 
-            return response()->json(['url' => $url]);
-        }
-
-        return response()->json(['error' => 'File not found'], 404);
+        return response()->json([
+            'message' => '删除成功',
+        ]);
     }
 
-    public function update(Request $request, string $id) {}
-
-    public function destroy(string $id)
+    private function normalizePath(string $path): string
     {
-        $filePath = 'uploads/'.$filename;
+        $normalized = trim(str_replace('..', '', $path), '/');
 
-        if (Storage::disk('minio')->exists($filePath)) {
-            Storage::disk('minio')->delete($filePath);
-
-            $this->response()->withMessages(['File deleted successfully']);
-
-            return response()->json();
-        }
-
-        return response()->json(['error' => 'File not found'], 404);
+        return '/' === $path ? '' : $normalized;
     }
 
-    protected function options(?bool $with_group_count = false): void
+    private function fullPath(string $path): string
     {
-        $this->response()->withExtras(
-        );
+        return trim($this->root.'/'.$path, '/');
+    }
+
+    private function trimRoot(string $path): string
+    {
+        return ltrim(str_replace($this->root, '', $path), '/');
     }
 }

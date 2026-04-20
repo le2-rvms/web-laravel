@@ -80,7 +80,9 @@ class VehicleViolation extends Model
                 'vv.*',
                 DB::raw("to_char(vv_violation_datetime, 'YYYY-MM-DD HH24:MI') as vv_violation_datetime_"),
                 DB::raw(VvPaymentStatus::toCaseSQL()),
+                DB::raw(VvPaymentStatus::toColorSQL()),
                 DB::raw(VvProcessStatus::toCaseSQL()),
+                DB::raw(VvProcessStatus::toColorSQL()),
             )
         ;
     }

@@ -143,9 +143,12 @@ class VehicleAccident extends Model
             ->select('va.*', 'vc.vc_name', 've.ve_plate_no', 'cu.cu_contact_name', 'cu.cu_contact_phone', 'vm.vm_brand_name', 'vm.vm_model_name')
             ->addSelect(
                 DB::raw(VaClaimStatus::toCaseSQL()),
+                DB::raw(VaClaimStatus::toColorSQL()),
                 DB::raw(VaRepairStatus::toCaseSQL()),
+                DB::raw(VaRepairStatus::toColorSQL()),
                 DB::raw(VaSettlementStatus::toCaseSQL()),
                 DB::raw(VaPickupStatus::toCaseSQL()),
+                DB::raw(VaPickupStatus::toColorSQL()),
                 DB::raw(VaSettlementMethod::toCaseSQL()),
                 DB::raw(VaManagedVehicle::toCaseSQL()),
                 // 进/出厂间隔按进厂时间减出厂时间计算，正负取决于时间顺序。

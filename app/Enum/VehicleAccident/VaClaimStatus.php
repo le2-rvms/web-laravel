@@ -2,6 +2,7 @@
 
 namespace App\Enum\VehicleAccident;
 
+use App\Enum\Color;
 use App\Enum\EnumLikeBase;
 
 class VaClaimStatus extends EnumLikeBase
@@ -12,5 +13,10 @@ class VaClaimStatus extends EnumLikeBase
     public const array LABELS = [
         self::PROCESSING => '处理中',
         self::COMPLETED  => '已完成',
+    ];
+
+    public const array colors = [
+        self::PROCESSING => Color::WARNING,
+        self::COMPLETED  => Color::SUCCESS,
     ];
 }

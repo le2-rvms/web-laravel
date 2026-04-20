@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\Device\GpsDataController;
 use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
 use App\Http\Controllers\Admin\Device\IotTerminalControlController;
 use App\Http\Controllers\Admin\File\StorageController;
+use App\Http\Controllers\Admin\File\FileController;
 use App\Http\Controllers\Admin\Payment\InoutController;
 use App\Http\Controllers\Admin\Payment\PaymentAccountController;
 use App\Http\Controllers\Admin\Payment\PaymentController;
@@ -76,7 +77,9 @@ Route::prefix('no-auth')->group(function () {
 Route::post('broadcasting/auth', [BroadcastController::class, 'authenticate'])->name('broadcasting.auth')->middleware([config('setting.mock.enable') ? TemporaryAdmin::class : 'auth:sanctum']);
 
 Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::class : 'auth:sanctum', CheckPermission::class]], function () {
-    //    Route::apiResource('file', FileController::class);
+    Route::get('file', [FileController::class, 'index']);
+    Route::post('file', [FileController::class, 'store']);
+    Route::delete('file', [FileController::class, 'destroy']);
     //    Route::apiResource('file-name', FileNameController::class);
 
     Route::resource('statistics', StatisticsController::class)->only('index');

@@ -101,17 +101,17 @@ return [
         'timescaledb' => [
             'driver'         => 'pgsql',
             'timezone'       => 'Asia/Shanghai',
-            'url'            => env('DB_URL'),
-            'host'           => 'timescaledb',
-            'port'           => env('DB_PORT', '5432'),
+            'url'            => env('TIMESCALEDB_URL'),
+            'host'           => env('TIMESCALEDB_HOST', 'timescaledb'),
+            'port'           => env('TIMESCALEDB_PORT', '5432'),
             'database'       => env('TIMESCALEDB_DATABASE', 'iot'),
             'username'       => env('TIMESCALEDB_USERNAME', 'iot'),
             'password'       => env('TIMESCALEDB_PASSWORD', 'iot'),
-            'charset'        => env('DB_CHARSET', 'utf8'),
+            'charset'        => env('TIMESCALEDB_CHARSET', 'utf8'),
             'prefix'         => '',
             'prefix_indexes' => true,
             'search_path'    => 'public',
-            'sslmode'        => env('DB_SSLMODE', 'prefer'),
+            'sslmode'        => env('TIMESCALEDB_SSLMODE', 'prefer'),
         ],
 
         'sqlsrv' => [
