@@ -24,8 +24,8 @@ use App\Http\Controllers\Admin\Device\DeviceBleKeyController;
 use App\Http\Controllers\Admin\Device\GpsDataController;
 use App\Http\Controllers\Admin\Device\IotDeviceBindingController;
 use App\Http\Controllers\Admin\Device\IotTerminalControlController;
-use App\Http\Controllers\Admin\File\StorageController;
 use App\Http\Controllers\Admin\File\FileController;
+use App\Http\Controllers\Admin\File\StorageController;
 use App\Http\Controllers\Admin\Payment\InoutController;
 use App\Http\Controllers\Admin\Payment\PaymentAccountController;
 use App\Http\Controllers\Admin\Payment\PaymentController;
@@ -101,7 +101,8 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
     Route::post('doc-tpls/upload', [DocTplController::class, 'upload']);
     Route::resource('doc-tpls', DocTplController::class);
 
-    Route::singleton('company', CompanyController::class);
+    Route::post('company/upload', [CompanyController::class, 'upload']);
+    Route::singleton('company', CompanyController::class)->only('update', 'edit');
 
     Route::apiSingleton('payment-type', PaymentTypeController::class);
 

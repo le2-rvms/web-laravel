@@ -189,12 +189,12 @@ class Customer extends Authenticatable
 
     public function SalesManager(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'sales_manager', 'cu_id');
+        return $this->belongsTo(Admin::class, 'cu_sales_manager', 'id');
     }
 
     public function DriverManager(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'driver_manager', 'cu_id');
+        return $this->belongsTo(Admin::class, 'cu_driver_manager', 'id');
     }
 
     public function Team(): BelongsTo

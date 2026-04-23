@@ -20,12 +20,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SaleContractController extends Controller
 {
-    public static function labelOptions(Controller $controller): void
-    {
-        $controller->response()->withExtras(
-        );
-    }
-
     public function index(Request $request): Response
     {
         $perPage = 20;
@@ -106,11 +100,5 @@ class SaleContractController extends Controller
         );
 
         return $this->response()->withData($saleContract)->respond();
-    }
-
-    protected function options(?bool $with_group_count = false): void
-    {
-        $this->response()->withExtras(
-        );
     }
 }

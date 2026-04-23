@@ -16,12 +16,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
-    public static function labelOptions(Controller $controller): void
-    {
-        $controller->response()->withExtras(
-        );
-    }
-
     public function sendVerificationCode(Request $request, SmsService $smsService): Response
     {
         $input = Validator::make(
@@ -111,7 +105,11 @@ class AuthController extends Controller
 
     public function getUserInfo(Request $request): Response
     {
-        return $this->response()->withData($request->user())->respond();
+        /** @var Customer $customer */
+        $customer = $request->user();
+        $customer->load('SalesManager', 'DriverManager', 'Team');
+
+        return $this->response()->withData($customer)->respond();
     }
 
     public function mock(Request $request): Response
@@ -127,11 +125,5 @@ class AuthController extends Controller
             'customer' => $customer,
             'token'    => $token,
         ])->respond();
-    }
-
-    protected function options(?bool $with_group_count = false): void
-    {
-        $this->response()->withExtras(
-        );
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Config;
 
 use App\Attributes\PermissionNoneType;
+use App\Enum\Config\CpVerifyStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\CheckAdminIsMock;
 use App\Models\_\Company;
@@ -10,6 +11,7 @@ use App\Services\Uploader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
 #[PermissionNoneType('公司信息管理')]
@@ -17,7 +19,7 @@ class CompanyController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(CheckAdminIsMock::class);
+        //        $this->middleware(CheckAdminIsMock::class);
     }
 
     public function show()
@@ -32,6 +34,7 @@ class CompanyController extends Controller
     {
         // 公司信息为单例记录，没有则创建空对象。
         $company = Company::query()->firstOrNew();
+        $this->options();
 
         return $this->response()->withData($company)->respond();
     }
@@ -47,13 +50,14 @@ class CompanyController extends Controller
                 'cp_latitude'             => ['bail', 'nullable', 'numeric'],
                 'cp_phone'                => ['bail', 'nullable', 'max:255'],
                 'cp_description'          => ['bail', 'nullable', 'string'],
-                'cp_rental_notes'         => ['bail', 'nullable', 'string'],
-                'cp_purchase_notes'       => ['bail', 'nullable', 'string'],
-                'cp_invoice_text'         => ['bail', 'nullable', 'string'],
+                'cp_rental_note'          => ['bail', 'nullable', 'string'],
+                'cp_purchase_note'        => ['bail', 'nullable', 'string'],
+                'cp_invoice_note'         => ['bail', 'nullable', 'string'],
                 'cp_bank_name'            => ['bail', 'nullable', 'max:255'],
                 'cp_bank_account_no'      => ['bail', 'nullable', 'max:255'],
                 'cp_social_credit_code'   => ['bail', 'nullable', 'max:255'],
                 'cp_wechat_notify_mobile' => ['bail', 'nullable', 'max:255'],
+                'cp_verify_status'        => ['bail', 'nullable', Rule::in(CpVerifyStatus::label_keys())],
             ] + Uploader::validator_rule_upload_object('cp_company_photo', false)
             + Uploader::validator_rule_upload_object('cp_business_license_photo', false),
             [],
@@ -74,12 +78,19 @@ class CompanyController extends Controller
     public static function labelOptions(Controller $controller): void
     {
         $controller->response()->withExtras(
+            CpVerifyStatus::labelOptions()
         );
+    }
+
+    public function upload(Request $request): Response
+    {
+        return Uploader::upload($request, 'company', ['cp_company_photo', 'cp_business_license_photo'], $this);
     }
 
     protected function options(?bool $with_group_count = false): void
     {
         $this->response()->withExtras(
+            CpVerifyStatus::options()
         );
     }
 }

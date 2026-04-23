@@ -62,16 +62,4 @@ class IotTerminalControlController extends Controller
             ->respond()
         ;
     }
-
-    public static function labelOptions(Controller $controller): void
-    {
-        $controller->response()->withExtras(
-        );
-    }
-
-    protected function options(?bool $with_group_count = false): void
-    {
-        $this->response()->withExtras(
-        );
-    }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Customer\_\AuthController;
 use App\Http\Controllers\Customer\Device\IotTerminalControlController;
+use App\Http\Controllers\Customer\Sale\BookingVehicleController;
 use App\Http\Controllers\Customer\Sale\SaleContractController;
 use App\Http\Middleware\TemporaryCustomer;
 use Illuminate\Support\Facades\Route;
@@ -20,5 +21,6 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryCustomer
 
     Route::post('iot-terminal-controls', [IotTerminalControlController::class, 'store']);
 
+    Route::resource('booking-vehicles', BookingVehicleController::class)->only(['index', 'show']);
     Route::resource('sale-contracts', SaleContractController::class)->only(['index', 'show']);
 });

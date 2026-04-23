@@ -1,4 +1,5 @@
 COMPOSER_BIN := $(shell composer -q global config bin-dir --absolute 2>/dev/null)
+REPO_ROOT := $(shell git -C $(CURDIR) rev-parse --show-toplevel 2>/dev/null)
 
 .PHONY:
 
@@ -13,20 +14,4 @@ composer-global-install:
 	@composer global require friendsofphp/php-cs-fixer
 
 composer-global-refresh-hooks:
-	@$(COMPOSER_BIN)/cghooks update
-
-composer-update:
-	#composer clear-cache
-	# 或指定 Composer 偏好协议为 ssh
-	#composer config github-protocols ssh
-	composer update -vvv
-
-composer-version:
-	php -v
-	#composer --version
-	composer diagnose
-	php artisan --version
-
-composer-run:
-	php artisan serve
-
+	cd $(REPO_ROOT) && $(COMPOSER_BIN)/cghooks update
