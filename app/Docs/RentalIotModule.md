@@ -56,7 +56,7 @@
 建议统一走命令模型返回 `command_id`，客户端可轮询或 WS 接收回执：
 - `POST /api-customer/iot/my-vehicle/commands/lock`
 - `POST /api-customer/iot/my-vehicle/commands/unlock`
-- `POST /api-customer/iot/my-vehicle/commands/horn`
+- `POST /api-customer/iot/my-vehicle/commands/beep`
 
 返回建议：
 - `data.command_id`：命令唯一 ID
@@ -93,7 +93,7 @@
 ### 2) 遥控命令字段与状态机
 - 命令字段建议：
   - `command_id`（UUID/雪花）
-  - `action`：`LOCK|UNLOCK|HORN|...`
+  - `action`：`LOCK|UNLOCK|BEEP|...`
   - `params`：动作参数（如鸣笛时长）
   - `status`：`queued -> sent -> acked|failed|timeout`
   - `requested_by`（admin/customer）、`requested_at`、`sent_at`、`acked_at`

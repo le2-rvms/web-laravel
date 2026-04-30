@@ -7,7 +7,7 @@ use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
 use App\Enum\VehicleInspection\ViInspectionType;
-use App\Http\Controllers\Customer\Sale\SaleContractController as CustomerSaleContractController;
+use App\Http\Controllers\Customer\SaleContractController as CustomerSaleContractController;
 use App\Models\Customer\Customer;
 use App\Models\Payment\Payment;
 use App\Models\Sale\SaleContract;

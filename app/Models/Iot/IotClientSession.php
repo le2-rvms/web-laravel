@@ -6,19 +6,20 @@ use App\Attributes\ClassName;
 use App\Models\_\ModelTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 #[ClassName('客户端会话')]
 /**
- * @property string      $client_id
- * @property null|string $username
- * @property string      $last_event_ts
- * @property string      $last_event_type
- * @property null|string $last_connect_ts
- * @property null|string $last_disconnect_ts
- * @property null|string $last_peer
- * @property null|string $last_protocol
- * @property null|int    $last_reason_code
- * @property null|array  $extra
+ * @property string             $client_id
+ * @property null|string        $username
+ * @property string             $last_event_ts
+ * @property string             $last_event_type
+ * @property null|Carbon|string $last_connect_ts
+ * @property null|string        $last_disconnect_ts
+ * @property null|string        $last_peer
+ * @property null|string        $last_protocol
+ * @property null|int           $last_reason_code
+ * @property null|array         $extra
  */
 class IotClientSession extends Model
 {

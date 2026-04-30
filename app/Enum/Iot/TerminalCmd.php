@@ -18,7 +18,7 @@ class TerminalCmd
                 'timeout_s' => 120,
             ],
             'buttonType' => 'warn',
-            'icon'       => 'locked',
+            'icon'       => 'icon-jiesuo',
         ],
         'unlock' => [
             'key'     => 'unlock',
@@ -29,7 +29,7 @@ class TerminalCmd
                 'timeout_s' => 120,
             ],
             'buttonType' => 'warn',
-            'icon'       => 'undo',
+            'icon'       => 'icon-suoding',
         ],
         'beep' => [
             'key'     => 'beep',
@@ -40,11 +40,11 @@ class TerminalCmd
                 'timeout_s' => 120,
             ],
             'buttonType' => 'warn',
-            'icon'       => 'sound',
+            'icon'       => 'icon-laba',
         ],
         'foo' => [
             'key'     => 'foo',
-            'label'   => '双击演示',
+            'label'   => '后备箱',
             'kind'    => 'double-click',
             'channel' => 1,
             'params'  => [
@@ -53,6 +53,7 @@ class TerminalCmd
                 'on2' => 120,
             ],
             'buttonType' => 'warn',
+            'icon'       => 'icon-houbeixiang',
         ],
     ];
 }

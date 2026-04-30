@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\Customer\_\AuthController;
-use App\Http\Controllers\Customer\Device\IotTerminalControlController;
-use App\Http\Controllers\Customer\Sale\BookingVehicleController;
-use App\Http\Controllers\Customer\Sale\SaleContractController;
+use App\Http\Controllers\Customer\AuthController;
+use App\Http\Controllers\Customer\BookingVehicleController;
+use App\Http\Controllers\Customer\SaleContractController;
+use App\Http\Controllers\Customer\TerminalKeyControlController;
 use App\Http\Middleware\TemporaryCustomer;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +19,8 @@ Route::prefix('no-auth')->group(callback: function () {
 Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryCustomer::class : 'auth:sanctum']], function () {
     Route::get('user', [AuthController::class, 'getUserInfo']);
 
-    Route::post('iot-terminal-controls', [IotTerminalControlController::class, 'store']);
+    Route::get('terminal-keys', [TerminalKeyControlController::class, 'index']);
+    Route::post('terminal-key-commands', [TerminalKeyControlController::class, 'store']);
 
     Route::resource('booking-vehicles', BookingVehicleController::class)->only(['index', 'show']);
     Route::resource('sale-contracts', SaleContractController::class)->only(['index', 'show']);

@@ -24,6 +24,8 @@ class IotDeviceProduct extends Model
 {
     use ModelTrait;
 
+    public const GPS_KEY = 'gps+key';
+
     public const CREATED_AT = 'created_at';
     public const UPDATED_AT = 'updated_at';
 

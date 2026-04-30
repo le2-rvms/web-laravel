@@ -11,16 +11,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Request;
-use Illuminate\View\View;
 
 final class ResponseBuilder
 {
-    private array|object|null $data     = null;
-    private array $messages             = [];
-    private array $extras               = [];
-    private array $lang                 = [];
-    private mixed $option               = null;
-    private ?string $view               = null;
+    private array|object|null $data = null;
+    private array $messages         = [];
+    private array $extras           = [];
+    private array $lang             = [];
+    private mixed $option           = null;
+    //    private ?string $view               = null;
     private array $viewParams           = [];
     private ?RedirectResponse $redirect = null;
 
@@ -119,48 +118,26 @@ final class ResponseBuilder
     }
 
     /**
-     * 指定要渲染的视图和参数.
-     */
-    public function withView(string $view, array $params = []): self
-    {
-        $this->view       = $view;
-        $this->viewParams = $params;
-
-        return $this;
-    }
-
-    /**
      * 最终响应.
      */
-    public function respond(int $status = 200): JsonResponse|RedirectResponse|Response|View
+    public function respond(int $status = 200): JsonResponse|RedirectResponse|Response
     {
-        if ($wantsJson = $this->request->wantsJson()) {
-            if (PageExcel::check_request($this->request) && $this->data instanceof PaginateService) {
-                // 列表接口命中 output=excel 时，用导出结果替换分页数据。
-                $pageExcel = new PageExcel($this->request->route()->getActionName());
-
-                $export = $pageExcel->export($this->data->builder, $this->data->columns);
-
-                $this->withData($export);
-            }
-
-            return response()->json($this->payload(), $status);
-        }
-
         if ($this->redirect) {
             return $this->redirect;
         }
 
-        // 非 JSON 请求：未指定视图时才按路由自动推导。
-        if (null === $this->view) {
-            $this->view = get_view_file($this->request);
-        }
-        $payload = array_merge(
-            $this->payload(),
-            $this->viewParams
-        );
+        //        if ($wantsJson = $this->request->wantsJson()) {
+        if (PageExcel::check_request($this->request) && $this->data instanceof PaginateService) {
+            // 列表接口命中 output=excel 时，用导出结果替换分页数据。
+            $pageExcel = new PageExcel($this->request->route()->getActionName());
 
-        return response()->view($this->view, $payload, $status);
+            $export = $pageExcel->export($this->data->builder, $this->data->columns);
+
+            $this->withData($export);
+        }
+
+        return response()->json($this->payload(), $status);
+        //        }
     }
 
     public function withRedirect(RedirectResponse $back)

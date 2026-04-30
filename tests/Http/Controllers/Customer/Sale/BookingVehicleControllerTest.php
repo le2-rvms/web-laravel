@@ -6,7 +6,7 @@ use App\Enum\Booking\BvIsListed;
 use App\Enum\Vehicle\VeStatusDispatch;
 use App\Enum\Vehicle\VeStatusRental;
 use App\Enum\Vehicle\VeStatusService;
-use App\Http\Controllers\Customer\Sale\BookingVehicleController as CustomerBookingVehicleController;
+use App\Http\Controllers\Customer\BookingVehicleController as CustomerBookingVehicleController;
 use App\Models\_\Company;
 use App\Models\Customer\Customer;
 use App\Models\Sale\BookingVehicle;

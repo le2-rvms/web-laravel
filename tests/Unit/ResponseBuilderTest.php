@@ -18,7 +18,6 @@ class ResponseBuilderTest extends NoAuthTestCase
     {
         $request  = Request::create('/dummy', 'GET');
         $response = (new ResponseBuilder(self::class, $request))
-            ->withView('tests.response-builder')
             ->respond()
         ;
 
