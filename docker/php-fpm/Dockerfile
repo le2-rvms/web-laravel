@@ -1,6 +1,6 @@
-ARG IMAGE_EXT_PREFIX
+ARG IMAGE_PREFIX
 
-FROM ${IMAGE_EXT_PREFIX}php-fpm-alpine
+FROM ${IMAGE_PREFIX}php-fpm-alpine
 
 # USER root
 

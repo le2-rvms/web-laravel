@@ -1,6 +1,6 @@
-ARG IMAGE_EXT_PREFIX
+ARG IMAGE_PREFIX
 
-FROM ${IMAGE_EXT_PREFIX}php-cli-alpine
+FROM ${IMAGE_PREFIX}php-cli-alpine
 
 # USER root
 
