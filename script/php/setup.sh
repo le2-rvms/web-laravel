@@ -7,7 +7,9 @@ composer clearcache
 pwd
 # chown -R www-data:www-data ./
 # find . -path ./.git -prune -o -exec chown -h www-data:www-data {} +
-composer config -g repo.packagist composer https://mirrors.tencent.com/composer/
+if [ -n "${COMPOSER_REGISTRY:-}" ]; then
+    composer config -g repo.packagist composer "${COMPOSER_REGISTRY}"
+fi
 composer config -g --list | grep repositories
 
 php -v
