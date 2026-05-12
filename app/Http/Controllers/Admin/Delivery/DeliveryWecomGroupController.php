@@ -27,7 +27,7 @@ class DeliveryWecomGroupController extends Controller
     }
 
     #[PermissionAction(PermissionAction::READ)]
-    public function show(Request $request): Response
+    public function edit(Request $request): Response
     {
         $this->options();
         $this->response()->withExtras(

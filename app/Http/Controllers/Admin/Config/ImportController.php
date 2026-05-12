@@ -27,7 +27,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ImportController extends Controller
 {
     #[PermissionAction(PermissionAction::WRITE)]
-    public function show(Request $request): Response
+    public function edit(Request $request): Response
     {
         $this->response()->withExtras(
             ImportConfig::options(),

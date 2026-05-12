@@ -31,14 +31,7 @@ class CheckPermission
 
         [$controllerName, $method] = $actionArray;
 
-        // 反射读取方法上的 PermissionAction 注解。
-        $actionName_ = str_replace('@', '::', $actionName);
-
-        try {
-            $reflectionMethod = \ReflectionMethod::createFromMethodName($actionName_);
-        } catch (\ReflectionException $e) {
-            abort(403, trans('You have not permission to this page!'));
-        }
+        $reflectionMethod = new \ReflectionMethod($controllerName, $method);
 
         $permissionAttributes = $reflectionMethod->getAttributes(PermissionAction::class);
 

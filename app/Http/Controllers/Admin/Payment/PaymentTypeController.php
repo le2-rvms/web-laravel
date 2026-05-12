@@ -22,7 +22,7 @@ class PaymentTypeController extends Controller
     }
 
     #[PermissionAction(PermissionAction::WRITE)]
-    public function show(Request $request): Response
+    public function edit(Request $request): Response
     {
         $this->response()->withExtras(
             // 前端配置页需要完整的类型选项。

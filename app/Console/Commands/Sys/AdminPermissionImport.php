@@ -74,16 +74,22 @@ class AdminPermissionImport extends Command
 
         //        $permissions = [];
         foreach ($routeCollection as $route) {
-            $reflectionMethod = null;
+            $actionName = $route->getActionName();
 
-            $actionName = str_replace('@', '::', $route->getActionName());
+            $actionArray = explode('@', $actionName);
 
-            if (!str_contains($actionName, 'App\Http\Controllers\Admin\\')) {
+            if (2 !== sizeof($actionArray)) {
+                continue;
+            }
+
+            [$controllerName, $method] = $actionArray;
+
+            if (!str_contains($controllerName, 'App\Http\Controllers\Admin\\')) {
                 continue;
             }
 
             try {
-                $reflectionMethod = new \ReflectionMethod($actionName);
+                $reflectionMethod = new \ReflectionMethod($controllerName, $method);
             } catch (\ReflectionException $e) {
                 continue;
             }

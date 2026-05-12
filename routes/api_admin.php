@@ -104,7 +104,7 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
     Route::post('company/upload', [CompanyController::class, 'upload']);
     Route::singleton('company', CompanyController::class)->only('update', 'edit');
 
-    Route::apiSingleton('payment-type', PaymentTypeController::class);
+    Route::singleton('payment-type', PaymentTypeController::class);
 
     Route::resource('vehicle-models', VehicleModelController::class);
 
@@ -122,8 +122,8 @@ Route::group(['middleware' => [config('setting.mock.enable') ? TemporaryAdmin::c
 
     Route::resource('delivery-logs', DeliveryLogController::class);
 
-    Route::apiSingleton('delivery-wecom-group', DeliveryWecomGroupController::class);
-    Route::apiSingleton('delivery-wecom-member', DeliveryWecomMemberController::class);
+    Route::singleton('delivery-wecom-group', DeliveryWecomGroupController::class);
+    Route::singleton('delivery-wecom-member', DeliveryWecomMemberController::class);
 
     Route::get('import/template', [ImportController::class, 'template']);
     Route::post('import/upload', [ImportController::class, 'upload']);
