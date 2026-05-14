@@ -18,9 +18,17 @@ php artisan about
 php artisan --version
 
 
-if [ "$APP_ENV" = "production" ] || [ "$APP_ENV" = "staging" ]; then
+if [ "$APP_ENV" = "production" ]; then
     echo "执行生产环境部署..."
     composer install --prefer-dist --no-interaction --no-progress --no-dev --optimize-autoloader --classmap-authoritative
+#    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan event:cache
+elif [ "$APP_ENV" = "staging" ]; then
+    echo "执行预发布环境部署..."
+    composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader --classmap-authoritative
 #    php artisan optimize:clear
     php artisan config:cache
     php artisan route:cache

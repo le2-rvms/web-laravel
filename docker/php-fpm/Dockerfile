@@ -4,13 +4,14 @@ FROM ${IMAGE_PREFIX}php-fpm-alpine
 
 # USER root
 
-ARG DOCKER_ENV="production"
-ENV DOCKER_ENV=${DOCKER_ENV}
+ARG APP_ENV="production"
+ENV APP_ENV=${APP_ENV}
 
 COPY config/ /tmp/
 
-RUN if [ "$DOCKER_ENV" = "production" ]; then \
+RUN if [ "$APP_ENV" = "production" ] || [ "$APP_ENV" = "staging" ]; then \
     mv /tmp/php.ini-prod $PHP_INI_DIR/conf.d/php.ini; \
+    rm -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini; \
     else \
     mv /tmp/php.ini-dev $PHP_INI_DIR/conf.d/php.ini; \
     fi
