@@ -17,7 +17,6 @@ composer --version
 php artisan about
 php artisan --version
 
-APP_ENV="${APP_ENV:-dev}"
 
 if [ "$APP_ENV" = "production" ] || [ "$APP_ENV" = "staging" ]; then
     echo "执行生产环境部署..."
