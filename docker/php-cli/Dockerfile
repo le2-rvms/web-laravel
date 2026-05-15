@@ -4,12 +4,12 @@ FROM ${IMAGE_PREFIX}php-cli-alpine
 
 # USER root
 
-ARG APP_ENV="production"
-ENV APP_ENV=${APP_ENV}
+ARG COMPOSE_ENV
+ENV COMPOSE_ENV=${COMPOSE_ENV}
 
 COPY config/ /tmp/
 
-RUN if [ "$APP_ENV" = "production" ] || [ "$APP_ENV" = "staging" ]; then \
+RUN if [ "$COMPOSE_ENV" = "production" ] || [ "$COMPOSE_ENV" = "staging" ]; then \
     mv /tmp/php.ini-prod $PHP_INI_DIR/conf.d/php.ini; \
     rm -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini; \
     else \
