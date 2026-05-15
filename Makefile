@@ -32,7 +32,7 @@ logs:
 	@$(LOAD_ENV) $(APP_ENV_OVERRIDES) php artisan pail --timeout=0
 
 vite:
-	@$(LOAD_ENV) $(APP_ENV_OVERRIDES) npm run dev
+	@$(LOAD_ENV) $(APP_ENV_OVERRIDES) pnpm run dev
 
 cli-bash:
 	@$(LOAD_ENV) $(APP_ENV_OVERRIDES) exec "$${SHELL:-/bin/bash}" -l

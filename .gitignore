@@ -12,6 +12,7 @@
 /.zed
 /auth.json
 /node_modules
+/.vite/
 /public/build
 /public/hot
 /public/storage
@@ -24,4 +25,3 @@ Thumbs.db
 yarn-error.log
 /package-lock.json
 /.pnpm-store/
-/composer.lock
