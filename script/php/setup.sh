@@ -18,17 +18,13 @@ php artisan about
 php artisan --version
 
 
-if [ "$DOCKER_ENV" = "production" ]; then
+if [ "$APP_ENV" = "production" ]; then
     echo "执行生产环境部署..."
-    composer install --prefer-dist --no-interaction --no-progress --no-dev --optimize-autoloader --classmap-authoritative
-#    php artisan optimize:clear
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
-    php artisan event:cache
-elif [ "$DOCKER_ENV" = "staging" ]; then
-    echo "执行预发布环境部署..."
-    composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader --classmap-authoritative
+    if [ "${MOCK_ENABLE:-false}" = "true" ]; then
+        composer install --prefer-dist --no-interaction --no-progress --no-dev --optimize-autoloader --classmap-authoritative
+    else
+        composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader --classmap-authoritative
+    fi
 #    php artisan optimize:clear
     php artisan config:cache
     php artisan route:cache
