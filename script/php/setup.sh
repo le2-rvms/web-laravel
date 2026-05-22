@@ -21,9 +21,9 @@ php artisan --version
 if [ "$APP_ENV" = "production" ]; then
     echo "执行生产环境部署..."
     if [ "${MOCK_ENABLE:-false}" = "true" ]; then
-        composer install --prefer-dist --no-interaction --no-progress --no-dev --optimize-autoloader --classmap-authoritative
-    else
         composer install --prefer-dist --no-interaction --no-progress --optimize-autoloader --classmap-authoritative
+    else
+        composer install --prefer-dist --no-interaction --no-progress --no-dev --optimize-autoloader --classmap-authoritative
     fi
 #    php artisan optimize:clear
     php artisan config:cache
