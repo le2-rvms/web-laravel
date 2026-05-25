@@ -14,6 +14,8 @@ use App\Http\Controllers\Admin\Sale\SaleContractController;
 use App\Models\Admin\Admin;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerIndividual;
+use App\Models\Iot\IotDevice;
+use App\Models\Iot\IotDeviceBinding;
 use App\Models\Payment\Payment;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleSettlement;
@@ -33,6 +35,7 @@ use App\Models\Vehicle\VehicleViolation;
 use App\Services\ProgressDisplay;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -78,6 +81,7 @@ class MockDataGenerate extends Command
 
         $Vehicles  = Vehicle::query()->get();
         $customers = Customer::query()->get();
+        $admins    = Admin::query()->get();
 
         $vehicleCenters            = VehicleCenter::query()->where('vc_status', '=', VcStatus::ENABLED)->get();
         $vehicleStatusAt           = [];
@@ -305,6 +309,21 @@ class MockDataGenerate extends Command
             $endTime = microtime(true);
             $this->info('end time: '.date('Y-m-d H:i:s'));
             $this->info(sprintf('elapsed time: %.2f s', $endTime - $startTime));
+        }
+
+        $devices              = IotDevice::query()->get();
+        $saleContractVehicles = Vehicle::query()->whereHas('SaleContracts', function (Builder $query) {
+            $query->where('sc_rental_type', '=', ScRentalType::LONG_TERM)
+                ->where('sc_status', '=', ScStatus::SIGNED)
+            ;
+        })->limit($devices->count())->get();
+
+        foreach ($devices as $device) {
+            $Vehicle = $saleContractVehicles->shift();
+            if (!$Vehicle) {
+                break;
+            }
+            IotDeviceBinding::factory()->for($device, 'IotDevice')->for($Vehicle)->for($admins->random(), 'ProcessedBy')->activeMockBinding()->create();
         }
     }
 

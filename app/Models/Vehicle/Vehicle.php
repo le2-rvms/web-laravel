@@ -16,6 +16,7 @@ use App\Models\_\ModelTrait;
 use App\Models\Admin\Admin;
 use App\Models\Admin\AdminTeam;
 use App\Models\One\OneAccount;
+use App\Models\Sale\SaleContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -126,6 +127,11 @@ class Vehicle extends Model
         've_team_id'         => 'integer',
         've_oa_id'           => 'integer',
     ];
+
+    public function SaleContracts(): HasMany
+    {
+        return $this->hasMany(SaleContract::class, 'sc_ve_id', 've_id');
+    }
 
     public function VehicleModel(): BelongsTo
     {

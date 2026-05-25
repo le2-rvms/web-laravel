@@ -7,6 +7,7 @@ use App\Models\Admin\Admin;
 use App\Models\Customer\Customer;
 use App\Models\Customer\CustomerCompany;
 use App\Models\Customer\CustomerIndividual;
+use App\Models\Iot\IotDeviceBinding;
 use App\Models\Payment\Payment;
 use App\Models\Payment\PaymentAccount;
 use App\Models\Payment\PaymentInout;
@@ -57,6 +58,8 @@ class MockDataClear extends Command
             VehicleAccident::query()->delete();
             VehicleViolation::query()->delete();
             VehicleForceTake::query()->delete();
+
+            IotDeviceBinding::query()->delete();
 
             Vehicle::query()->delete();
             VehicleModel::query()->delete();

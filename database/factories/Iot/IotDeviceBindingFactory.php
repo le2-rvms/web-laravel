@@ -6,7 +6,7 @@ use App\Models\Iot\IotDeviceBinding;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Iot\IotDeviceBinding>
+ * @extends Factory<IotDeviceBinding>
  */
 class IotDeviceBindingFactory extends Factory
 {
@@ -18,5 +18,14 @@ class IotDeviceBindingFactory extends Factory
             'db_start_at' => now()->subDays(2)->toDateTimeString(),
             'db_end_at'   => now()->subDay()->toDateTimeString(),
         ];
+    }
+
+    public function activeMockBinding(): static
+    {
+        return $this->state(fn () => [
+            'db_start_at' => now()->subYears(2)->toDateTimeString(),
+            'db_end_at'   => null,
+            'db_note'     => '演示数据：当前有效设备绑定',
+        ]);
     }
 }

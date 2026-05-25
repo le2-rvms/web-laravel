@@ -73,6 +73,9 @@ class GpsDataController extends Controller
             ->when(!empty($input['terminal_ids']), function ($query) use ($input) {
                 $query->whereIn('terminal_id', $input['terminal_ids']);
             })
+            ->when(empty($input['terminal_ids']), function ($query) { // 如果是列表，就不显示10天前的轨迹点
+                $query->where('gps_time', '>', now()->subDays(10));
+            })
             ->get()
         ;
 
