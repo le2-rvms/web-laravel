@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands\Dev;
 
-use App\Enum\Admin\AUserType;
 use App\Enum\Customer\CuType;
 use App\Enum\Payment\PPtId;
 use App\Enum\SaleContract\ScRentalType;
@@ -14,18 +13,13 @@ use App\Enum\Vehicle\VeStatusService;
 use App\Http\Controllers\Admin\Sale\SaleContractController;
 use App\Models\Admin\Admin;
 use App\Models\Customer\Customer;
-use App\Models\Customer\CustomerCompany;
 use App\Models\Customer\CustomerIndividual;
 use App\Models\Payment\Payment;
-use App\Models\Payment\PaymentAccount;
-use App\Models\Payment\PaymentInout;
 use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleSettlement;
 use App\Models\Sale\VehicleTemp;
 use App\Models\Vehicle\Vehicle;
-use App\Models\Vehicle\VehicleAccident;
 use App\Models\Vehicle\VehicleCenter;
-use App\Models\Vehicle\VehicleForceTake;
 use App\Models\Vehicle\VehicleInspection;
 use App\Models\Vehicle\VehicleInsurance;
 use App\Models\Vehicle\VehicleMaintenance;
@@ -40,7 +34,6 @@ use App\Services\ProgressDisplay;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Console\Attribute\AsCommand;
 
@@ -63,56 +56,7 @@ class MockDataGenerate extends Command
 
         [$month_form,$month_to] = array_map('intval', explode('-', $this->option('month')));
 
-        // 先删除数据
-
-        DB::transaction(function () {
-            PaymentAccount::query()->update(['pa_balance' => '0']);
-            PaymentInout::query()->delete();
-            Payment::query()->delete();
-
-            VehicleSchedule::query()->delete();
-            VehicleManualViolation::query()->delete();
-            VehicleMaintenance::query()->delete();
-            VehicleInsurance::query()->delete();
-            SaleSettlement::query()->delete();
-            VehicleRepair::query()->delete();
-            VehicleUsage::query()->delete();
-            VehicleInspection::query()->delete();
-            VehicleTemp::query()->delete();
-            VehicleCenter::query()->delete();
-            VehicleAccident::query()->delete();
-            VehicleViolation::query()->delete();
-            VehicleForceTake::query()->delete();
-
-            Vehicle::query()->delete();
-            VehicleModel::query()->delete();
-
-            SaleContract::query()->delete();
-            VehiclePreparation::query()->delete();
-
-            CustomerIndividual::query()->whereRaw("cui_cu_id not in (select cu_id from customers where cu_contact_name like '演示%')")->delete();
-            CustomerCompany::query()->delete();
-            Customer::query()->whereNotLike('cu_contact_name', '演示%')->delete();
-
-            //            Vehicle::query()->update(['ve_status_service' => VeStatusService::YES, 've_status_rental' => VeStatusRental::LISTED, 've_status_dispatch' => VeStatusDispatch::NOT_DISPATCHED]);
-
-            Admin::query()->where('a_user_type', '=', AUserType::COMMON)->delete();
-            DB::table(config('permission.table_names.model_has_roles'))->whereRaw('model_id not in (select id from admins)')->delete();
-
-            DB::statement('call reset_identity_sequences(?)', ['public']);
-        });
-
-        DB::transaction(function () {
-            $auditSchema = config('setting.dblog.schema');
-
-            foreach (config('setting.dblog.models') as $class_name) {
-                /** @var Model $model */
-                $model = new $class_name();
-                $table = $model->getTable();
-
-                DB::table("{$auditSchema}.{$table}")->delete();
-            }
-        });
+        $this->call(MockDataClear::class);
 
         DB::transaction(function () {
             Admin::factory()->count(20)->create();
