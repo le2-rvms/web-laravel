@@ -4,7 +4,9 @@ namespace Database\Factories\Vehicle;
 
 use App\Enum\VehicleViolation\VvPaymentStatus;
 use App\Enum\VehicleViolation\VvProcessStatus;
+use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleViolation;
+use Carbon\Carbon;
 use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -32,5 +34,13 @@ class VehicleViolationFactory extends Factory
             'vv_payment_status'     => VvPaymentStatus::label_key_random(),
             'vv_remark'             => $data['vv_remark'],
         ];
+    }
+
+    public function duringUsage(Vehicle $vehicle, Carbon $violationAt): static
+    {
+        return $this->state([
+            'vv_plate_no'           => $vehicle->ve_plate_no,
+            'vv_violation_datetime' => $violationAt,
+        ]);
     }
 }

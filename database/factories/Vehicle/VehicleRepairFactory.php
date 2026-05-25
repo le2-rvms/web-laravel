@@ -9,6 +9,7 @@ use App\Enum\VehicleRepair\VrRepairStatus;
 use App\Enum\VehicleRepair\VrSettlementMethod;
 use App\Enum\VehicleRepair\VrSettlementStatus;
 use App\Models\Vehicle\VehicleRepair;
+use Carbon\Carbon;
 use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -43,5 +44,14 @@ class VehicleRepairFactory extends Factory
             'vr_additional_photos'  => fake_many_photos(),
             'vr_repair_info'        => [],
         ];
+    }
+
+    public function duringUsage(Carbon $entryAt, Carbon $departureAt, int $startMileage, int $returnMileage): static
+    {
+        return $this->state([
+            'vr_entry_datetime'     => $entryAt,
+            'vr_departure_datetime' => $departureAt,
+            'vr_mileage'            => fake()->numberBetween($startMileage, $returnMileage),
+        ]);
     }
 }

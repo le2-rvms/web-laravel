@@ -1,4 +1,4 @@
-.PHONY: dev print-env serve horizon logs vite bash
+.PHONY: dev print-env write-env serve horizon logs vite bash
 
 L1_PRIVATE_DIR := ${HOME}/rvms/1prod/compose-L1-private/
 L2_HOST_DIR := $(HOME)/rvms/2host/compose-L2-host/
@@ -13,12 +13,17 @@ CONTEXT_ENV_FILES := \
 
 SERVICE_ENV_FILE := $(L3_COMPANY_DIR)apps/web/php.env
 
-APP_ENV_OVERRIDES := DB_HOST=localhost DB_PORT=$${POSTGRES_PORT} 
+APP_ENV_OVERRIDES := DB_HOST=localhost DB_PORT=$${POSTGRES_PORT}
 
 LOAD_ENV := $(foreach file,$(CONTEXT_ENV_FILES),. $(file);) ${APP_ENV_OVERRIDES} set -a; . $(SERVICE_ENV_FILE); set +a;
+ENV_OUTPUT ?= .env.generated
 
 print-env:
 	env -i sh -c '$(LOAD_ENV) env'
+
+write-env:
+	@env -i sh -c '$(LOAD_ENV) env | grep -Ev "^(PWD|SHLVL|_)=" | sort' > "$(ENV_OUTPUT)"
+	@printf 'wrote %s\n' "$(ENV_OUTPUT)"
 
 serve:
 	@$(LOAD_ENV) php artisan serve

@@ -2,9 +2,14 @@
 
 namespace Database\Factories\Sale;
 
+use App\Enum\Payment\PPayStatus;
+use App\Enum\Payment\PPtId;
 use App\Enum\Payment\SsDeleteOption;
 use App\Enum\Sale\SsReturnStatus;
+use App\Models\Sale\SaleContract;
 use App\Models\Sale\SaleSettlement;
+use App\Models\Vehicle\VehicleInspection;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -41,5 +46,19 @@ class SaleSettlementFactory extends Factory
             'ss_delete_option'              => SsDeleteOption::label_key_random(),
             //            'ss_remark'                  => $this->faker->optional()->paragraph(),
         ];
+    }
+
+    public function closedContract(SaleContract $saleContract, Carbon $returnAt, ?VehicleInspection $returnInspection): static
+    {
+        return $this->state([
+            'ss_deposit_amount'   => $saleContract->sc_deposit_amount,
+            'ss_received_deposit' => $saleContract->Payments()
+                ->where('p_pt_id', PPtId::DEPOSIT)
+                ->where('p_pay_status', PPayStatus::PAID)
+                ->sum('p_actual_pay_amount'),
+            'ss_deposit_return_date'   => $returnAt->copy()->addDays(fake()->numberBetween(0, 7))->toDateString(),
+            'ss_return_datetime'       => $returnAt,
+            'ss_deposit_return_amount' => max(0, (float) $saleContract->sc_deposit_amount - (float) ($returnInspection?->vi_damage_deduction ?? 0)),
+        ]);
     }
 }

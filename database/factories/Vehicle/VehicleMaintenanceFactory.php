@@ -7,6 +7,7 @@ use App\Enum\VehicleMaintenance\VmPickupStatus;
 use App\Enum\VehicleMaintenance\VmSettlementMethod;
 use App\Enum\VehicleMaintenance\VmSettlementStatus;
 use App\Models\Vehicle\VehicleMaintenance;
+use Carbon\Carbon;
 use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -38,5 +39,16 @@ class VehicleMaintenanceFactory extends Factory
             'vm_additional_photos'     => fake_many_photos(),
             'vm_maintenance_info'      => [],
         ];
+    }
+
+    public function duringUsage(Carbon $entryAt, Carbon $departureAt, int $startMileage, int $returnMileage): static
+    {
+        return $this->state([
+            'vm_entry_datetime'        => $entryAt,
+            'vm_departure_datetime'    => $departureAt,
+            'vm_entry_mileage'         => fake()->numberBetween($startMileage, $returnMileage),
+            'vm_maintenance_mileage'   => fake()->randomElement([5000, 7500, 10000, 15000]),
+            'vm_next_maintenance_date' => $entryAt->copy()->addMonths(fake()->randomElement([3, 6]))->toDateString(),
+        ]);
     }
 }

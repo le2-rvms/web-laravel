@@ -3,10 +3,12 @@
 namespace Database\Factories\Vehicle;
 
 use App\Enum\Vehicle\VsInspectionType;
+use App\Models\Vehicle\VehicleSchedule;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Vehicle\VehicleSchedule>
+ * @extends Factory<VehicleSchedule>
  */
 class VehicleScheduleFactory extends Factory
 {
@@ -21,5 +23,13 @@ class VehicleScheduleFactory extends Factory
             'vs_additional_photos'    => fake_many_photos(),
             'vs_remark'               => null,
         ];
+    }
+
+    public function inspectionCycle(Carbon $inspectionAt): static
+    {
+        return $this->state([
+            'vs_inspection_date'      => $inspectionAt->toDateString(),
+            'vs_next_inspection_date' => $inspectionAt->copy()->addMonths(fake()->randomElement([3, 6, 12]))->toDateString(),
+        ]);
     }
 }

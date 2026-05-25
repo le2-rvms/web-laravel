@@ -3,7 +3,9 @@
 namespace Database\Factories\Vehicle;
 
 use App\Enum\Exist;
+use App\Enum\VehicleInspection\ViInspectionType;
 use App\Models\Vehicle\VehicleInspection;
+use Carbon\Carbon;
 use Database\Factories\UsesJsonFixture;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -34,13 +36,39 @@ class VehicleInspectionFactory extends Factory
         ];
     }
 
+    public function saleContractDispatch(Carbon $dispatchAt, int $mileage): static
+    {
+        return $this->state([
+            'vi_inspection_type'     => ViInspectionType::SC_DISPATCH,
+            'vi_inspection_datetime' => $dispatchAt,
+            'vi_mileage'             => $mileage,
+            'vi_damage_deduction'    => null,
+            'vi_add_should_pay'      => 0,
+        ]);
+    }
+
+    public function saleContractReturn(Carbon $returnAt, int $mileage): static
+    {
+        return $this->state(function () use ($returnAt, $mileage) {
+            $damageDeduction = fake()->boolean(12) ? fake()->randomFloat(2, 100, 1800) : null;
+
+            return [
+                'vi_inspection_type'     => ViInspectionType::SC_RETURN,
+                'vi_inspection_datetime' => $returnAt,
+                'vi_mileage'             => $mileage,
+                'vi_damage_deduction'    => $damageDeduction,
+                'vi_add_should_pay'      => null === $damageDeduction ? 0 : 1,
+            ];
+        });
+    }
+
     public function configure()
     {
         return $this
             ->afterMaking(function (VehicleInspection $inspection) {
                 $remark_array          = $this->randomGroupFromPools($inspection->vi_inspection_type, mt_rand(2, 5));
                 $remark_array          = array_column($remark_array, 'vi_remark');
-                $inspection->vi_remark = join('', $remark_array);
+                $inspection->vi_remark = implode('', $remark_array);
 
                 $inspection_info = [];
                 foreach ($remark_array as $key => $remark) {

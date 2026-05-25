@@ -2,7 +2,9 @@
 
 namespace Database\Factories\Vehicle;
 
+use App\Models\Vehicle\Vehicle;
 use App\Models\Vehicle\VehicleInsurance;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -48,5 +50,22 @@ class VehicleInsuranceFactory extends Factory
             'vi_is_company_borne'                    => $this->faker->boolean(),
             'vi_remark'                              => null,
         ];
+    }
+
+    public function annualForVehicle(Vehicle $vehicle, Carbon $startDate): static
+    {
+        $endDate = $startDate->copy()->addYear()->subDay();
+
+        return $this->state([
+            'vi_compulsory_plate_no'          => $vehicle->ve_plate_no,
+            'vi_carrier_liability_plate_no'   => $vehicle->ve_plate_no,
+            'vi_commercial_plate_no'          => $vehicle->ve_plate_no,
+            'vi_compulsory_start_date'        => $startDate->toDateString(),
+            'vi_carrier_liability_start_date' => $startDate->toDateString(),
+            'vi_commercial_start_date'        => $startDate->toDateString(),
+            'vi_compulsory_end_date'          => $endDate->toDateString(),
+            'vi_carrier_liability_end_date'   => $endDate->toDateString(),
+            'vi_commercial_end_date'          => $endDate->toDateString(),
+        ]);
     }
 }
