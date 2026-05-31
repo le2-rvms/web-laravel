@@ -14,9 +14,6 @@ composer config -g --list | grep repositories
 
 php -v
 composer --version
-php artisan about
-php artisan --version
-
 
 if [ "$APP_ENV" = "production" ]; then
     echo "执行生产环境部署..."
@@ -37,3 +34,6 @@ else
 #    composer install
 #    php artisan optimize:clear  # 这个时候数据表还没有准备好
 fi
+
+php artisan about
+php artisan --version
