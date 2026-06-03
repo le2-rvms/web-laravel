@@ -211,10 +211,12 @@ SQL,
 SELECT terminal_id, to_char(gps_time, 'YYYY-MM-DD HH24:MI:SS') as gps_time,latitude_gcj as latitude,longitude_gcj as longitude,altitude,direction,speed
 FROM public.gps_position_histories ph
 WHERE
-    terminal_id = :terminal_id
+  1=1
+  AND terminal_id = :terminal_id
+  AND speed > 0
   AND ph.gps_time >= :start_at AND ph.gps_time < :end_at
 ORDER BY ph.gps_time
-LIMIT 500
+LIMIT 10000
 ;
 SQL,
             [
