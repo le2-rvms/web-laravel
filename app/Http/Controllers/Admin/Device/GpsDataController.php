@@ -213,7 +213,7 @@ FROM public.gps_position_histories ph
 WHERE
   1=1
   AND terminal_id = :terminal_id
-  AND speed > 0
+  AND speed > 1
   AND ph.gps_time >= :start_at AND ph.gps_time < :end_at
 ORDER BY ph.gps_time
 LIMIT 10000
